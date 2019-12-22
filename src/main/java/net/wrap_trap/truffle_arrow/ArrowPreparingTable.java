@@ -1,14 +1,13 @@
 package net.wrap_trap.truffle_arrow;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.prepare.Prepare;
-import org.apache.calcite.rel.RelCollation;
-import org.apache.calcite.rel.RelDistribution;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelReferentialConstraint;
+import org.apache.calcite.rel.*;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlAccessType;
 import org.apache.calcite.sql.validate.SqlModality;
@@ -17,15 +16,17 @@ import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.List;
 
-/**
- * Created by masayuki on 2019/12/06.
- */
 public class ArrowPreparingTable extends Prepare.AbstractPreparingTable {
 
-  private Table table;
+  private List<String> names;
+  private ArrowTable table;
+  private RelDataTypeFactory typeFactory;
 
-  public ArrowPreparingTable(Table table) {
+  public ArrowPreparingTable(List<String> names, ArrowTable table,
+                             RelDataTypeFactory typeFactory) {
+    this.names = names;
     this.table = table;
+    this.typeFactory = typeFactory;
   }
 
   @Override
@@ -35,7 +36,7 @@ public class ArrowPreparingTable extends Prepare.AbstractPreparingTable {
 
   @Override
   public List<String> getQualifiedName() {
-    return null;
+    return this.names;
   }
 
   @Override
@@ -45,7 +46,7 @@ public class ArrowPreparingTable extends Prepare.AbstractPreparingTable {
 
   @Override
   public RelDataType getRowType() {
-    return null;
+    return this.table.getRowType(this.typeFactory);
   }
 
   @Override
@@ -55,12 +56,12 @@ public class ArrowPreparingTable extends Prepare.AbstractPreparingTable {
 
   @Override
   public RelNode toRel(ToRelContext context) {
-    return null;
+    return this.table.toRel(context, this);
   }
 
   @Override
   public List<RelCollation> getCollationList() {
-    return null;
+    return ImmutableList.of(RelCollations.EMPTY);
   }
 
   @Override

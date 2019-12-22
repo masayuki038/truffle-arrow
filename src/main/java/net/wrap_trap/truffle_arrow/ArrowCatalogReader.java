@@ -53,8 +53,8 @@ public class ArrowCatalogReader implements Prepare.CatalogReader {
 
   @Override
   public Prepare.PreparingTable getTable(List<String> names) {
-    Table table = this.arrowSchema.getTableMap().get(names.get(0));
-    return new ArrowPreparingTable(table);
+    ArrowTable table = (ArrowTable) this.arrowSchema.getTableMap().get(names.get(1));
+    return new ArrowPreparingTable(names, table, this.typeFactory);
   }
 
   @Override

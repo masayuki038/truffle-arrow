@@ -60,8 +60,13 @@ public class TruffleArrowMeta extends  MetaImpl {
 
   @Override
   public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
+    SqlNode sqlNode = parse(sql);
+    Signature signature = createSignature(sql, sqlNode);
+    RelRoot root = createPlan(sqlNode);
+
     StatementHandle statement = createStatement(ch);
-    statement.signature = createSignature(sql, parse(sql));
+    statement.signature = signature;
+    start(statement, root);
     return statement;
   }
 
