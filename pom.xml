@@ -70,24 +70,27 @@
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.graalvm.truffle/truffle-api -->
         <dependency>
-            <groupId>com.oracle.truffle</groupId>
+            <groupId>org.graalvm.truffle</groupId>
             <artifactId>truffle-api</artifactId>
-            <version>1.0.0-rc7</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.oracle.truffle/truffle-tck -->
-        <dependency>
-            <groupId>com.oracle.truffle</groupId>
-            <artifactId>truffle-tck</artifactId>
-            <version>1.0.0-rc7</version>
+            <version>19.3.0.2</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.oracle.truffle/truffle-dsl-processor -->
+        <!-- https://mvnrepository.com/artifact/org.graalvm.truffle/truffle-tck -->
         <dependency>
-            <groupId>com.oracle.truffle</groupId>
-            <artifactId>truffle-dsl-processor</artifactId>
-            <version>1.0.0-rc7</version>
+            <groupId>org.graalvm.truffle</groupId>
+            <artifactId>truffle-tck</artifactId>
+            <version>19.3.0.2</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.graalvm.truffle/truffle-dsl-processor -->
+        <dependency>
+            <groupId>org.graalvm.truffle</groupId>
+            <artifactId>truffle-dsl-processor</artifactId>
+            <version>19.3.0.2</version>
+        </dependency>
+
 
         <dependency>
             <groupId>com.intellij</groupId>

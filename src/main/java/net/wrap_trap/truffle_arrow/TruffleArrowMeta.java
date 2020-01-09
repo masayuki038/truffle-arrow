@@ -2,6 +2,7 @@ package net.wrap_trap.truffle_arrow;
 
 import com.google.common.collect.ImmutableList;
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.source.TruffleArrowSource;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.avatica.*;
 import org.apache.calcite.avatica.remote.TypedValue;
@@ -30,6 +31,10 @@ import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.calcite.tools.Programs;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.PolyglotAccess;
+import org.graalvm.polyglot.Source;
+import org.graalvm.polyglot.Value;
 
 import java.io.File;
 import java.sql.DatabaseMetaData;
@@ -40,103 +45,19 @@ import java.util.List;
 
 public class TruffleArrowMeta extends  MetaImpl {
 
-  private  JavaTypeFactory typeFactory;
-  private Prepare.CatalogReader catalogReader;
-  private SqlValidatorImpl validator;
-
   public TruffleArrowMeta(AvaticaConnection connection) {
     super(connection);
-    SqlOperatorTable operatorTable = SqlStdOperatorTable.instance();
-    ArrowSchema schema = new ArrowSchema(new File("target/classes/samples/files"));
-    CalciteSchema rootSchema = CalciteSchema.createRootSchema(false, true, "SAMPLES", schema);
-    this.typeFactory = new JavaTypeFactoryImpl();
-    this.catalogReader =
-      new ArrowCatalogReader(schema, rootSchema, ImmutableList.of("SAMPLES"), typeFactory);
-    this.validator = new ArrowValidatorImpl(operatorTable,
-                                             catalogReader,
-                                             this.typeFactory,
-                                             SqlConformance.PRAGMATIC_2003);
   }
 
   @Override
   public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
-    SqlNode sqlNode = parse(sql);
-    Signature signature = createSignature(sql, sqlNode);
-    RelRoot root = createPlan(sqlNode);
+    Context context = Context.newBuilder().allowPolyglotAccess(PolyglotAccess.ALL).build();
+    Value value = context.eval("ta", sql);
+    Signature signature = value.as(Signature.class);
 
     StatementHandle statement = createStatement(ch);
     statement.signature = signature;
-    start(statement, root);
     return statement;
-  }
-
-  private Signature createSignature(String sql, SqlNode sqlNode) {
-
-    this.validator.validate(sqlNode);
-    RelDataType type = this.validator.getValidatedNodeType(sqlNode);
-    List<List<String>> fieldOrigins = this.validator.getFieldOrigins(sqlNode);
-
-    List<RelDataTypeField> fieldList = type.getFieldList();
-    List<ColumnMetaData> columns = new ArrayList<>();
-    for (int i = 0; i < fieldList.size(); i++) {
-      RelDataTypeField field = fieldList.get(i);
-      List<String> origins = fieldOrigins.get(i);
-
-      SqlTypeName sqlTypeName = type.getSqlTypeName();
-      ColumnMetaData.AvaticaType avaticaType =  ColumnMetaData.scalar(
-        sqlTypeName.getJdbcOrdinal(),
-        sqlTypeName.getName(),
-        ColumnMetaData.Rep.of(this.typeFactory.getJavaClass(field.getType()))
-      );
-
-      ColumnMetaData metadata =  new ColumnMetaData(
-         i,
-         false,
-         true,
-         false,
-         false,
-         type.isNullable()
-           ? DatabaseMetaData.columnNullable
-           : DatabaseMetaData.columnNoNulls,
-         true,
-         type.getPrecision(),
-         field.getName(),
-         origins.get(2),
-         origins.get(0),
-         type.getPrecision() == RelDataType.PRECISION_NOT_SPECIFIED
-           ? 0
-           : type.getPrecision(),
-         type.getScale() == RelDataType.SCALE_NOT_SPECIFIED
-           ? 0
-           :  type.getScale(),
-         origins.get(1),
-         null,
-         avaticaType,
-         true,
-         false,
-         false,
-         avaticaType.columnClassName());
-      columns.add(metadata);
-    }
-
-    return new Signature(
-      columns,
-      sql,
-      Collections.emptyList(),
-      Collections.emptyMap(),
-      CursorFactory.ARRAY,
-      StatementType.SELECT
-    );
-  }
-
-  private SqlNode parse(String sql) {
-    try {
-      SqlParser.Config config = SqlParser.configBuilder().setLex(Lex.JAVA).build();
-      SqlParser parser = SqlParser.create(sql, config);
-      return parser.parseStmt();
-    } catch (SqlParseException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   @Override
@@ -146,10 +67,9 @@ public class TruffleArrowMeta extends  MetaImpl {
 
   @Override
   public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) throws NoSuchStatementException {
-    SqlNode sqlNode = parse(sql);
-    Signature signature = createSignature(sql, sqlNode);
-    RelRoot root = createPlan(sqlNode);
-    start(h, root);
+    Context context = Context.newBuilder().allowPolyglotAccess(PolyglotAccess.ALL).build();
+    Value value = context.eval("ta", sql);
+    Signature signature = value.as(Signature.class);
 
     try {
       synchronized (callback.getMonitor()) {
@@ -212,56 +132,12 @@ public class TruffleArrowMeta extends  MetaImpl {
     throw new UnsupportedOperationException();
   }
 
-  private void start(StatementHandle handle, RelRoot plan) {
-    List<Object[]> results = new ArrayList<>();
-    CallTarget program = TruffleArrowLanguage.INSTANCE.compileInteractiveQuery(plan, results::add);
-    TruffleArrowLanguage.callWithRootContext(program);
-  }
-
-  static class ArrowValidatorImpl extends SqlValidatorImpl {
+  public static class ArrowValidatorImpl extends SqlValidatorImpl {
     public ArrowValidatorImpl(SqlOperatorTable opTab,
                                SqlValidatorCatalogReader catalogReader,
                                RelDataTypeFactory typeFactory,
                                SqlConformance conformance) {
       super(opTab, catalogReader, typeFactory, conformance);
-    }
-  }
-
-  private static RelRoot expandView(
-                                     RelDataType rowType,
-                                     String queryString,
-                                     List<String> schemaPath,
-                                     List<String> viewPath) {
-    throw new UnsupportedOperationException();
-  }
-
-  private RelRoot createPlan(SqlNode sqlNode) {
-    try {
-      VolcanoPlanner planner = new VolcanoPlanner(null, new PlannerContext());
-      catalogReader.registerRules(planner);
-
-      RelOptCluster cluster = RelOptCluster.create(planner, new RexBuilder(this.typeFactory));
-      SqlToRelConverter.Config config =
-        SqlToRelConverter.configBuilder().withTrimUnusedFields(true).build();
-      SqlToRelConverter converter = new SqlToRelConverter(
-                                                           TruffleArrowMeta::expandView,
-                                                           this.validator,
-                                                           this.catalogReader,
-                                                           cluster,
-                                                           StandardConvertletTable.INSTANCE,
-                                                           config);
-
-      RelRoot root = converter.convertQuery(sqlNode, true, true);
-      RelTraitSet traits = root.rel.getTraitSet()
-                             .replace(ArrowRel.CONVENTION)
-                             .replace(root.collation)
-                             .simplify();
-
-      RelNode optimized = Programs.standard().run(
-        planner, root.rel, traits, ImmutableList.of(), ImmutableList.of());
-      return root.withRel(optimized);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
     }
   }
 }

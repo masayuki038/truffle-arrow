@@ -1,11 +1,10 @@
 package net.wrap_trap.truffle_arrow;
 
-import com.oracle.truffle.api.ExecutionContext;
 import com.oracle.truffle.api.TruffleLanguage;
 
 import java.io.*;
 
-public class TruffleArrowContext extends ExecutionContext {
+public class TruffleArrowContext {
   private BufferedReader in;
   private PrintWriter out;
   private PrintWriter err;
