@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow;
 
+import net.wrap_trap.truffle_arrow.truffle.Result;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.avatica.*;
 import org.apache.calcite.avatica.remote.TypedValue;
@@ -20,10 +21,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class TruffleArrowMeta extends  MetaImpl {
 
   private Context context;
+  private final Map<Integer, Running> runningQueries = new ConcurrentHashMap<>();
 
   public TruffleArrowMeta(AvaticaConnection connection) {
     super(connection);
@@ -32,10 +37,11 @@ public class TruffleArrowMeta extends  MetaImpl {
 
   @Override
   public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
-
-    context.eval("ta", sql);
+    Value value = context.eval("ta", sql);
+    List result = value.as(List.class);
 
     StatementHandle statement = createStatement(ch);
+    this.runningQueries.put(statement.id, new Running(result, null));
     statement.signature = createSignature(sql);
     return statement;
   }
@@ -76,7 +82,14 @@ public class TruffleArrowMeta extends  MetaImpl {
 
   @Override
   public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) throws NoSuchStatementException, MissingResultsException {
-    return null;
+    Running running = runningQueries.get(h.id);
+    List<Object> slice = running.rows
+                           .stream()
+                           .skip(offset)
+                           .limit(fetchMaxRowCount)
+                           .collect(Collectors.toList());
+
+    return new Frame(offset, slice.isEmpty(), slice);
   }
 
   @Override
@@ -142,32 +155,32 @@ public class TruffleArrowMeta extends  MetaImpl {
       );
 
       ColumnMetaData metadata =  new ColumnMetaData(
-                                                     i,
-                                                     false,
-                                                     true,
-                                                     false,
-                                                     false,
-                                                     type.isNullable()
-                                                       ? DatabaseMetaData.columnNullable
-                                                       : DatabaseMetaData.columnNoNulls,
-                                                     true,
-                                                     type.getPrecision(),
-                                                     field.getName(),
-                                                     origins.get(2),
-                                                     origins.get(0),
-                                                     type.getPrecision() == RelDataType.PRECISION_NOT_SPECIFIED
-                                                       ? 0
-                                                       : type.getPrecision(),
-                                                     type.getScale() == RelDataType.SCALE_NOT_SPECIFIED
-                                                       ? 0
-                                                       :  type.getScale(),
-                                                     origins.get(1),
-                                                     null,
-                                                     avaticaType,
-                                                     true,
-                                                     false,
-                                                     false,
-                                                     avaticaType.columnClassName());
+         i,
+         false,
+         true,
+         false,
+         false,
+         type.isNullable()
+           ? DatabaseMetaData.columnNullable
+           : DatabaseMetaData.columnNoNulls,
+         true,
+         type.getPrecision(),
+         field.getName(),
+         origins.get(2),
+         origins.get(0),
+         type.getPrecision() == RelDataType.PRECISION_NOT_SPECIFIED
+           ? 0
+           : type.getPrecision(),
+         type.getScale() == RelDataType.SCALE_NOT_SPECIFIED
+           ? 0
+           :  type.getScale(),
+         origins.get(1),
+         null,
+         avaticaType,
+         true,
+         false,
+         false,
+         avaticaType.columnClassName());
       columns.add(metadata);
     }
 
@@ -179,5 +192,15 @@ public class TruffleArrowMeta extends  MetaImpl {
                                Meta.CursorFactory.ARRAY,
                                Meta.StatementType.SELECT
     );
+  }
+
+  private static class Running {
+    public final List<Object[]> rows;
+    public final RelDataType type;
+
+    private Running(List<Object[]> rows, RelDataType type) {
+      this.rows = rows;
+      this.type = type;
+    }
   }
 }

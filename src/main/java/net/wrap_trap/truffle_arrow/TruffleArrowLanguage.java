@@ -68,12 +68,12 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
     String sql = request.getSource().getCharacters().toString();
     SqlNode sqlNode = SqlParser.parse(sql);
     RelRoot root = createPlan(sqlNode);
-    List<Object[]> results = new ArrayList<>();
-
-    return compileInteractiveQuery(root, results::add);
+    return compileInteractiveQuery(root);
   }
 
-  private CallTarget compileInteractiveQuery(RelRoot plan, Consumer<Object[]> then) {
+  private CallTarget compileInteractiveQuery(RelRoot plan) {
+    final List<Object[]> results = new ArrayList<>();
+
     ThenRowSink sink = resultFrame -> new RowSink() {
       @Override
       public void executeVoid(VirtualFrame frame) {
@@ -87,31 +87,20 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
           values[i] = resultSetValue;
         }
-        then.accept(values);
+        results.add(values);
       }
     };
 
-    CallTarget callTarget = compile(plan, sink);
-    //this.callWithRootContext(callTarget);
+    CallTarget callTarget = compile(plan, results, sink);
     return callTarget;
   }
 
-  private CallTarget compile(RelRoot plan, ThenRowSink sink) {
+  private CallTarget compile(RelRoot plan, List<Object[]> results, ThenRowSink sink) {
     ArrowRel rel = (ArrowRel) plan.rel;
     RowSource compiled = rel.compile(sink);
-    RelRootNode root = new RelRootNode(this, compiled);
+    RelRootNode root = new RelRootNode(this, compiled, results);
 
     return Truffle.getRuntime().createCallTarget(root);
-  }
-
-  private void callWithRootContext(CallTarget main) {
-    Objects.requireNonNull(main, "Program is null");
-    TruffleArrowContext arrowContext = new TruffleArrowContext(
-      System.in,
-      System.out,
-      System.err
-    );
-    main.call(arrowContext);
   }
 
   private static RelRoot expandView(
