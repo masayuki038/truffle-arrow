@@ -1,6 +1,7 @@
 package net.wrap_trap.truffle_arrow;
 
 import net.wrap_trap.truffle_arrow.truffle.Result;
+import net.wrap_trap.truffle_arrow.truffle.RowGroup;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.avatica.*;
 import org.apache.calcite.avatica.remote.TypedValue;
@@ -15,7 +16,7 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.graalvm.polyglot.*;
-
+import com.oracle.truffle.polyglot.*;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class TruffleArrowMeta extends  MetaImpl {
 
   public TruffleArrowMeta(AvaticaConnection connection) {
     super(connection);
-    this.context = Context.newBuilder("ta").build();
+    this.context = Context.newBuilder("ta").allowHostAccess(HostAccess.ALL).build();
   }
 
   @Override
@@ -147,7 +148,8 @@ public class TruffleArrowMeta extends  MetaImpl {
       RelDataTypeField field = fieldList.get(i);
       List<String> origins = fieldOrigins.get(i);
 
-      SqlTypeName sqlTypeName = type.getSqlTypeName();
+
+      SqlTypeName sqlTypeName = type.getFieldList().get(i).getType().getSqlTypeName();
       ColumnMetaData.AvaticaType avaticaType =  ColumnMetaData.scalar(
         sqlTypeName.getJdbcOrdinal(),
         sqlTypeName.getName(),

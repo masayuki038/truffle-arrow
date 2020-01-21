@@ -7,15 +7,16 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+
 import java.util.List;
 
 @ExportLibrary(InteropLibrary.class)
-public class Result implements TruffleObject {
+public class Row implements TruffleObject {
 
- final List<Row> result;
+  final List<Object> row;
 
-  public Result(List<Row> result) {
-    this.result = result;
+  public Row(List<Object> row) {
+    this.row = row;
   }
 
   @ExportMessage
@@ -27,7 +28,7 @@ public class Result implements TruffleObject {
   @CompilerDirectives.TruffleBoundary
   Object readArrayElement(long index) throws UnsupportedMessageException, InvalidArrayIndexException {
     try {
-      return this.result.get((int) index);
+      return this.row.get((int) index);
     } catch (IndexOutOfBoundsException ioob) {
       throw InvalidArrayIndexException.create(index);
     }
@@ -42,7 +43,7 @@ public class Result implements TruffleObject {
   @ExportMessage
   @CompilerDirectives.TruffleBoundary
   long getArraySize() {
-    return this.result.size();
+    return this.row.size();
   }
 
   @ExportMessage(name = "isArrayElementReadable")

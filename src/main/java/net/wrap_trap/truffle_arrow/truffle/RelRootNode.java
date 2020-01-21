@@ -11,9 +11,9 @@ public class RelRootNode extends RootNode {
 
   @Child
   private RowSource delegate;
-  private List<Object[]> results;
+  private List<Row> results;
 
-  public RelRootNode(TruffleArrowLanguage language, RowSource delegate, List<Object[]> results) {
+  public RelRootNode(TruffleArrowLanguage language, RowSource delegate, List<Row> results) {
     // TODO Cross reference by TruffleArrowLanguage
     super(language, new FrameDescriptor());
     this.delegate = delegate;

@@ -1,16 +1,16 @@
 package net.wrap_trap.truffle_arrow;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExecutableNode;
-import net.wrap_trap.truffle_arrow.truffle.RelRootNode;
-import net.wrap_trap.truffle_arrow.truffle.RowSink;
-import net.wrap_trap.truffle_arrow.truffle.RowSource;
-import net.wrap_trap.truffle_arrow.truffle.ThenRowSink;
+import net.wrap_trap.truffle_arrow.truffle.*;
+import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.util.Text;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -28,8 +28,6 @@ import org.apache.calcite.tools.Programs;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
 
 @TruffleLanguage.Registration(id="ta", name = "TruffleArrow", version = "0.1", mimeType = TruffleArrowLanguage.MIME_TYPE)
 public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
@@ -72,22 +70,22 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
   }
 
   private CallTarget compileInteractiveQuery(RelRoot plan) {
-    final List<Object[]> results = new ArrayList<>();
+    final List<Row> results = new ArrayList<>();
 
     ThenRowSink sink = resultFrame -> new RowSink() {
       @Override
       public void executeVoid(VirtualFrame frame) {
-        Object[] values = new Object[resultFrame.size()];
+        Object[] vectors = new Object[resultFrame.size()];
 
         for (int i = 0; i < resultFrame.size(); i++) {
           FrameSlot slot = resultFrame.findFrameSlot(i);
           Object truffleValue = frame.getValue(slot);
-          RelDataType type = plan.validatedRowType.getFieldList().get(i).getType();
-          Object resultSetValue = truffleValue; // TODO Convert type to match ResultSet interface
 
-          values[i] = resultSetValue;
+          // TODO Convert type to match ResultSet interface
+          // RelDataType type = plan.validatedRowType.getFieldList().get(i).getType();
+          vectors[i] = truffleValue;
         }
-        results.add(values);
+        results.addAll(convertVectorsToRows(vectors));
       }
     };
 
@@ -95,7 +93,26 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
     return callTarget;
   }
 
-  private CallTarget compile(RelRoot plan, List<Object[]> results, ThenRowSink sink) {
+  private List<Row> convertVectorsToRows(Object[] vectors) {
+    List<Row> rowList = Lists.newArrayList();
+    if (vectors.length > 0) {
+      for (int i = 0; i < ((ValueVector) vectors[0]).getValueCount(); i++) {
+        List<Object> row = Lists.newArrayList();
+        for (int j = 0; j < vectors.length; j++) {
+          Object o = ((ValueVector) vectors[j]).getObject(i);
+          if (o instanceof Text) {
+            row.add(o.toString());
+          } else {
+            row.add(o);
+          }
+        }
+        rowList.add(new Row(row));
+      }
+    }
+    return rowList;
+  }
+
+  private CallTarget compile(RelRoot plan, List<Row> results, ThenRowSink sink) {
     ArrowRel rel = (ArrowRel) plan.rel;
     RowSource compiled = rel.compile(sink);
     RelRootNode root = new RelRootNode(this, compiled, results);
