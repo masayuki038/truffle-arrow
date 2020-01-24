@@ -1,6 +1,5 @@
 package net.wrap_trap.truffle_arrow;
 
-
 import org.apache.calcite.plan.Context;
 
 public class PlannerContext implements Context {

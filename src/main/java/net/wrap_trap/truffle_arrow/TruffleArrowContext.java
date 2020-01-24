@@ -1,7 +1,6 @@
 package net.wrap_trap.truffle_arrow;
 
 import com.oracle.truffle.api.TruffleLanguage;
-
 import java.io.*;
 
 public class TruffleArrowContext {

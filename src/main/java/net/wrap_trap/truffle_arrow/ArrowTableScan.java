@@ -6,7 +6,6 @@ import net.wrap_trap.truffle_arrow.truffle.VectorSchemaRootBroker;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.linq4j.tree.Primitive;
 import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;

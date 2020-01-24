@@ -1,7 +1,5 @@
 package net.wrap_trap.truffle_arrow;
 
-import net.wrap_trap.truffle_arrow.truffle.Result;
-import net.wrap_trap.truffle_arrow.truffle.RowGroup;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.avatica.*;
 import org.apache.calcite.avatica.remote.TypedValue;
@@ -16,9 +14,7 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.graalvm.polyglot.*;
-import com.oracle.truffle.polyglot.*;
 import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -54,21 +50,7 @@ public class TruffleArrowMeta extends  MetaImpl {
 
   @Override
   public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) throws NoSuchStatementException {
-    context.eval("ta", sql);
-    Signature signature = createSignature(sql);
-
-    try {
-      synchronized (callback.getMonitor()) {
-        callback.clear();
-        callback.assign(signature, null, -1);
-      }
-      callback.execute();
-      MetaResultSet metaResultSet =
-        MetaResultSet.create(h.connectionId, h.id, false, signature, null);
-      return new ExecuteResult(Collections.singletonList(metaResultSet));
-    } catch(SQLException e){
-      throw new RuntimeException(e);
-    }
+    throw new UnsupportedOperationException();
   }
 
   @Override

@@ -27,7 +27,10 @@ import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.calcite.tools.Programs;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @TruffleLanguage.Registration(id="ta", name = "TruffleArrow", version = "0.1", mimeType = TruffleArrowLanguage.MIME_TYPE)
 public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
@@ -94,22 +97,16 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
   }
 
   private List<Row> convertVectorsToRows(Object[] vectors) {
-    List<Row> rowList = Lists.newArrayList();
     if (vectors.length > 0) {
-      for (int i = 0; i < ((ValueVector) vectors[0]).getValueCount(); i++) {
-        List<Object> row = Lists.newArrayList();
-        for (int j = 0; j < vectors.length; j++) {
-          Object o = ((ValueVector) vectors[j]).getObject(i);
-          if (o instanceof Text) {
-            row.add(o.toString());
-          } else {
-            row.add(o);
-          }
-        }
-        rowList.add(new Row(row));
-      }
+      return IntStream.range(0, ((ValueVector) vectors[0]).getValueCount()).mapToObj(rowIndex -> {
+        List<Object> row = Arrays.stream(vectors).map(v -> {
+          Object o = ((ValueVector) v).getObject(rowIndex);
+          return (o instanceof Text) ? o.toString() : o;
+        }).collect(Collectors.toList());
+        return new Row(row);
+      }).collect(Collectors.toList());
     }
-    return rowList;
+    return Lists.newArrayList();
   }
 
   private CallTarget compile(RelRoot plan, List<Row> results, ThenRowSink sink) {
