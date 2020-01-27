@@ -24,7 +24,7 @@ public class JdbcTest {
   @Test
   public void simpleProjection() throws SQLException {
     try (
-          Connection conn = DriverManager.getConnection("jdbc:truffle://localhost:80");
+          Connection conn = DriverManager.getConnection("jdbc:truffle:");
           PreparedStatement pstmt = conn.prepareStatement("select N_NATIONKEY, N_NAME, N_REGIONKEY from NATIONSSF");
           ResultSet rs = pstmt.executeQuery()
         ) {
