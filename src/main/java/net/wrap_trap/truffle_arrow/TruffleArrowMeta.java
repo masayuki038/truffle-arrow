@@ -29,7 +29,7 @@ public class TruffleArrowMeta extends  MetaImpl {
 
   public TruffleArrowMeta(AvaticaConnection connection) {
     super(connection);
-    this.context = Context.newBuilder("ta").allowHostAccess(HostAccess.ALL).build();
+    this.context = Context.newBuilder("ta").build();
   }
 
   @Override
