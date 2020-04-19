@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExecutableNode;
@@ -77,7 +78,7 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
     ThenRowSink sink = resultFrame -> new RowSink() {
       @Override
-      public void executeVoid(VirtualFrame frame) {
+      public void executeVoid(VirtualFrame frame, FrameDescriptorPart sourceFrame) {
         Object[] vectors = new Object[resultFrame.size()];
 
         for (int i = 0; i < resultFrame.size(); i++) {

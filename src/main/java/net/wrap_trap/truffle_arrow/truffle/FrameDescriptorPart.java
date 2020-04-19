@@ -2,6 +2,7 @@ package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 
 /**
  * Represents a contiguous subset of frame slots that we use to store a relation
@@ -47,9 +48,9 @@ public class FrameDescriptorPart {
         return new FrameDescriptorPart(frame, 0, slots);
     }
 
-    FrameDescriptorPart push(int slots) {
+    public FrameDescriptorPart push(int slots, FrameSlotKind kind) {
         for (int i = startOffset + size; i < startOffset + size + slots; i++)
-            frame.addFrameSlot(i);
+            frame.addFrameSlot(i, kind);
 
         return new FrameDescriptorPart(frame, startOffset + size, slots);
     }

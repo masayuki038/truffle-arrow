@@ -62,6 +62,7 @@ public class ArrowCatalogReader implements Prepare.CatalogReader {
   public void registerRules(RelOptPlanner planner) throws Exception {
     planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
     planner.addRule(ArrowProjectTableScanRule.INSTANCE);
+    planner.addRule(ArrowFilterTableScanRule.INSTANCE);
   }
 
   @Override

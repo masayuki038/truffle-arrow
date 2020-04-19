@@ -3,6 +3,7 @@ package net.wrap_trap.truffle_arrow.truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import net.wrap_trap.truffle_arrow.TruffleArrowLanguage;
 
 import java.util.List;
@@ -22,7 +23,11 @@ public class RelRootNode extends RootNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    this.delegate.executeVoid();
-    return new Result(this.results);
+    try {
+      this.delegate.executeVoid();
+      return new Result(this.results);
+    } catch (UnexpectedResultException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

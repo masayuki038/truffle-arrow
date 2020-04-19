@@ -1,8 +1,7 @@
 package net.wrap_trap.truffle_arrow;
 
-import net.wrap_trap.truffle_arrow.truffle.RowSource;
-import net.wrap_trap.truffle_arrow.truffle.ThenRowSink;
-import net.wrap_trap.truffle_arrow.truffle.VectorSchemaRootBroker;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import net.wrap_trap.truffle_arrow.truffle.*;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.linq4j.tree.Primitive;
 import org.apache.calcite.plan.RelOptCluster;
@@ -14,6 +13,7 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexNode;
 
 import java.util.Arrays;
 import java.util.List;
@@ -63,6 +63,9 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
   }
 
   public RowSource compile(ThenRowSink next) {
-    return VectorSchemaRootBroker.compile(getRowType(), this.vectorSchemaRoots, this.fields, next);
+    ThenRowSink wrapped =
+      sourceFrame -> VectorSchemaRootBroker.compile(
+        sourceFrame, getRowType(),this.vectorSchemaRoots, this.fields, next);
+    return TerminalSink.compile(wrapped);
   }
 }
