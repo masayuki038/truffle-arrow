@@ -11,6 +11,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExecutableNode;
 import net.wrap_trap.truffle_arrow.truffle.*;
 import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.util.Text;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.plan.RelOptCluster;
@@ -79,16 +80,10 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
     ThenRowSink sink = resultFrame -> new RowSink() {
       @Override
       public void executeVoid(VirtualFrame frame, FrameDescriptorPart sourceFrame) {
-        Object[] vectors = new Object[resultFrame.size()];
-
-        for (int i = 0; i < resultFrame.size(); i++) {
-          FrameSlot slot = resultFrame.findFrameSlot(i);
-          Object truffleValue = frame.getValue(slot);
-
-          // TODO Convert type to match ResultSet interface
-          // RelDataType type = plan.validatedRowType.getFieldList().get(i).getType();
-          vectors[i] = truffleValue;
-        }
+        FrameSlot slot = resultFrame.findFrameSlot(0);
+        List<FieldVector> fieldVectors = (List<FieldVector>) frame.getValue(slot);
+        Object[] vectors = new Object[fieldVectors.size()];
+        fieldVectors.toArray(vectors);
         results.addAll(convertVectorsToRows(vectors));
       }
     };

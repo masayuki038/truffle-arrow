@@ -24,7 +24,7 @@ public class VectorSchemaRootBroker extends RowSink {
       VectorSchemaRoot[] vectorSchemaRoots,
       int[] fields,
       ThenRowSink then) {
-    FrameDescriptorPart frame = sourceFrame.push(relType.getFieldCount(), FrameSlotKind.Object);
+    FrameDescriptorPart frame = sourceFrame.push(1, FrameSlotKind.Object);
     RowSink sink = then.apply(frame);
     return new VectorSchemaRootBroker(relType, frame, vectorSchemaRoots, fields, sink);
   }
@@ -40,17 +40,14 @@ public class VectorSchemaRootBroker extends RowSink {
     this.sourceFrame = sourceFrame;
     this.then = then;
 
-    assert relType.getFieldCount() == sourceFrame.size();
+    assert relType.getFieldCount() == fields.length;
   }
 
   @Override
   public void executeVoid(VirtualFrame frame, FrameDescriptorPart sourceFrame) throws UnexpectedResultException {
     for (VectorSchemaRoot vectorSchemaRoot : vectorSchemaRoots) {
-      for (int i = 0; i < this.fields.length; i++) {
-        FrameSlot slot = sourceFrame.findFrameSlot(i);
-        FieldVector fieldVector = vectorSchemaRoot.getFieldVectors().get(this.fields[i]);
-        frame.setObject(slot, fieldVector);
-      }
+      FrameSlot slot = sourceFrame.findFrameSlot(0);
+      frame.setObject(slot, vectorSchemaRoot.getFieldVectors());
       then.executeVoid(frame, sourceFrame);
     }
   }
