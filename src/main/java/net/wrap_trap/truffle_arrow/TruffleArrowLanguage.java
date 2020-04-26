@@ -10,8 +10,9 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExecutableNode;
 import net.wrap_trap.truffle_arrow.truffle.*;
-import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.util.Text;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.plan.RelOptCluster;
@@ -80,11 +81,19 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
     ThenRowSink sink = resultFrame -> new RowSink() {
       @Override
       public void executeVoid(VirtualFrame frame, FrameDescriptorPart sourceFrame) {
-        FrameSlot slot = resultFrame.findFrameSlot(0);
-        List<FieldVector> fieldVectors = (List<FieldVector>) frame.getValue(slot);
+        FrameDescriptor frameDescrptor = sourceFrame.frame();
+        FrameSlot slot0 = frameDescrptor.findFrameSlot(0);
+        List<FieldVector> fieldVectors = (List<FieldVector>) frame.getValue(slot0);
+
+        UInt4Vector selectionVector = null;
+        FrameSlot slot1 = frameDescrptor.findFrameSlot(1);
+        if (slot1 != null) {
+          selectionVector = (UInt4Vector) frame.getValue(slot1);
+        }
+
         Object[] vectors = new Object[fieldVectors.size()];
         fieldVectors.toArray(vectors);
-        results.addAll(convertVectorsToRows(vectors));
+        results.addAll(convertVectorsToRows(vectors, selectionVector));
       }
     };
 
@@ -92,18 +101,33 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
     return callTarget;
   }
 
-  private List<Row> convertVectorsToRows(Object[] vectors) {
+  private List<Row> convertVectorsToRows(Object[] vectors, UInt4Vector selectionVector) {
+    List<Row> ret = Lists.newArrayList();
     if (vectors.length > 0) {
-      return IntStream.range(0, ((ValueVector) vectors[0]).getValueCount()).mapToObj(rowIndex -> {
-        List<Object> row = Arrays.stream(vectors).map(v -> {
-          Object o = ((ValueVector) v).getObject(rowIndex);
-          return (o instanceof Text) ? o.toString() : o;
-        }).collect(Collectors.toList());
-        return new Row(row);
-      }).collect(Collectors.toList());
+      if (selectionVector != null) {
+        for (int i = 0; i < selectionVector.getValueCount(); i++) {
+          int rowIndex = selectionVector.get(i);
+          Row row = createRow(vectors, rowIndex);
+          ret.add(row);
+        }
+      } else {
+        for (int i = 0; i < ((FieldVector) vectors[0]).getValueCount(); i++) {
+          Row row = createRow(vectors, i);
+          ret.add(row);
+        }
+      }
     }
-    return Lists.newArrayList();
+    return ret;
   }
+
+  private Row createRow(Object[] vectors, int rowIndex) {
+    List<Object> row = Arrays.stream(vectors).map(v -> {
+      Object o = ((ValueVector) v).getObject(rowIndex);
+      return (o instanceof Text) ? o.toString() : o;
+    }).collect(Collectors.toList());
+    return new Row(row);
+  }
+
 
   private CallTarget compile(RelRoot plan, List<Row> results, ThenRowSink sink) {
     ArrowRel rel = (ArrowRel) plan.rel;

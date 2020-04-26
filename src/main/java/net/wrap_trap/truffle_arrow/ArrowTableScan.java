@@ -2,6 +2,7 @@ package net.wrap_trap.truffle_arrow;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import net.wrap_trap.truffle_arrow.truffle.*;
+import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.linq4j.tree.Primitive;
 import org.apache.calcite.plan.RelOptCluster;
@@ -26,23 +27,27 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
   private RelOptTable relOptTable;
   private ArrowTable arrowTable;
   private VectorSchemaRoot[] vectorSchemaRoots;
+  private UInt4Vector selectionVector;
   private int[] fields;
 
   public ArrowTable getArrowTable() {
     return this.arrowTable;
   }
 
-  public ArrowTableScan(RelOptCluster cluster, RelOptTable relOptTable, ArrowTable arrowTable, VectorSchemaRoot[] vectorSchemaRoots, int[] fields) {
+  public ArrowTableScan(RelOptCluster cluster, RelOptTable relOptTable, ArrowTable arrowTable,
+                        VectorSchemaRoot[] vectorSchemaRoots, UInt4Vector selectionVector, int[] fields) {
     super(cluster, cluster.traitSetOf(ArrowRel.CONVENTION), relOptTable);
     this.relOptTable = relOptTable;
     this.arrowTable = arrowTable;
     this.vectorSchemaRoots = vectorSchemaRoots;
+    this.selectionVector = selectionVector;
     this.fields = fields;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new ArrowTableScan(getCluster(), this.relOptTable, this.arrowTable, this.vectorSchemaRoots, this.fields);
+    return new ArrowTableScan(getCluster(), this.relOptTable, this.arrowTable, this.vectorSchemaRoots,
+      this.selectionVector, this.fields);
   }
 
   @Override
@@ -62,10 +67,14 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
     return this.vectorSchemaRoots;
   }
 
+  public UInt4Vector getSelectionVector() {
+    return this.selectionVector;
+  }
+
   public RowSource compile(ThenRowSink next) {
     ThenRowSink wrapped =
       sourceFrame -> VectorSchemaRootBroker.compile(
-        sourceFrame, getRowType(),this.vectorSchemaRoots, this.fields, next);
+        sourceFrame, getRowType(),this.vectorSchemaRoots, this.selectionVector, this.fields, next);
     return TerminalSink.compile(wrapped);
   }
 }

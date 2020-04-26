@@ -42,9 +42,11 @@ public class JdbcTest {
             r.getObject(3)).stream().map(o -> o == null ? "" : o.toString()).collect(Collectors.joining("\t")))
             .stream().collect(Collectors.toList());
 
-            assertThat(results.size(), is(25));
-            assertThat(results.get(0), is("0\tALGERIA\t0"));
-            assertThat(results.get(24), is("24\tUNITED STATES\t1"));
+        System.out.println(results);
+
+        assertThat(results.size(), is(25));
+        assertThat(results.get(0), is("0\tALGERIA\t0"));
+        assertThat(results.get(24), is("24\tUNITED STATES\t1"));
     }
   }
 
@@ -71,7 +73,7 @@ public class JdbcTest {
           .stream().collect(Collectors.toList());
 
       assertThat(results.size(), is(1));
-      assertThat(results.get(0), is("1\tALGERIA\t0"));
+      assertThat(results.get(0), is("1\tARGENTINA\t1"));
     }
 
 

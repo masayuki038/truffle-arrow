@@ -60,7 +60,8 @@ public class ArrowTable extends AbstractTable implements QueryableTable, Transla
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable relOptTable) {
     int fieldCount = relOptTable.getRowType().getFieldCount();
     int[] fields = identityList(fieldCount);
-    return new ArrowTableScan(context.getCluster(), relOptTable, this, this.vectorSchemaRoots, fields);
+    return new ArrowTableScan(context.getCluster(), relOptTable, this,
+      this.vectorSchemaRoots, this.selectionVector, fields);
   }
 
   private RelDataType deduceRowType(VectorSchemaRoot vectorSchemaRoot, JavaTypeFactory typeFactory) {

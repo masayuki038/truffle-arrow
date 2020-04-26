@@ -2,6 +2,7 @@ package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import org.apache.arrow.vector.FieldVector;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.type.SqlTypeName;
 
@@ -35,11 +36,10 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 
   @Override
   public ExprBase visitInputRef(RexInputRef inputRef) {
-    FrameSlot slot = from.findFrameSlot(inputRef.getIndex());
+    FrameSlot slot0 = from.findFrameSlot(0);
+    Objects.requireNonNull(slot0);
 
-    Objects.requireNonNull(slot);
-
-    return ExprReadLocalNodeGen.create(slot);
+    return ExprReadLocalArrayNodeGen.create(slot0, inputRef.getIndex());
   }
 
   @Override
@@ -93,6 +93,9 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 //      case GREATER_THAN_OR_EQUAL:
 //        throw new UnsupportedOperationException();
       case EQUALS:
+        if (containsInputRef(call.getOperands())) {
+          return binary(call.getOperands(), ExprFilterNodeGen::create);
+        }
         return binary(call.getOperands(), ExprEqualsNodeGen::create);
 //      case NOT_EQUALS:
 //        return binary(call.getOperands(), ExprNotEqualsNodeGen::create);
@@ -281,5 +284,14 @@ public class CompileExpr implements RexVisitor<ExprBase> {
   @Override
   public ExprBase visitPatternFieldRef(RexPatternFieldRef fieldRef) {
     throw new UnsupportedOperationException();
+  }
+
+  private boolean containsInputRef(List<RexNode> rexNodes) {
+    for (RexNode rexNode: rexNodes) {
+      if (rexNode instanceof RexInputRef) {
+        return true;
+      }
+    }
+    return false;
   }
 }

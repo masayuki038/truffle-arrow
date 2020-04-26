@@ -50,12 +50,11 @@ public class ArrowSchema extends AbstractSchema {
   public Map<String, Table> getTableMap() {
     if (tableMap == null) {
       tableMap = new HashMap<>();
-      RootAllocator allocator = new RootAllocator(Long.MAX_VALUE);
       File[] arrowFiles = directory.listFiles((dir, name) -> name.endsWith(".arrow"));
       Arrays.stream(arrowFiles).forEach(file -> {
         try {
-          VectorSchemaRoot[] vectorSchemaRoots = load(file.getAbsolutePath(), allocator);
-          UInt4Vector selectionVector = new UInt4Vector("selectionVector", allocator);
+          VectorSchemaRoot[] vectorSchemaRoots = ArrowUtils.load(file.getAbsolutePath());
+          UInt4Vector selectionVector = ArrowUtils.createSelectionVector();
           tableMap.put(
             trim(file.getName(), ".arrow").toUpperCase(),
             new ArrowTable(vectorSchemaRoots, selectionVector, null));
@@ -65,24 +64,5 @@ public class ArrowSchema extends AbstractSchema {
       });
     }
     return tableMap;
-  }
-
-  private VectorSchemaRoot[] load(String path, BufferAllocator allocator) throws IOException {
-    byte[] bytes = Files.readAllBytes(FileSystems.getDefault().getPath(path));
-    SeekableReadChannel channel = new SeekableReadChannel(new ByteArrayReadableSeekableByteChannel(bytes));
-    ArrowFileReader reader = new ArrowFileReader(channel, allocator);
-    List<VectorSchemaRoot> list = reader.getRecordBlocks().stream().map(block -> {
-      try {
-        if (!reader.loadRecordBatch(block)) {
-          throw new IllegalStateException("Failed to load RecordBatch");
-        }
-        return reader.getVectorSchemaRoot();
-      } catch (IOException e) {
-        throw new IllegalStateException(e);
-      }
-    }).collect(Collectors.toList());
-    VectorSchemaRoot[] vectorSchemaRoots = new VectorSchemaRoot[list.size()];
-    list.toArray(vectorSchemaRoots);
-    return vectorSchemaRoots;
   }
 }

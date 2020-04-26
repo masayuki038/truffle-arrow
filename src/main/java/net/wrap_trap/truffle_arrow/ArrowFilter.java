@@ -42,7 +42,6 @@ public class ArrowFilter extends SingleRel implements ArrowRel {
   public static ArrowFilter create(final RelTraitSet traitSet, final RelNode input,
                                    final RexProgram program, final RexNode condition) {
     final RelOptCluster cluster = input.getCluster();
-    final RelMetadataQuery mq = cluster.getMetadataQuery();
     return new ArrowFilter(cluster, traitSet, input, program, condition);
   }
 

@@ -1,6 +1,5 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
-
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.NodeInfo;
 
