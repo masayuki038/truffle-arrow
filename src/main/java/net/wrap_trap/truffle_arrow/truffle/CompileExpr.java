@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import org.apache.arrow.vector.FieldVector;
@@ -17,8 +18,8 @@ import java.util.Objects;
  */
 public class CompileExpr implements RexVisitor<ExprBase> {
 
-  public static ExprBase compile(FrameDescriptorPart sourceFrame, RexNode child) {
-    CompileExpr compiler = new CompileExpr(sourceFrame);
+  public static ExprBase compile(FrameDescriptor from, RexNode child) {
+    CompileExpr compiler = new CompileExpr(from);
 
     return child.accept(compiler);
   }
@@ -28,9 +29,9 @@ public class CompileExpr implements RexVisitor<ExprBase> {
    *
    * Can be empty in queries like SELECT 1
    */
-  private final FrameDescriptorPart from;
+  private final FrameDescriptor from;
 
-  CompileExpr(FrameDescriptorPart from) {
+  CompileExpr(FrameDescriptor from) {
     this.from = from;
   }
 

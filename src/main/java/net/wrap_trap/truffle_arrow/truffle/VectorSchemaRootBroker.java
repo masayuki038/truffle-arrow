@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -17,24 +18,22 @@ public class VectorSchemaRootBroker extends RowSink {
   private VectorSchemaRoot[] vectorSchemaRoots;
   private UInt4Vector selectionVector;
   private int[] fields;
-  private FrameDescriptorPart sourceFrame;
   private RowSink then;
 
   public static VectorSchemaRootBroker compile(
-      FrameDescriptorPart sourceFrame,
+      FrameDescriptor frameDescriptor,
       RelDataType relType,
       VectorSchemaRoot[] vectorSchemaRoots,
       UInt4Vector selectionVector,
       int[] fields,
       ThenRowSink then) {
-    FrameDescriptorPart frame = sourceFrame.push(SLOT_OFFSET, FrameSlotKind.Object);
-    RowSink sink = then.apply(frame);
-    return new VectorSchemaRootBroker(relType, frame, vectorSchemaRoots, selectionVector, fields, sink);
+    frameDescriptor.addFrameSlot(0, FrameSlotKind.Object);
+    RowSink sink = then.apply(frameDescriptor);
+    return new VectorSchemaRootBroker(relType, vectorSchemaRoots, selectionVector, fields, sink);
   }
 
   private VectorSchemaRootBroker(
       RelDataType relType,
-      FrameDescriptorPart sourceFrame,
       VectorSchemaRoot[] vectorSchemaRoots,
       UInt4Vector selectionVector,
       int[] fields, RowSink then) {
@@ -42,18 +41,17 @@ public class VectorSchemaRootBroker extends RowSink {
     this.vectorSchemaRoots = vectorSchemaRoots;
     this.selectionVector = selectionVector;
     this.fields = fields;
-    this.sourceFrame = sourceFrame;
     this.then = then;
 
     assert relType.getFieldCount() == fields.length;
   }
 
   @Override
-  public void executeVoid(VirtualFrame frame, FrameDescriptorPart sourceFrame) throws UnexpectedResultException {
+  public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor) throws UnexpectedResultException {
     for (VectorSchemaRoot vectorSchemaRoot : vectorSchemaRoots) {
-      FrameSlot slot0 = sourceFrame.findFrameSlot(0);
+      FrameSlot slot0 = frameDescriptor.findFrameSlot(0);
       frame.setObject(slot0, vectorSchemaRoot.getFieldVectors());
-      then.executeVoid(frame, sourceFrame);
+      then.executeVoid(frame, frameDescriptor);
     }
   }
 }

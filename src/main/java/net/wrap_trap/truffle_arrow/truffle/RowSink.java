@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
@@ -14,6 +15,6 @@ public abstract class RowSink extends Node {
     /**
      * Do something with one row. Called once per row of the relational expression.
      */
-    public abstract void executeVoid(VirtualFrame frame, FrameDescriptorPart sourceFrame)
+    public abstract void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor)
       throws UnexpectedResultException;
 }

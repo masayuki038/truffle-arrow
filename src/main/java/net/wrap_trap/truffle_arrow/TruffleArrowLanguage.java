@@ -80,13 +80,12 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
     ThenRowSink sink = resultFrame -> new RowSink() {
       @Override
-      public void executeVoid(VirtualFrame frame, FrameDescriptorPart sourceFrame) {
-        FrameDescriptor frameDescrptor = sourceFrame.frame();
-        FrameSlot slot0 = frameDescrptor.findFrameSlot(0);
+      public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor) {
+        FrameSlot slot0 = frameDescriptor.findFrameSlot(0);
         List<FieldVector> fieldVectors = (List<FieldVector>) frame.getValue(slot0);
 
         UInt4Vector selectionVector = null;
-        FrameSlot slot1 = frameDescrptor.findFrameSlot(1);
+        FrameSlot slot1 = frameDescriptor.findFrameSlot(1);
         if (slot1 != null) {
           selectionVector = (UInt4Vector) frame.getValue(slot1);
         }
