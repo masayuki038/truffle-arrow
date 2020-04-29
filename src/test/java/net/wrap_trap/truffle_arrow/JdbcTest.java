@@ -33,10 +33,34 @@ public class JdbcTest {
       int count = meta.getColumnCount();
       assertThat(count, is(3));
       assertThat(meta.getColumnName(1), is("N_NATIONKEY"));
+      assertThat(meta.getColumnType(1), is(Types.BIGINT));
       assertThat(meta.getColumnName(2), is("N_NAME"));
+      assertThat(meta.getColumnType(2), is(Types.VARCHAR));
       assertThat(meta.getColumnName(3), is("N_REGIONKEY"));
+      assertThat(meta.getColumnType(3), is(Types.BIGINT));
     }
   }
+
+  @Test
+  public void metadata2() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select * from MYTEST_MULTIPLE");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      ResultSetMetaData meta = rs.getMetaData();
+      int count = meta.getColumnCount();
+      assertThat(count, is(3));
+      assertThat(meta.getColumnName(1), is("int"));
+      assertThat(meta.getColumnType(1), is(Types.INTEGER));
+      assertThat(meta.getColumnName(2), is("bigInt"));
+      assertThat(meta.getColumnType(2), is(Types.BIGINT));
+      assertThat(meta.getColumnName(3), is("float"));
+      assertThat(meta.getColumnType(3), is(Types.REAL));
+    }
+  }
+
 
   @Test
   public void simpleProjection() throws SQLException {
@@ -124,6 +148,17 @@ public class JdbcTest {
     // a = 1 or (b = 2 or (c = 3 or d = 4))
     // (a = 1 and b = 2) or (c = 3 and (d = 4 or e = 5))
     // ((a = 1 or b = 2) and c = 3) or (d = 4 or (e = 5 and f = 6))
+  }
+
+  private void dumpMetadata(ResultSet rs) throws SQLException {
+    ResultSetMetaData meta = rs.getMetaData();
+    for (int i = 0; i < meta.getColumnCount(); i ++) {
+      System.out.println(meta.getColumnName(i + 1) + "\t" + meta.getColumnTypeName(i + 1));
+    }
+  }
+
+  private void dumpResults(ResultSet rs) {
+    System.out.println(getResults(rs));
   }
 
   private List<String> getResults(ResultSet rs) {

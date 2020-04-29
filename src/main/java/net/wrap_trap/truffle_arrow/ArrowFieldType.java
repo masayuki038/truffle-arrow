@@ -1,6 +1,8 @@
 package net.wrap_trap.truffle_arrow;
 
 import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.apache.arrow.vector.types.Types;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.linq4j.tree.Primitive;
 import org.apache.calcite.rel.type.RelDataType;
@@ -23,21 +25,25 @@ enum ArrowFieldType {
   DOUBLE(Primitive.DOUBLE),
   DATE(java.sql.Date.class, "date"),
   TIME(java.sql.Time.class, "time"),
-  TIMESTAMP(java.sql.Timestamp.class, "timestamp");
+  TIMESTAMP(java.sql.Timestamp.class, "timestamp"),
+  BYTEARRAY(byte[].class, "bytearray");
 
   private final Class clazz;
   private final String simpleName;
 
-  private static final Map<Class<? extends ArrowType>, ArrowFieldType> MAP = new HashMap<>();
+  private static final Map<MinorType, ArrowFieldType> MAP = new HashMap<>();
 
   static {
-    MAP.put(ArrowType.Utf8.class, STRING);
-    MAP.put(ArrowType.Bool.class, BOOLEAN);
-    MAP.put(ArrowType.Int.class, LONG);
-    MAP.put(ArrowType.FloatingPoint.class, FLOAT);
-    MAP.put(ArrowType.Date.class, DATE);
-    MAP.put(ArrowType.Time.class, TIME);
-    MAP.put(ArrowType.Timestamp.class, TIMESTAMP);
+    MAP.put(MinorType.VARCHAR, STRING);
+    MAP.put(MinorType.BIT, BOOLEAN);
+    MAP.put(MinorType.INT, INT);
+    MAP.put(MinorType.BIGINT, LONG);
+    MAP.put(MinorType.FLOAT4, FLOAT);
+    MAP.put(MinorType.FLOAT8, DOUBLE);
+    MAP.put(MinorType.DATEDAY, DATE);
+    MAP.put(MinorType.TIMESEC, TIME);
+    MAP.put(MinorType.TIMESTAMPMILLITZ, TIMESTAMP);
+    MAP.put(MinorType.VARBINARY, BYTEARRAY);
   }
 
   ArrowFieldType(Primitive primitive) {
@@ -56,6 +62,7 @@ enum ArrowFieldType {
   }
 
   public static ArrowFieldType of(ArrowType arrowType) {
-    return MAP.get(arrowType.getClass());
+    MinorType minorType = Types.getMinorTypeForArrowType(arrowType);
+    return MAP.get(minorType);
   }
 }

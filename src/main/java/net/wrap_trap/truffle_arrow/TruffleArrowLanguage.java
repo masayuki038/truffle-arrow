@@ -149,33 +149,32 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
     JavaTypeFactory typeFactory = TruffleArrowConfig.INSTANCE.typeFactory();
     Prepare.CatalogReader catalogReader = TruffleArrowConfig.INSTANCE.catalogReader();
 
+    VolcanoPlanner planner = new VolcanoPlanner(null, new PlannerContext());
     try {
-
-      VolcanoPlanner planner = new VolcanoPlanner(null, new PlannerContext());
       catalogReader.registerRules(planner);
-
-      RelOptCluster cluster = RelOptCluster.create(planner, new RexBuilder(typeFactory));
-      SqlToRelConverter.Config config =
-        SqlToRelConverter.configBuilder().withTrimUnusedFields(true).build();
-      SqlToRelConverter converter = new SqlToRelConverter(
-                                                           TruffleArrowLanguage::expandView,
-                                                           validator,
-                                                           catalogReader,
-                                                           cluster,
-                                                           StandardConvertletTable.INSTANCE,
-                                                           config);
-
-      RelRoot root = converter.convertQuery(sqlNode, true, true);
-      RelTraitSet traits = root.rel.getTraitSet()
-                             .replace(ArrowRel.CONVENTION)
-                             .replace(root.collation)
-                             .simplify();
-
-      RelNode optimized = Programs.standard().run(
-        planner, root.rel, traits, ImmutableList.of(), ImmutableList.of());
-      return root.withRel(optimized);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    RelOptCluster cluster = RelOptCluster.create(planner, new RexBuilder(typeFactory));
+    SqlToRelConverter.Config config =
+      SqlToRelConverter.configBuilder().withTrimUnusedFields(true).build();
+    SqlToRelConverter converter = new SqlToRelConverter(
+                                                         TruffleArrowLanguage::expandView,
+                                                         validator,
+                                                         catalogReader,
+                                                         cluster,
+                                                         StandardConvertletTable.INSTANCE,
+                                                         config);
+
+    RelRoot root = converter.convertQuery(sqlNode, true, true);
+    RelTraitSet traits = root.rel.getTraitSet()
+                           .replace(ArrowRel.CONVENTION)
+                           .replace(root.collation)
+                           .simplify();
+
+    RelNode optimized = Programs.standard().run(
+      planner, root.rel, traits, ImmutableList.of(), ImmutableList.of());
+    return root.withRel(optimized);
   }
 }
