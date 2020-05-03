@@ -5,6 +5,9 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 
 import net.wrap_trap.truffle_arrow.ArrowUtils;
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.BigIntVector;
+import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.util.Text;
 
@@ -12,13 +15,33 @@ import org.apache.arrow.vector.util.Text;
 abstract class ExprFilter extends ExprBinary {
 
   @Specialization
-  protected UInt4Vector filter(FieldVector left,String right) {
+  protected UInt4Vector filter(VarCharVector left, String right) {
     return filter(left, new Text(right));
   }
 
   @Specialization
-  protected UInt4Vector filter(String left, FieldVector right) {
+  protected UInt4Vector filter(String left, VarCharVector right) {
     return filter(right, new Text(left));
+  }
+
+  @Specialization
+  protected UInt4Vector filter(IntVector left, Long right) {
+    return filter(left, right.intValue());
+  }
+
+  @Specialization
+  protected UInt4Vector filter(Long left, IntVector right) {
+    return filter(right, left.intValue());
+  }
+
+  @Specialization
+  protected UInt4Vector filter(BigIntVector left, Integer right) {
+    return filter(left, right.longValue());
+  }
+
+  @Specialization
+  protected UInt4Vector filter(Integer left, BigIntVector right) {
+    return filter(right, left.longValue());
   }
 
   @Specialization
