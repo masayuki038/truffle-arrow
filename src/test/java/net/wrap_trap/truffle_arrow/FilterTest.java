@@ -24,19 +24,19 @@ public class FilterTest {
     new File("target/classes/samples/files/all_fields.arrow").delete();
   }
 
-//  @Test
-//  public void simpleFilterByInt() throws SQLException {
-//    try (
-//      Connection conn = DriverManager.getConnection("jdbc:truffle:");
-//      PreparedStatement pstmt = conn.prepareStatement(
-//        "select * from ALL_FIELDS where F_INT=2");
-//      ResultSet rs = pstmt.executeQuery()
-//    ) {
-//      List<String> results = TestUtils.getResults(rs);
-//      assertThat(results.size(), is(1));
-//      assertThat(results.get(0), is("2\t2\ttest2"));
-//    }
-//  }
+  @Test
+  public void simpleFilterByInt() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select * from ALL_FIELDS where F_INT=2");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(1));
+      assertThat(results.get(0), is("2\t2\ttest2"));
+    }
+  }
 
   @Test
   public void simpleFilterByLong() throws SQLException {

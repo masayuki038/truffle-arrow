@@ -1,6 +1,5 @@
 package net.wrap_trap.truffle_arrow;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
 import net.wrap_trap.truffle_arrow.truffle.*;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
@@ -14,7 +13,6 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexNode;
 
 import java.util.Arrays;
 import java.util.List;

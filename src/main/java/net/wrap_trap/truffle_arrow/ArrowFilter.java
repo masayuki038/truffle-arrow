@@ -52,12 +52,7 @@ public class ArrowFilter extends SingleRel implements ArrowRel {
     if (this.input != null) {
       ArrowRel arrowRel = (ArrowRel) this.input;
       return arrowRel.compile(wrapped);
-    } else {
-      return TerminalSink.compile(wrapped);
     }
-
-    // where 句の parse
-    // RexCall から node を作る
-    // node.compile を呼ぶ
+    return TerminalSink.compile(wrapped);
   }
 }
