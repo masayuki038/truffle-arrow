@@ -35,6 +35,7 @@ public class ProjectTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("2\ttest2"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowProject.class), is(true));
     }
   }
 
@@ -49,6 +50,7 @@ public class ProjectTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("2\t2\ttest2"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowProject.class), is(true));
     }
   }
 
@@ -63,6 +65,7 @@ public class ProjectTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("2\t2\ttest2"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowProject.class), is(true));
     }
   }
 }

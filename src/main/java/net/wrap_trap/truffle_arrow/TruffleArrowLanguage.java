@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @TruffleLanguage.Registration(id="ta", name = "TruffleArrow", version = "0.1", mimeType = TruffleArrowLanguage.MIME_TYPE)
 public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
@@ -72,6 +71,7 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
     String sql = request.getSource().getCharacters().toString();
     SqlNode sqlNode = SqlParser.parse(sql);
     RelRoot root = createPlan(sqlNode);
+    LastPlan.INSTANCE.set(root);
     return compileInteractiveQuery(root);
   }
 

@@ -35,6 +35,7 @@ public class FilterTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("2\t2\ttest2"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }
 
@@ -49,6 +50,7 @@ public class FilterTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("1\tARGENTINA\t1"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }
 
@@ -63,6 +65,7 @@ public class FilterTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("1\tARGENTINA\t1"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }
 
@@ -77,6 +80,7 @@ public class FilterTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("2\tBRAZIL\t1"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }
 
@@ -91,6 +95,7 @@ public class FilterTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("2\tBRAZIL\t1"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }
 }
