@@ -1,10 +1,7 @@
 package net.wrap_trap.truffle_arrow;
 
 
-import net.wrap_trap.truffle_arrow.truffle.ProjectSink;
-import net.wrap_trap.truffle_arrow.truffle.RowSource;
-import net.wrap_trap.truffle_arrow.truffle.TerminalSink;
-import net.wrap_trap.truffle_arrow.truffle.ThenRowSink;
+import net.wrap_trap.truffle_arrow.truffle.*;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.plan.RelOptCluster;
@@ -36,17 +33,14 @@ public class ArrowProject  extends Project implements ArrowRel {
     return new ArrowProject(getCluster(), traitSet, input, projects, rowType);
   }
 
-  @Override
-  public RowSource compile(ThenRowSink next) {
-    int[] projectIndex = createProjectIndex();
-    ThenRowSink wrapped =
-      sourceFrame -> ProjectSink.createSink(sourceFrame, projectIndex, next);
+  public RelNode getInput() {
+    return this.input;
+  }
 
-    if (this.input != null) {
-      ArrowRel arrowRel = (ArrowRel) this.input;
-      return arrowRel.compile(wrapped);
-    }
-    return TerminalSink.compile(wrapped);
+  public ThenRowSink createRowSink(ThenRowSink next) {
+    int[] projectIndex = createProjectIndex();
+    return
+      sourceFrame -> ProjectSink.createSink(sourceFrame, projectIndex, next);
   }
 
   private int[] createProjectIndex() {

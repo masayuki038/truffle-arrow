@@ -45,14 +45,12 @@ public class ArrowFilter extends SingleRel implements ArrowRel {
     return new ArrowFilter(cluster, traitSet, input, program, condition);
   }
 
-  public RowSource compile(ThenRowSink next) {
-    ThenRowSink wrapped =
-      sourceFrame ->  FilterSink.createSink(sourceFrame, this.condition, next);
+  public RelNode getInput() {
+    return this.input;
+  }
 
-    if (this.input != null) {
-      ArrowRel arrowRel = (ArrowRel) this.input;
-      return arrowRel.compile(wrapped);
-    }
-    return TerminalSink.compile(wrapped);
+  public ThenRowSink createRowSink(ThenRowSink next) {
+    return
+      sourceFrame ->  FilterSink.createSink(sourceFrame, this.condition, next);
   }
 }

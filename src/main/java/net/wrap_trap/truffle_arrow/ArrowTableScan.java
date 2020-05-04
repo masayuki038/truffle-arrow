@@ -69,10 +69,17 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
     return this.selectionVector;
   }
 
-  public RowSource compile(ThenRowSink next) {
-    ThenRowSink wrapped =
+  public RelNode getInput() {
+    return null;
+  }
+
+  public ThenRowSink createRowSink(ThenRowSink next) {
+    return
       frameDescriptor -> VectorSchemaRootBroker.compile(
-        frameDescriptor, getRowType(),this.vectorSchemaRoots, this.selectionVector, this.fields, next);
-    return TerminalSink.compile(wrapped);
+        frameDescriptor,
+        getRowType(),this.vectorSchemaRoots,
+        this.selectionVector,
+        this.fields,
+        next);
   }
 }
