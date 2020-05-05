@@ -5,9 +5,14 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.rel.type.RelDataType;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class VectorSchemaRootBroker extends RowSink {
@@ -49,8 +54,11 @@ public class VectorSchemaRootBroker extends RowSink {
   @Override
   public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor) throws UnexpectedResultException {
     for (VectorSchemaRoot vectorSchemaRoot : vectorSchemaRoots) {
+      List<FieldVector> fieldVectors = vectorSchemaRoot.getFieldVectors();
+      List<FieldVector> selected = Arrays.stream(this.fields).mapToObj(i -> fieldVectors.get(i))
+        .collect(Collectors.toList());
       FrameSlot slot0 = frameDescriptor.findFrameSlot(0);
-      frame.setObject(slot0, vectorSchemaRoot.getFieldVectors());
+      frame.setObject(slot0, selected);
       then.executeVoid(frame, frameDescriptor);
     }
   }
