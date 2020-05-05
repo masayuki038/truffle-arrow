@@ -44,12 +44,12 @@ public class ProjectTest {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
-        "select F_INT, F_BIGINT, F_VARCHAR, F_TIMESTAMP, F_TIME from ALL_FIELDS where F_INT=2");
+        "select F_INT, F_BIGINT, F_VARCHAR, F_TIMESTAMP, F_TIME, F_DATE from ALL_FIELDS where F_INT=2");
       ResultSet rs = pstmt.executeQuery()
     ) {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
-      assertThat(results.get(0), is("2\t2\ttest2\t2020-05-04 15:48:11.0\t03:20:23"));
+      assertThat(results.get(0), is("2\t2\ttest2\t2020-05-04 15:48:11.0\t03:20:23\t2020-05-05"));
       assertThat(LastPlan.INSTANCE.includes(ArrowProject.class), is(true));
     }
   }
@@ -64,7 +64,7 @@ public class ProjectTest {
     ) {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
-      assertThat(results.get(0), is("2\t2\ttest2\t2020-05-04 15:48:11.0\t03:20:23"));
+      assertThat(results.get(0), is("2\t2\ttest2\t2020-05-04 15:48:11.0\t03:20:23\t2020-05-05"));
       assertThat(LastPlan.INSTANCE.includes(ArrowProject.class), is(true));
     }
   }

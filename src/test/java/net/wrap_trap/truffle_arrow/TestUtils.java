@@ -3,6 +3,7 @@ package net.wrap_trap.truffle_arrow;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.BigIntVector;
+import org.apache.arrow.vector.DateDayVector;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.TimeStampSecTZVector;
@@ -33,11 +34,12 @@ public class TestUtils {
     FieldVector varCharVector = createVarCharVector(10, allocator);
     FieldVector timestampVector = createTimestampVector(10, allocator);
     FieldVector timeVector = createTimeVector(10, allocator);
+    FieldVector dateVector = createDateVector(10, allocator);
 
     VectorSchemaRoot root = new VectorSchemaRoot(
       Arrays.asList(intVector.getField(), bigIntVector.getField(), varCharVector.getField(),
-        timestampVector.getField(), timeVector.getField()),
-      Arrays.asList(intVector, bigIntVector, varCharVector, timestampVector, timeVector),
+        timestampVector.getField(), timeVector.getField(), dateVector.getField()),
+      Arrays.asList(intVector, bigIntVector, varCharVector, timestampVector, timeVector, dateVector),
       10);
 
     try (FileOutputStream out = new FileOutputStream(path)) {
@@ -100,6 +102,17 @@ public class TestUtils {
     int offset = 4823; // 01:20:23
     for (int i = 0; i < size; i ++) {
       vector.set(i, offset + i * 60 * 60);
+    }
+    return vector;
+  }
+
+  private static FieldVector createDateVector(int size, BufferAllocator allocator) {
+    DateDayVector vector = new DateDayVector("F_DATE", allocator);
+    vector.allocateNew();
+    vector.setValueCount(size);
+    int offset = 18385; // 2020-05-03
+    for (int i = 0; i < size; i ++) {
+      vector.set(i, offset + i);
     }
     return vector;
   }

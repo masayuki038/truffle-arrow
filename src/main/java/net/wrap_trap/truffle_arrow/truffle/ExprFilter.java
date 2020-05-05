@@ -8,6 +8,7 @@ import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.util.Text;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @NodeInfo(shortName = "=")
@@ -61,6 +62,16 @@ abstract class ExprFilter extends ExprBinary {
   @Specialization
   protected UInt4Vector filter(LocalTime left, TimeSecVector right) {
     return filter(right, left.toSecondOfDay());
+  }
+
+  @Specialization
+  protected UInt4Vector filter(DateDayVector left, LocalDate right) {
+    return filter(left, Long.valueOf(right.toEpochDay()).intValue());
+  }
+
+  @Specialization
+  protected UInt4Vector filter(LocalDate left, DateDayVector right) {
+    return filter(right, Long.valueOf(left.toEpochDay()).intValue());
   }
 
   @Specialization
