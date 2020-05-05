@@ -8,6 +8,7 @@ import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.util.Text;
 
 import java.time.Instant;
+import java.time.LocalTime;
 
 @NodeInfo(shortName = "=")
 abstract class ExprFilter extends ExprBinary {
@@ -50,6 +51,16 @@ abstract class ExprFilter extends ExprBinary {
   @Specialization
   protected UInt4Vector filter(Instant left, TimeStampSecTZVector right) {
     return filter(right, left.toEpochMilli());
+  }
+
+  @Specialization
+  protected UInt4Vector filter(TimeSecVector left, LocalTime right) {
+    return filter(left, right.toSecondOfDay());
+  }
+
+  @Specialization
+  protected UInt4Vector filter(LocalTime left, TimeSecVector right) {
+    return filter(right, left.toSecondOfDay());
   }
 
   @Specialization

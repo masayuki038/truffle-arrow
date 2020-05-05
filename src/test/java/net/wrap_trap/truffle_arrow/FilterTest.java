@@ -34,7 +34,7 @@ public class FilterTest {
     ) {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
-      assertThat(results.get(0), is("2\t2\ttest2\t2020-05-04 15:48:11.0"));
+      assertThat(results.get(0), is("2\t2\ttest2\t2020-05-04 15:48:11.0\t03:20:23"));
       assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }
@@ -141,6 +141,36 @@ public class FilterTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("3\t3\ttest3\t2020-05-04 16:48:11.0"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
+    }
+  }
+
+  @Test
+  public void simpleFilterByTime() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_INT, F_TIME from ALL_FIELDS where F_TIME=time'04:20:23'");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(1));
+      assertThat(results.get(0), is("3\t04:20:23"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
+    }
+  }
+
+  @Test
+  public void simpleFilterByTime2() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_INT, F_TIME from ALL_FIELDS where time'05:20:23'=F_TIME");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(1));
+      assertThat(results.get(0), is("4\t05:20:23"));
       assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }

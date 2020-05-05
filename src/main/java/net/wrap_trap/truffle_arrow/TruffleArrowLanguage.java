@@ -11,7 +11,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExecutableNode;
 import net.wrap_trap.truffle_arrow.truffle.*;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.util.Text;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
@@ -121,12 +121,21 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
   private Row createRow(Object[] vectors, int rowIndex) {
     List<Object> row = Arrays.stream(vectors).map(v -> {
-      Object o = ((ValueVector) v).getObject(rowIndex);
-      return (o instanceof Text) ? o.toString() : o;
+      FieldVector fieldVector = (FieldVector) v;
+      ArrowFieldType arrowFieldType = ArrowFieldType.of(fieldVector.getField().getFieldType().getType());
+      return getValue(fieldVector.getObject(rowIndex), arrowFieldType);
     }).collect(Collectors.toList());
     return new Row(row);
   }
 
+  private Object getValue(Object o, ArrowFieldType arrowFieldType) {
+    if (o instanceof Text) {
+      return o.toString();
+    } else if (arrowFieldType == ArrowFieldType.TIME) {
+      return ((Integer) o).intValue() * 1000;
+    }
+    return o;
+  }
 
   private CallTarget compile(RelRoot plan, List<Row> results, ThenRowSink sink) {
     ArrowRel rel = (ArrowRel) plan.rel;

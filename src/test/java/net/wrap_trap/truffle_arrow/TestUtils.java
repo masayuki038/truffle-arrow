@@ -6,6 +6,7 @@ import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.TimeStampSecTZVector;
+import org.apache.arrow.vector.TimeSecVector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowFileWriter;
@@ -31,10 +32,12 @@ public class TestUtils {
     FieldVector bigIntVector = createBigIntVector(10, allocator);
     FieldVector varCharVector = createVarCharVector(10, allocator);
     FieldVector timestampVector = createTimestampVector(10, allocator);
+    FieldVector timeVector = createTimeVector(10, allocator);
 
     VectorSchemaRoot root = new VectorSchemaRoot(
-      Arrays.asList(intVector.getField(), bigIntVector.getField(), varCharVector.getField(), timestampVector.getField()),
-      Arrays.asList(intVector, bigIntVector, varCharVector, timestampVector),
+      Arrays.asList(intVector.getField(), bigIntVector.getField(), varCharVector.getField(),
+        timestampVector.getField(), timeVector.getField()),
+      Arrays.asList(intVector, bigIntVector, varCharVector, timestampVector, timeVector),
       10);
 
     try (FileOutputStream out = new FileOutputStream(path)) {
@@ -86,6 +89,17 @@ public class TestUtils {
     long offset = calendar.getTimeInMillis();
     for (int i = 0; i < size; i ++) {
       vector.set(i, offset + i * 60 * 60 * 1000);
+    }
+    return vector;
+  }
+
+  private static FieldVector createTimeVector(int size, BufferAllocator allocator) {
+    TimeSecVector vector = new TimeSecVector("F_TIME", allocator);
+    vector.allocateNew();
+    vector.setValueCount(size);
+    int offset = 4823; // 01:20:23
+    for (int i = 0; i < size; i ++) {
+      vector.set(i, offset + i * 60 * 60);
     }
     return vector;
   }
