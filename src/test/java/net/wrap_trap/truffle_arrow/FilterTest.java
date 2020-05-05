@@ -34,10 +34,26 @@ public class FilterTest {
     ) {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
-      assertThat(results.get(0), is("2\t2\ttest2"));
+      assertThat(results.get(0), is("2\t2\ttest2\t2020-05-04 15:48:11.0"));
       assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }
+
+// TODO Need to implement 'CAST'
+//  @Test
+//  public void simpleFilterByInt2() throws SQLException {
+//    try (
+//      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+//      PreparedStatement pstmt = conn.prepareStatement(
+//        "select * from ALL_FIELDS where '3'=F_INT");
+//      ResultSet rs = pstmt.executeQuery()
+//    ) {
+//      List<String> results = TestUtils.getResults(rs);
+//      assertThat(results.size(), is(1));
+//      assertThat(results.get(0), is("3\t3\ttest3\t2020-05-04 15:48:11.0"));
+//      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
+//    }
+//  }
 
   @Test
   public void simpleFilterByLong() throws SQLException {
@@ -95,6 +111,36 @@ public class FilterTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("2\tBRAZIL\t1"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
+    }
+  }
+
+  @Test
+  public void simpleFilterByTimestamp() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_INT, F_BIGINT, F_VARCHAR, F_TIMESTAMP from ALL_FIELDS where F_TIMESTAMP=timestamp'2020-05-04 17:48:11'");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(1));
+      assertThat(results.get(0), is("4\t4\ttest4\t2020-05-04 17:48:11.0"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
+    }
+  }
+
+  @Test
+  public void simpleFilterByTimestamp2() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_INT, F_BIGINT, F_VARCHAR, F_TIMESTAMP from ALL_FIELDS where timestamp'2020-05-04 16:48:11'=F_TIMESTAMP");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(1));
+      assertThat(results.get(0), is("3\t3\ttest3\t2020-05-04 16:48:11.0"));
       assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }

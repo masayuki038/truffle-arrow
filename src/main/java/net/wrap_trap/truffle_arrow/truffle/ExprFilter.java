@@ -4,12 +4,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.NodeInfo;
 
 import net.wrap_trap.truffle_arrow.ArrowUtils;
-import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.IntVector;
-import org.apache.arrow.vector.BigIntVector;
-import org.apache.arrow.vector.VarCharVector;
-import org.apache.arrow.vector.UInt4Vector;
+import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.util.Text;
+
+import java.time.Instant;
 
 @NodeInfo(shortName = "=")
 abstract class ExprFilter extends ExprBinary {
@@ -42,6 +40,16 @@ abstract class ExprFilter extends ExprBinary {
   @Specialization
   protected UInt4Vector filter(Integer left, BigIntVector right) {
     return filter(right, left.longValue());
+  }
+
+  @Specialization
+  protected UInt4Vector filter(TimeStampSecTZVector left, Instant right) {
+    return filter(left, right.toEpochMilli());
+  }
+
+  @Specialization
+  protected UInt4Vector filter(Instant left, TimeStampSecTZVector right) {
+    return filter(right, left.toEpochMilli());
   }
 
   @Specialization

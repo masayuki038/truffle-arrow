@@ -42,6 +42,7 @@ enum ArrowFieldType {
     MAP.put(MinorType.FLOAT8, DOUBLE);
     MAP.put(MinorType.DATEDAY, DATE);
     MAP.put(MinorType.TIMESEC, TIME);
+    MAP.put(MinorType.TIMESTAMPSECTZ, TIMESTAMP);
     MAP.put(MinorType.TIMESTAMPMILLITZ, TIMESTAMP);
     MAP.put(MinorType.VARBINARY, BYTEARRAY);
   }

@@ -5,6 +5,7 @@ import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
+import org.apache.arrow.vector.TimeStampSecTZVector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowFileWriter;
@@ -17,9 +18,8 @@ import java.nio.channels.Channels;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -30,10 +30,11 @@ public class TestUtils {
     FieldVector intVector = createIntVector(10, allocator);
     FieldVector bigIntVector = createBigIntVector(10, allocator);
     FieldVector varCharVector = createVarCharVector(10, allocator);
+    FieldVector timestampVector = createTimestampVector(10, allocator);
 
     VectorSchemaRoot root = new VectorSchemaRoot(
-      Arrays.asList(intVector.getField(), bigIntVector.getField(), varCharVector.getField()),
-      Arrays.asList(intVector, bigIntVector, varCharVector),
+      Arrays.asList(intVector.getField(), bigIntVector.getField(), varCharVector.getField(), timestampVector.getField()),
+      Arrays.asList(intVector, bigIntVector, varCharVector, timestampVector),
       10);
 
     try (FileOutputStream out = new FileOutputStream(path)) {
@@ -69,6 +70,22 @@ public class TestUtils {
     vector.setValueCount(size);
     for (int i = 0; i < size; i ++) {
       vector.set(i, new Text("test" + i));
+    }
+    return vector;
+  }
+
+  private static FieldVector createTimestampVector(int size, BufferAllocator allocator) {
+    // TODO create TimeStampSecTZVector instead of TiemsStampMilliTZVector
+    //  because timestamp literal of Calcite generate java.time.Instant that has only seconds
+    TimeStampSecTZVector vector = new TimeStampSecTZVector("F_TIMESTAMP", allocator, "GMT");
+    vector.allocateNew();
+    vector.setValueCount(size);
+    Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.of("GMT")));
+    calendar.set(2020, 4, 4, 13, 48, 11);
+    calendar.set(Calendar.MILLISECOND, 0);
+    long offset = calendar.getTimeInMillis();
+    for (int i = 0; i < size; i ++) {
+      vector.set(i, offset + i * 60 * 60 * 1000);
     }
     return vector;
   }
