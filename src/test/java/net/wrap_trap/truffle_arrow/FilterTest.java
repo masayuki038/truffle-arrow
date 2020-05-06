@@ -204,4 +204,20 @@ public class FilterTest {
       assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }
+
+  // Decimal is not supported by Truffle.
+//  @Test
+//  public void simpleFilterByDecimal() throws SQLException {
+//    try (
+//      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+//      PreparedStatement pstmt = conn.prepareStatement(
+//        "select F_INT, F_DECIMAL from ALL_FIELDS where F_DECIMAL=1234568890.12245678");
+//      ResultSet rs = pstmt.executeQuery()
+//    ) {
+//      List<String> results = TestUtils.getResults(rs);
+//      assertThat(results.size(), is(1));
+//      assertThat(results.get(0), is("1\t1234568890.12245678"));
+//      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
+//    }
+//  }
 }

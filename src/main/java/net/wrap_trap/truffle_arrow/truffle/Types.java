@@ -26,8 +26,8 @@ public class Types {
       case FLOAT:
       case REAL:
       case DOUBLE:
-      case DECIMAL:
         return FrameSlotKind.Double;
+      case DECIMAL:
       default:
         return FrameSlotKind.Object;
     }
@@ -63,6 +63,8 @@ public class Types {
       case BIGINT:
         return ((Number) value).longValue();
       case DECIMAL:
+        assert value instanceof java.math.BigDecimal;
+        return value;
       case FLOAT:
       case REAL:
       case DOUBLE:

@@ -14,7 +14,7 @@ import java.util.Map;
  * Field Type for Apache Arrow
  */
 enum ArrowFieldType {
-  STRING(String.class, "string"),
+  STRING(String.class),
   BOOLEAN(Primitive.BOOLEAN),
   BYTE(Primitive.BYTE),
   CHAR(Primitive.CHAR),
@@ -23,14 +23,15 @@ enum ArrowFieldType {
   LONG(Primitive.LONG),
   FLOAT(Primitive.FLOAT),
   DOUBLE(Primitive.DOUBLE),
-  DATE(java.sql.Date.class, "date"),
-  TIME(java.sql.Time.class, "time"),
-  TIMESTAMP(java.sql.Timestamp.class, "timestamp"),
-  BYTEARRAY(byte[].class, "bytearray");
+  DECIMAL(java.math.BigDecimal.class, 18, 8),
+  DATE(java.sql.Date.class),
+  TIME(java.sql.Time.class),
+  TIMESTAMP(java.sql.Timestamp.class),
+  BYTEARRAY(byte[].class);
 
   private final Class clazz;
-  private final String simpleName;
-
+  private int precision;
+  private int scale;
   private static final Map<MinorType, ArrowFieldType> MAP = new HashMap<>();
 
   static {
@@ -40,6 +41,7 @@ enum ArrowFieldType {
     MAP.put(MinorType.BIGINT, LONG);
     MAP.put(MinorType.FLOAT4, FLOAT);
     MAP.put(MinorType.FLOAT8, DOUBLE);
+    MAP.put(MinorType.DECIMAL, DECIMAL);
     MAP.put(MinorType.DATEDAY, DATE);
     MAP.put(MinorType.TIMESEC, TIME);
     MAP.put(MinorType.TIMESTAMPSECTZ, TIMESTAMP);
@@ -48,17 +50,27 @@ enum ArrowFieldType {
   }
 
   ArrowFieldType(Primitive primitive) {
-    this(primitive.boxClass, primitive.primitiveClass.getSimpleName());
+    this(primitive.boxClass);
   }
 
-  ArrowFieldType(Class clazz, String simpleName) {
+  ArrowFieldType(Class clazz) {
     this.clazz = clazz;
-    this.simpleName = simpleName;
+  }
+
+  ArrowFieldType(Class clazz, int precision, int scale) {
+    this.clazz = clazz;
+    this.precision = precision;
+    this.scale = scale;
   }
 
   public RelDataType toType(JavaTypeFactory typeFactory) {
     RelDataType javaType = typeFactory.createJavaType(clazz);
-    RelDataType sqlType = typeFactory.createSqlType(javaType.getSqlTypeName());
+    RelDataType sqlType;
+    if (precision > 0) {
+      sqlType = typeFactory.createSqlType(javaType.getSqlTypeName(), precision, scale);
+    } else {
+      sqlType = typeFactory.createSqlType(javaType.getSqlTypeName());
+    }
     return typeFactory.createTypeWithNullability(sqlType, true);
   }
 

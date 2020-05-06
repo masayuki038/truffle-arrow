@@ -4,6 +4,7 @@ import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.DateDayVector;
+import org.apache.arrow.vector.DecimalVector;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.TimeStampSecTZVector;
@@ -16,6 +17,7 @@ import org.apache.arrow.vector.util.Text;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.channels.Channels;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -35,11 +37,23 @@ public class TestUtils {
     FieldVector timestampVector = createTimestampVector(10, allocator);
     FieldVector timeVector = createTimeVector(10, allocator);
     FieldVector dateVector = createDateVector(10, allocator);
+    FieldVector decimalVector = createDecimalVector(10, allocator);
 
     VectorSchemaRoot root = new VectorSchemaRoot(
-      Arrays.asList(intVector.getField(), bigIntVector.getField(), varCharVector.getField(),
-        timestampVector.getField(), timeVector.getField(), dateVector.getField()),
-      Arrays.asList(intVector, bigIntVector, varCharVector, timestampVector, timeVector, dateVector),
+      Arrays.asList(
+        intVector.getField(),
+        bigIntVector.getField(),
+        varCharVector.getField(),
+        timestampVector.getField(),
+        timeVector.getField(),
+        dateVector.getField()),
+      Arrays.asList(
+        intVector,
+        bigIntVector,
+        varCharVector,
+        timestampVector,
+        timeVector,
+        dateVector),
       10);
 
     try (FileOutputStream out = new FileOutputStream(path)) {
@@ -113,6 +127,17 @@ public class TestUtils {
     int offset = 18385; // 2020-05-03
     for (int i = 0; i < size; i ++) {
       vector.set(i, offset + i);
+    }
+    return vector;
+  }
+
+  private static FieldVector createDecimalVector(int size, BufferAllocator allocator) {
+    DecimalVector vector = new DecimalVector("F_DECIMAL", allocator, 18, 8);
+    vector.allocateNew();
+    vector.setValueCount(size);
+    BigDecimal offset = new BigDecimal("1234567890.12345678");
+    for (int i = 0; i < size; i ++) {
+      vector.set(i, offset.add(new BigDecimal("999.999")));
     }
     return vector;
   }
