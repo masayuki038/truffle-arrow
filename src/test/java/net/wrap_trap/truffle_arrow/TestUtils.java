@@ -6,6 +6,8 @@ import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.DateDayVector;
 import org.apache.arrow.vector.DecimalVector;
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.Float4Vector;
+import org.apache.arrow.vector.Float8Vector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.TimeStampSecTZVector;
 import org.apache.arrow.vector.TimeSecVector;
@@ -37,7 +39,7 @@ public class TestUtils {
     FieldVector timestampVector = createTimestampVector(10, allocator);
     FieldVector timeVector = createTimeVector(10, allocator);
     FieldVector dateVector = createDateVector(10, allocator);
-    FieldVector decimalVector = createDecimalVector(10, allocator);
+    FieldVector doubleVector = createDoubleVector(10, allocator);
 
     VectorSchemaRoot root = new VectorSchemaRoot(
       Arrays.asList(
@@ -46,14 +48,16 @@ public class TestUtils {
         varCharVector.getField(),
         timestampVector.getField(),
         timeVector.getField(),
-        dateVector.getField()),
+        dateVector.getField(),
+        doubleVector.getField()),
       Arrays.asList(
         intVector,
         bigIntVector,
         varCharVector,
         timestampVector,
         timeVector,
-        dateVector),
+        dateVector,
+        doubleVector),
       10);
 
     try (FileOutputStream out = new FileOutputStream(path)) {
@@ -138,6 +142,28 @@ public class TestUtils {
     BigDecimal offset = new BigDecimal("1234567890.12345678");
     for (int i = 0; i < size; i ++) {
       vector.set(i, offset.add(new BigDecimal("999.999")));
+    }
+    return vector;
+  }
+
+  private static FieldVector createFloatVector(int size, BufferAllocator allocator) {
+    Float4Vector vector = new Float4Vector("F_FLOAT", allocator);
+    vector.allocateNew();
+    vector.setValueCount(size);
+    float offset = 123.456f;
+    for (int i = 0; i < size; i ++) {
+      vector.set(i, offset + i);
+    }
+    return vector;
+  }
+
+  private static FieldVector createDoubleVector(int size, BufferAllocator allocator) {
+    Float8Vector vector = new Float8Vector("F_DOUBLE", allocator);
+    vector.allocateNew();
+    vector.setValueCount(size);
+    double offset = 123.456d;
+    for (int i = 0; i < size; i ++) {
+      vector.set(i, offset + i);
     }
     return vector;
   }

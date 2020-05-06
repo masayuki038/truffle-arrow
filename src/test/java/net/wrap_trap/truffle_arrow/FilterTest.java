@@ -34,7 +34,7 @@ public class FilterTest {
     ) {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
-      assertThat(results.get(0), is("2\t2\ttest2\t2020-05-04 15:48:11.0\t03:20:23\t2020-05-05"));
+      assertThat(results.get(0), is("2\t2\ttest2\t2020-05-04 15:48:11.0\t03:20:23\t2020-05-05\t125.456"));
       assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }
@@ -205,19 +205,49 @@ public class FilterTest {
     }
   }
 
-  // Decimal is not supported by Truffle.
+  // TODO Need to implement 'CAST'
 //  @Test
-//  public void simpleFilterByDecimal() throws SQLException {
+//  public void simpleFilterByFloat() throws SQLException {
 //    try (
 //      Connection conn = DriverManager.getConnection("jdbc:truffle:");
 //      PreparedStatement pstmt = conn.prepareStatement(
-//        "select F_INT, F_DECIMAL from ALL_FIELDS where F_DECIMAL=1234568890.12245678");
+//        "select F_INT, F_FLOAT from ALL_FIELDS where F_FLOAT=126.456");
 //      ResultSet rs = pstmt.executeQuery()
 //    ) {
 //      List<String> results = TestUtils.getResults(rs);
 //      assertThat(results.size(), is(1));
-//      assertThat(results.get(0), is("1\t1234568890.12245678"));
+//      assertThat(results.get(0), is("3\t126.456"));
 //      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
 //    }
 //  }
+
+  @Test
+  public void simpleFilterByDouble() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_INT, F_DOUBLE from ALL_FIELDS where F_DOUBLE=126.456");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(1));
+      assertThat(results.get(0), is("3\t126.456"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
+    }
+  }
+
+  @Test
+  public void simpleFilterByDouble2() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_INT, F_DOUBLE from ALL_FIELDS where 126.456=F_DOUBLE");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(1));
+      assertThat(results.get(0), is("3\t126.456"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
+    }
+  }
 }
