@@ -15,73 +15,76 @@ import java.time.LocalTime;
 abstract class ExprFilter extends ExprBinary {
 
   @Specialization
-  protected UInt4Vector filter(VarCharVector left, String right) {
-    return filter(left, new Text(right));
-  }
-
-  @Specialization
-  protected UInt4Vector filter(String left, VarCharVector right) {
-    return filter(right, new Text(left));
-  }
-
-  @Specialization
   protected UInt4Vector filter(IntVector left, Long right) {
-    return filter(left, right.intValue());
+    return eval(left, right.intValue(), false);
   }
 
   @Specialization
   protected UInt4Vector filter(Long left, IntVector right) {
-    return filter(right, left.intValue());
+    return eval(right, left.intValue(), true);
   }
 
   @Specialization
   protected UInt4Vector filter(BigIntVector left, Integer right) {
-    return filter(left, right.longValue());
+    return eval(left, right.longValue(), false);
   }
 
   @Specialization
   protected UInt4Vector filter(Integer left, BigIntVector right) {
-    return filter(right, left.longValue());
+    return eval(right, left.longValue(), true);
   }
 
   @Specialization
   protected UInt4Vector filter(TimeStampSecTZVector left, Instant right) {
-    return filter(left, right.toEpochMilli());
+    return eval(left, right.toEpochMilli(), false);
   }
 
   @Specialization
   protected UInt4Vector filter(Instant left, TimeStampSecTZVector right) {
-    return filter(right, left.toEpochMilli());
+    return eval(right, left.toEpochMilli(), true);
   }
 
   @Specialization
   protected UInt4Vector filter(TimeSecVector left, LocalTime right) {
-    return filter(left, right.toSecondOfDay());
+    return eval(left, right.toSecondOfDay(), false);
   }
 
   @Specialization
   protected UInt4Vector filter(LocalTime left, TimeSecVector right) {
-    return filter(right, left.toSecondOfDay());
+    return eval(right, left.toSecondOfDay(), true);
   }
 
   @Specialization
   protected UInt4Vector filter(DateDayVector left, LocalDate right) {
-    return filter(left, Long.valueOf(right.toEpochDay()).intValue());
+    return eval(left, Long.valueOf(right.toEpochDay()).intValue(), false);
   }
 
   @Specialization
   protected UInt4Vector filter(LocalDate left, DateDayVector right) {
-    return filter(right, Long.valueOf(left.toEpochDay()).intValue());
+    return eval(right, Long.valueOf(left.toEpochDay()).intValue(), true);
   }
 
   @Specialization
   protected UInt4Vector filter(FieldVector left, Object right) {
+    return eval(left, right, false);
+  }
+
+  @Specialization
+  protected UInt4Vector filter(Object left, FieldVector right) {
+    return filter(right, left);
+  }
+
+  protected UInt4Vector eval(FieldVector left, Object right, boolean reverse) {
     UInt4Vector selectionVector = ArrowUtils.createSelectionVector();
     int selectionIndex = 0;
 
     selectionVector.setValueCount(left.getValueCount());
     for (int i = 0; i < left.getValueCount(); i++) {
-      if (left.getObject(i).equals(right)) {
+      Object o = left.getObject(i);
+      if (o instanceof Text) {
+        o = ((Text) o).toString();
+      }
+      if (compare((Comparable) o, right, reverse)) {
         selectionVector.set(selectionIndex ++, i);
       }
     }
@@ -89,8 +92,7 @@ abstract class ExprFilter extends ExprBinary {
     return selectionVector;
   }
 
-  @Specialization
-  protected UInt4Vector filter(Object left, FieldVector right) {
-    return filter(right, left);
+  protected boolean compare(Comparable left, Object right, boolean ignore) {
+    return left.compareTo(right) == 0;
   }
 }
