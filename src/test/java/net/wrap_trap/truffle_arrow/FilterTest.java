@@ -40,21 +40,6 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleGraterThanFilterByInt() throws SQLException {
-    try (
-      Connection conn = DriverManager.getConnection("jdbc:truffle:");
-      PreparedStatement pstmt = conn.prepareStatement(
-        "select * from ALL_FIELDS where F_INT > 2");
-      ResultSet rs = pstmt.executeQuery()
-    ) {
-      List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(7));
-      assertThat(results.get(0), is("3\t3\ttest3\t2020-05-04 16:48:11.0\t04:20:23\t2020-05-06\t126.456"));
-      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
-    }
-  }
-
-  @Test
   public void simpleLessThanFilterByInt() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");

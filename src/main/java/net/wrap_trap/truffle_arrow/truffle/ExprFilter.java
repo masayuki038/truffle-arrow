@@ -71,7 +71,7 @@ abstract class ExprFilter extends ExprBinary {
 
   @Specialization
   protected UInt4Vector filter(Object left, FieldVector right) {
-    return filter(right, left);
+    return eval(right, left, true);
   }
 
   protected UInt4Vector eval(FieldVector left, Object right, boolean reverse) {
