@@ -2,9 +2,9 @@ package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.NodeInfo;
-import net.wrap_trap.truffle_arrow.ArrowUtils;
 import org.apache.arrow.vector.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -60,6 +60,19 @@ abstract public class ExprLessThanFilter extends ExprFilter {
   @Specialization
   protected UInt4Vector filter(LocalDate left, DateDayVector right) {
     return eval(right, Long.valueOf(left.toEpochDay()).intValue(), true);
+  }
+
+  // For double because '123.456' generate the instance of BigDecimal at comparing with '>' by calcite
+  // '123.456' generate the instance of Double at comparing with '='
+  // So ExprFilter have no methods for Float8Vector
+  @Specialization
+  protected UInt4Vector filter(Float8Vector left, BigDecimal right) {
+    return eval(left, right.doubleValue(), false);
+  }
+
+  @Specialization
+  protected UInt4Vector filter(BigDecimal left, Float8Vector right) {
+    return eval(right, left.doubleValue(), true);
   }
 
   @Specialization

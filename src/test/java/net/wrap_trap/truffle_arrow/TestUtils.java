@@ -21,12 +21,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.channels.Channels;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 
 public class TestUtils {
@@ -166,6 +167,19 @@ public class TestUtils {
       vector.set(i, offset + i);
     }
     return vector;
+  }
+
+  public static void filterTest(String sql, int size, String expectedFirstRow) throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(sql);
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(size));
+      assertThat(results.get(0), is(expectedFirstRow));
+      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
+    }
   }
 
   public static void dumpMetadata(ResultSet rs) throws SQLException {

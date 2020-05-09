@@ -2,7 +2,6 @@ package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.NodeInfo;
-import net.wrap_trap.truffle_arrow.ArrowUtils;
 import org.apache.arrow.vector.*;
 
 import java.math.BigDecimal;
