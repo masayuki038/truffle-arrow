@@ -3,7 +3,6 @@ package net.wrap_trap.truffle_arrow.truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
-import org.apache.arrow.vector.FieldVector;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.type.SqlTypeName;
 
@@ -110,8 +109,11 @@ public class CompileExpr implements RexVisitor<ExprBase> {
           return binary(call.getOperands(), ExprFilterNodeGen::create);
         }
         return binary(call.getOperands(), ExprEqualsNodeGen::create);
-//      case NOT_EQUALS:
-//        return binary(call.getOperands(), ExprNotEqualsNodeGen::create);
+      case NOT_EQUALS:
+        if (containsInputRef(call.getOperands())) {
+          return binary(call.getOperands(), ExprNotEqualFilterNodeGen::create);
+        }
+        throw new UnsupportedOperationException();
 //      case OR:
 //        return fold(call.getOperands(), 0, ExprOrNodeGen::create);
 //      case AND:
