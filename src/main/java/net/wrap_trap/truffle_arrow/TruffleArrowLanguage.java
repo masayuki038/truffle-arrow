@@ -11,7 +11,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExecutableNode;
 import net.wrap_trap.truffle_arrow.truffle.*;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.util.Text;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
@@ -129,7 +128,9 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
   }
 
   private Object getValue(Object o, ArrowFieldType arrowFieldType) {
-    if (o instanceof Text) {
+    if (o == null) {
+      return SqlNull.INSTANCE;
+    } else if (o instanceof Text) {
       return o.toString();
     } else if (arrowFieldType == ArrowFieldType.TIME) {
       return ((Integer) o).intValue() * 1000;

@@ -144,7 +144,7 @@ public class TruffleArrowMeta extends  MetaImpl {
          true,
          false,
          false,
-         type.isNullable()
+        type.getFieldList().get(i).getType().isNullable()
            ? DatabaseMetaData.columnNullable
            : DatabaseMetaData.columnNoNulls,
          true,

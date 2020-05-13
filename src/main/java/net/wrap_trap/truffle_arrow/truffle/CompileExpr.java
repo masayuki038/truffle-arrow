@@ -114,6 +114,11 @@ public class CompileExpr implements RexVisitor<ExprBase> {
           return binary(call.getOperands(), ExprNotEqualFilterNodeGen::create);
         }
         throw new UnsupportedOperationException();
+      case IS_NULL:
+        if (containsInputRef(call.getOperands())) {
+          return ExprIsNullFilterNodeGen.create(compile(singleOperand(call.getOperands())));
+        }
+        throw new UnsupportedOperationException();
 //      case OR:
 //        return fold(call.getOperands(), 0, ExprOrNodeGen::create);
 //      case AND:
@@ -140,8 +145,6 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 //        throw new UnsupportedOperationException();
 //      case MINUS_PREFIX:
 //        throw new UnsupportedOperationException();
-//      case IS_NULL:
-//        return ExprIsNullNodeGen.create(compile(singleOperand(call.getOperands())));
 //      case IS_NOT_NULL:
 //        return ExprNotNodeGen.create(ExprIsNullNodeGen.create(compile(singleOperand(call.getOperands()))));
 //      case ROW:
@@ -209,11 +212,11 @@ public class CompileExpr implements RexVisitor<ExprBase> {
     }
   }
 
-//  private RexNode singleOperand(List<RexNode> operands) {
-//    assert operands.size() == 1;
-//
-//    return operands.get(0);
-//  }
+  private RexNode singleOperand(List<RexNode> operands) {
+    assert operands.size() == 1;
+
+    return operands.get(0);
+  }
 //
 //  private ExprBase compileCase(List<RexNode> operands, int offset) {
 //    // ELSE ? END
