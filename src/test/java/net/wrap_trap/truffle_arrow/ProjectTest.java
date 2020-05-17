@@ -17,6 +17,7 @@ public class ProjectTest {
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
     TestUtils.generateTestFile("target/classes/samples/files/all_fields.arrow");
+    TruffleArrowConfig.INSTANCE.reload();
   }
 
   @AfterClass

@@ -14,6 +14,7 @@ public class FilterNullTest {
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
     TestUtils.generateTestFile("target/classes/samples/files/all_nullable_fields.arrow", true);
+    TruffleArrowConfig.INSTANCE.reload();
   }
 
   @AfterClass

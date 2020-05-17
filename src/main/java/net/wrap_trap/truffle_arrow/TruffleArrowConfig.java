@@ -22,17 +22,7 @@ public class TruffleArrowConfig {
   private SqlValidatorImpl validator;
 
   private TruffleArrowConfig() {
-
-    SqlOperatorTable operatorTable = SqlStdOperatorTable.instance();
-    ArrowSchema schema = new ArrowSchema(new File("target/classes/samples/files"));
-    CalciteSchema rootSchema = CalciteSchema.createRootSchema(false, true, "SAMPLES", schema);
-    this.typeFactory = new JavaTypeFactoryImpl();
-    this.catalogReader =
-      new ArrowCatalogReader(schema, rootSchema, ImmutableList.of("SAMPLES"), typeFactory);
-    this.validator = new TruffleArrowMeta.ArrowValidatorImpl(operatorTable,
-                                                              catalogReader,
-                                                              this.typeFactory,
-                                                              SqlConformance.PRAGMATIC_2003);
+    reload();
   }
 
   public Prepare.CatalogReader catalogReader() {
@@ -45,5 +35,18 @@ public class TruffleArrowConfig {
 
   public SqlValidator sqlValidator() {
     return this.validator;
+  }
+
+  void reload() {
+    SqlOperatorTable operatorTable = SqlStdOperatorTable.instance();
+    ArrowSchema schema = new ArrowSchema(new File("target/classes/samples/files"));
+    CalciteSchema rootSchema = CalciteSchema.createRootSchema(false, true, "SAMPLES", schema);
+    this.typeFactory = new JavaTypeFactoryImpl();
+    this.catalogReader =
+      new ArrowCatalogReader(schema, rootSchema, ImmutableList.of("SAMPLES"), typeFactory);
+    this.validator = new TruffleArrowMeta.ArrowValidatorImpl(operatorTable,
+      catalogReader,
+      this.typeFactory,
+      SqlConformance.PRAGMATIC_2003);
   }
 }

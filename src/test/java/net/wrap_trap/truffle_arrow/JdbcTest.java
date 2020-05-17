@@ -19,6 +19,7 @@ public class JdbcTest {
   @BeforeClass
   public static void setupOnce() throws ClassNotFoundException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
+    TruffleArrowConfig.INSTANCE.reload();
   }
 
   @Test
