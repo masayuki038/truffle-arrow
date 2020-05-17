@@ -119,6 +119,8 @@ public class CompileExpr implements RexVisitor<ExprBase> {
           return ExprIsNullFilterNodeGen.create(compile(singleOperand(call.getOperands())));
         }
         throw new UnsupportedOperationException();
+      case IS_NOT_NULL:
+        return ExprIsNotNullFilterNodeGen.create(compile(singleOperand(call.getOperands())));
 //      case OR:
 //        return fold(call.getOperands(), 0, ExprOrNodeGen::create);
 //      case AND:
@@ -145,8 +147,6 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 //        throw new UnsupportedOperationException();
 //      case MINUS_PREFIX:
 //        throw new UnsupportedOperationException();
-//      case IS_NOT_NULL:
-//        return ExprNotNodeGen.create(ExprIsNullNodeGen.create(compile(singleOperand(call.getOperands()))));
 //      case ROW:
 //        throw new UnsupportedOperationException();
 //      case CAST:
