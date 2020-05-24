@@ -65,6 +65,31 @@ abstract class ExprFilter extends ExprBinary {
   }
 
   @Specialization
+  protected UInt4Vector filter(FieldVector left, FieldVector right) {
+    assert left.getValueCount() == right.getValueCount();
+
+    UInt4Vector selectionVector = ArrowUtils.createSelectionVector();
+    int selectionIndex = 0;
+
+    selectionVector.setValueCount(left.getValueCount());
+    for (int i = 0; i < left.getValueCount(); i++) {
+      Object levtValue = left.getObject(i);
+      if (levtValue instanceof Text) {
+        levtValue = ((Text) levtValue).toString();
+      }
+      Object rightValue = right.getObject(i);
+      if (rightValue instanceof Text) {
+        rightValue = ((Text) rightValue).toString();
+      }
+      if (compare((Comparable) levtValue, rightValue, false)) {
+        selectionVector.set(selectionIndex ++, i);
+      }
+      selectionVector.setValueCount(selectionIndex);
+    }
+    return selectionVector;
+  }
+
+  @Specialization
   protected UInt4Vector filter(FieldVector left, Object right) {
     return eval(left, right, false);
   }

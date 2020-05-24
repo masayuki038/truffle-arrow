@@ -21,6 +21,7 @@ public class Types {
       case TINYINT:
       case SMALLINT:
       case INTEGER:
+        return FrameSlotKind.Int;
       case BIGINT:
         return FrameSlotKind.Long;
       case FLOAT:
@@ -60,6 +61,7 @@ public class Types {
       case TINYINT:
       case SMALLINT:
       case INTEGER:
+        return ((Number) value).intValue();
       case BIGINT:
         return ((Number) value).longValue();
       case DECIMAL:

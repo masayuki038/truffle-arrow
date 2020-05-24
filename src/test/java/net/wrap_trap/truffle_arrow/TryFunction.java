@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow;
 
+
 @FunctionalInterface
 public interface TryFunction<T, R, E extends Exception> {
   R apply(T t) throws E;

@@ -1,12 +1,13 @@
 package net.wrap_trap.truffle_arrow;
 
-import org.junit.BeforeClass;
-import org.junit.AfterClass;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+
 
 public class FilterLessThanTest {
 
@@ -16,15 +17,14 @@ public class FilterLessThanTest {
   private static final int TEST2_SIZE = 7;
   private static final String TEST2_RESULT = "3\t3\ttest3\t2020-05-04 16:48:11.0\t04:20:23\t2020-05-06\t126.456";
 
-
-  @BeforeClass
+  @BeforeAll
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
     TestUtils.generateTestFile("target/classes/samples/files/all_fields.arrow");
     TruffleArrowConfig.INSTANCE.reload();
   }
 
-  @AfterClass
+  @AfterAll
   public static void teardownOnce() {
     new File("target/classes/samples/files/all_fields.arrow").delete();
   }

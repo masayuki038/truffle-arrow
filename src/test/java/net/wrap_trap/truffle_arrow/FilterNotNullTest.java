@@ -1,25 +1,27 @@
 package net.wrap_trap.truffle_arrow;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+
 
 public class FilterNotNullTest {
 
   private static final String EXPECTED = "0\t0\ttest0\t2020-05-04 13:48:11.0\t01:20:23\t2020-05-03\t123.456";
 
-  @BeforeClass
+  @BeforeAll
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
-    TestUtils.generateTestFile("target/classes/samples/files/all_nullable_fields.arrow", true);
+    TestUtils.generateTestFile(
+      "target/classes/samples/files/all_nullable_fields.arrow", TestDataType.NULLABLE);
     TruffleArrowConfig.INSTANCE.reload();
   }
 
-  @AfterClass
+  @AfterAll
   public static void teardownOnce() {
     new File("target/classes/samples/files/all_nullable_fields.arrow").delete();
   }

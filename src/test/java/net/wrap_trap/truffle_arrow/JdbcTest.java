@@ -1,22 +1,21 @@
 package net.wrap_trap.truffle_arrow;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.sql.*;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeAll;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 
 /**
  * Query tests for ArrowTable
  */
 public class JdbcTest {
 
-  @BeforeClass
+  @BeforeAll
   public static void setupOnce() throws ClassNotFoundException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
     TruffleArrowConfig.INSTANCE.reload();

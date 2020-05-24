@@ -1,5 +1,14 @@
 package net.wrap_trap.truffle_arrow;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.channels.Channels;
+import java.sql.*;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.BigIntVector;
@@ -17,46 +26,63 @@ import org.apache.arrow.vector.ipc.ArrowFileWriter;
 import org.apache.arrow.vector.ipc.ArrowWriter;
 import org.apache.arrow.vector.util.Text;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.channels.Channels;
-import java.sql.*;
-import java.time.ZoneId;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 
 public class TestUtils {
 
   public static void generateTestFile(String path) throws IOException {
-    generateTestFile(path, false);
+    generateTestFile(path, TestDataType.COMMON);
   }
 
-  public static void generateTestFile(String path, boolean includeNull) throws IOException {
+  public static void generateTestFile(String path, TestDataType dataType) throws IOException {
     RootAllocator allocator = new RootAllocator(Integer.MAX_VALUE);
     FieldVector intVector, bigIntVector, varCharVector, timestampVector, timeVector, dateVector, doubleVector;
 
-    if (includeNull) {
-      intVector = createIntVector(10, 1, allocator);
-      bigIntVector = createBigIntVector(10, 2, allocator);
-      varCharVector = createVarCharVector(10, 3, allocator);
-      timestampVector = createTimestampVector(10, 4, allocator);
-      timeVector = createTimeVector(10, 5, allocator);
-      dateVector = createDateVector(10, 6, allocator);
-      doubleVector = createDoubleVector(10, 7, allocator);
+    Calendar c20200504134811 = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.of("GMT")));
+    c20200504134811.set(2020, 4, 4, 13, 48, 11);
+    c20200504134811.set(Calendar.MILLISECOND, 0);
 
-    } else {
-      intVector = createIntVector(10, allocator);
-      bigIntVector = createBigIntVector(10, allocator);
-      varCharVector = createVarCharVector(10, allocator);
-      timestampVector = createTimestampVector(10, allocator);
-      timeVector = createTimeVector(10, allocator);
-      dateVector = createDateVector(10, allocator);
-      doubleVector = createDoubleVector(10, allocator);
+    Calendar c20200503000000 = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.of("GMT")));
+    c20200503000000.set(2020, 4, 3, 0, 0, 0);
+    c20200503000000.set(Calendar.MILLISECOND, 0);
+
+    long intervalByHour = 60 * 60 * 1000L;
+    long intervalByDay = 24 * 60 * 60 * 1000L;
+
+    switch(dataType) {
+      case NULLABLE:
+        intVector = createIntVector(10, 1, allocator);
+        bigIntVector = createBigIntVector(10, 2, allocator);
+        varCharVector = createVarCharVector(10, "test", 3, allocator);
+        timestampVector = createTimestampVector(10, c20200504134811, intervalByHour, 4, allocator);
+        timeVector = createTimeVector(10, 5, allocator);
+        dateVector = createDateVector(10, 6, allocator);
+        doubleVector = createDoubleVector(10, 123.456d, 7, allocator);
+        break;
+
+      case WITH_NUMBER_STRING:
+        intVector = createIntVector(10, allocator);
+        bigIntVector = createBigIntVector(10, allocator);
+        varCharVector = createVarCharVector(10, "", allocator);
+        timestampVector = createTimestampVector(10, c20200503000000, intervalByDay, -1, allocator);
+        timeVector = createTimeVector(10, allocator);
+        dateVector = createDateVector(10, allocator);
+        doubleVector = createDoubleVector(10, 0d, -1, allocator);
+        break;
+
+      case COMMON:
+        intVector = createIntVector(10, allocator);
+        bigIntVector = createBigIntVector(10, allocator);
+        varCharVector = createVarCharVector(10, "test", allocator);
+        timestampVector = createTimestampVector(10, c20200504134811, intervalByHour, -1, allocator);
+        timeVector = createTimeVector(10, allocator);
+        dateVector = createDateVector(10, allocator);
+        doubleVector = createDoubleVector(10,123.456d, -1, allocator);
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid Type:" + dataType);
     }
 
     VectorSchemaRoot root = new VectorSchemaRoot(
@@ -121,11 +147,11 @@ public class TestUtils {
     return vector;
   }
 
-  private static FieldVector createVarCharVector(int size, BufferAllocator allocator) {
-    return createVarCharVector(size, -1, allocator);
+  private static FieldVector createVarCharVector(int size, String prefix, BufferAllocator allocator) {
+    return createVarCharVector(size, prefix,-1, allocator);
   }
 
-  private static FieldVector createVarCharVector(int size, int nullIndex, BufferAllocator allocator) {
+  private static FieldVector createVarCharVector(int size, String prefix, int nullIndex, BufferAllocator allocator) {
     VarCharVector vector = new VarCharVector("F_VARCHAR", allocator);
     vector.allocateNew();
     vector.setValueCount(size);
@@ -133,31 +159,24 @@ public class TestUtils {
       if (i == nullIndex) {
         vector.setNull(i);
       } else {
-        vector.set(i, new Text("test" + i));
+        vector.set(i, new Text(prefix + i));
       }
     }
     return vector;
   }
 
-  private static FieldVector createTimestampVector(int size, BufferAllocator allocator) {
-    return createTimestampVector(size, -1, allocator);
-  }
-
-  private static FieldVector createTimestampVector(int size, int nullIndex, BufferAllocator allocator) {
+  private static FieldVector createTimestampVector(int size, Calendar offset, long interval, int nullIndex, BufferAllocator allocator) {
     // TODO create TimeStampSecTZVector instead of TiemsStampMilliTZVector
     //  because timestamp literal of Calcite generate java.time.Instant that has only seconds
     TimeStampSecTZVector vector = new TimeStampSecTZVector("F_TIMESTAMP", allocator, "GMT");
     vector.allocateNew();
     vector.setValueCount(size);
-    Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.of("GMT")));
-    calendar.set(2020, 4, 4, 13, 48, 11);
-    calendar.set(Calendar.MILLISECOND, 0);
-    long offset = calendar.getTimeInMillis();
+    long offsetMillis = offset.getTimeInMillis();
     for (int i = 0; i < size; i ++) {
       if (i == nullIndex) {
         vector.setNull(i);
       } else {
-        vector.set(i, offset + i * 60 * 60 * 1000);
+        vector.set(i, offsetMillis + i * interval);
       }
     }
     return vector;
@@ -237,15 +256,10 @@ public class TestUtils {
     return vector;
   }
 
-  private static FieldVector createDoubleVector(int size, BufferAllocator allocator) {
-    return createDoubleVector(size, -1, allocator);
-  }
-
-  private static FieldVector createDoubleVector(int size, int nullIndex, BufferAllocator allocator) {
+  private static FieldVector createDoubleVector(int size, double offset, int nullIndex, BufferAllocator allocator) {
     Float8Vector vector = new Float8Vector("F_DOUBLE", allocator);
     vector.allocateNew();
     vector.setValueCount(size);
-    double offset = 123.456d;
     for (int i = 0; i < size; i ++) {
       if (i == nullIndex) {
         vector.setNull(i);

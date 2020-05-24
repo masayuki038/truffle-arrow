@@ -1,26 +1,28 @@
 package net.wrap_trap.truffle_arrow;
 
-import org.junit.BeforeClass;
-import org.junit.AfterClass;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.util.List;
 
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 
 public class ProjectTest {
-  @BeforeClass
+
+  @BeforeAll
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
     TestUtils.generateTestFile("target/classes/samples/files/all_fields.arrow");
     TruffleArrowConfig.INSTANCE.reload();
   }
 
-  @AfterClass
+  @AfterAll
   public static void teardownOnce() {
     new File("target/classes/samples/files/all_fields.arrow").delete();
   }

@@ -13,6 +13,16 @@ abstract class ExprLiteral extends ExprBase {
     };
   }
 
+  static ExprLiteral Int(int value) {
+    return new ExprLiteral() {
+      @Override
+      Object executeGeneric(VirtualFrame frame) {
+        return value;
+      }
+
+    };
+  }
+
   static ExprLiteral Long(long value) {
     return new ExprLiteral() {
       @Override

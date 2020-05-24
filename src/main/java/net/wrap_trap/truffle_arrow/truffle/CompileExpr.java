@@ -57,6 +57,8 @@ public class CompileExpr implements RexVisitor<ExprBase> {
     FrameSlotKind kind = Types.kind(type);
 
     switch (kind) {
+      case Int:
+        return ExprLiteral.Int((int) value);
       case Long:
         return ExprLiteral.Long((long) value);
       case Double:
@@ -121,6 +123,8 @@ public class CompileExpr implements RexVisitor<ExprBase> {
         throw new UnsupportedOperationException();
       case IS_NOT_NULL:
         return ExprIsNotNullFilterNodeGen.create(compile(singleOperand(call.getOperands())));
+      case CAST:
+        return ExprCastNodeGen.create(call.getType(), compile(singleOperand(call.getOperands())));
 //      case OR:
 //        return fold(call.getOperands(), 0, ExprOrNodeGen::create);
 //      case AND:
