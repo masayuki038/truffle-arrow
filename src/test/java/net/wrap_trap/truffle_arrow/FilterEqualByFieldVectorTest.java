@@ -19,7 +19,7 @@ public class FilterEqualByFieldVectorTest {
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
     TestUtils.generateTestFile(
-      "target/classes/samples/files/all_fields.arrow", TestDataType.WITH_NUMBER_STRING);
+      "target/classes/samples/files/all_fields.arrow", TestDataType.CASE3);
     TruffleArrowConfig.INSTANCE.reload();
   }
 

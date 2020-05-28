@@ -33,7 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class TestUtils {
 
   public static void generateTestFile(String path) throws IOException {
-    generateTestFile(path, TestDataType.COMMON);
+    generateTestFile(path, TestDataType.CASE1);
   }
 
   public static void generateTestFile(String path, TestDataType dataType) throws IOException {
@@ -48,39 +48,45 @@ public class TestUtils {
     c20200503000000.set(2020, 4, 3, 0, 0, 0);
     c20200503000000.set(Calendar.MILLISECOND, 0);
 
-    long intervalByHour = 60 * 60 * 1000L;
-    long intervalByDay = 24 * 60 * 60 * 1000L;
+    long timestampIntervalByHour = 60 * 60 * 1000L;
+    long timestampIntervalByDay = 24 * 60 * 60 * 1000L;
+
+    int timeOffset = 4823; // 01:20:23
+    int timeInterval = 60 * 60;
+
+    int dateOffset = 18385; // 2020-05-03
 
     switch(dataType) {
-      case NULLABLE:
-        intVector = createIntVector(10, 1, allocator);
-        bigIntVector = createBigIntVector(10, 2, allocator);
-        varCharVector = createVarCharVector(10, "test", 3, allocator);
-        timestampVector = createTimestampVector(10, c20200504134811, intervalByHour, 4, allocator);
-        timeVector = createTimeVector(10, 5, allocator);
-        dateVector = createDateVector(10, 6, allocator);
-        doubleVector = createDoubleVector(10, 123.456d, 7, allocator);
+      case CASE1:
+        intVector = createIntVector(10, 0, 1, -1, allocator);
+        bigIntVector = createBigIntVector(10, 0, 1, -1, allocator);
+        varCharVector = createVarCharVector("test", 10, 0, 1, -1, allocator);
+        timestampVector = createTimestampVector(10, c20200504134811, timestampIntervalByHour, -1, allocator);
+        timeVector = createTimeVector(10, timeOffset, timeInterval, -1, allocator);
+        dateVector = createDateVector(10, dateOffset, 1, -1, allocator);
+        doubleVector = createDoubleVector(10,123.456d, 1, -1, allocator);
         break;
 
-      case WITH_NUMBER_STRING:
-        intVector = createIntVector(10, allocator);
-        bigIntVector = createBigIntVector(10, allocator);
-        varCharVector = createVarCharVector(10, "", allocator);
-        timestampVector = createTimestampVector(10, c20200503000000, intervalByDay, -1, allocator);
-        timeVector = createTimeVector(10, allocator);
-        dateVector = createDateVector(10, allocator);
-        doubleVector = createDoubleVector(10, 0d, -1, allocator);
+      case CASE2: // null values
+        intVector = createIntVector(10, 0, 1, 1, allocator);
+        bigIntVector = createBigIntVector(10, 0, 1, 2, allocator);
+        varCharVector = createVarCharVector("test", 10, 0, 1, 3, allocator);
+        timestampVector = createTimestampVector(10, c20200504134811, timestampIntervalByHour, 4, allocator);
+        timeVector = createTimeVector(10, timeOffset, timeInterval, 5, allocator);
+        dateVector = createDateVector(10, dateOffset, 1, 6, allocator);
+        doubleVector = createDoubleVector(10, 123.456d, 1, 7, allocator);
         break;
 
-      case COMMON:
-        intVector = createIntVector(10, allocator);
-        bigIntVector = createBigIntVector(10, allocator);
-        varCharVector = createVarCharVector(10, "test", allocator);
-        timestampVector = createTimestampVector(10, c20200504134811, intervalByHour, -1, allocator);
-        timeVector = createTimeVector(10, allocator);
-        dateVector = createDateVector(10, allocator);
-        doubleVector = createDoubleVector(10,123.456d, -1, allocator);
+      case CASE3:
+        intVector = createIntVector(10, 0, 1, -1, allocator);
+        bigIntVector = createBigIntVector(10, 0, 1, -1, allocator);
+        varCharVector = createVarCharVector("", 10, 0, 1, -1, allocator);
+        timestampVector = createTimestampVector(10, c20200503000000, timestampIntervalByDay, -1, allocator);
+        timeVector = createTimeVector(10, timeOffset, timeInterval, -1, allocator);
+        dateVector = createDateVector(10, dateOffset, 1, -1, allocator);
+        doubleVector = createDoubleVector(10, 0d, 1, -1, allocator);
         break;
+
       default:
         throw new IllegalArgumentException("Invalid Type:" + dataType);
     }
@@ -111,11 +117,7 @@ public class TestUtils {
     }
   }
 
-  private static FieldVector createIntVector(int size, BufferAllocator allocator) {
-    return createIntVector(size, -1, allocator);
-  }
-
-  private static FieldVector createIntVector(int size, int nullIndex, BufferAllocator allocator) {
+  private static FieldVector createIntVector(int size, int offset, int step, int nullIndex, BufferAllocator allocator) {
     IntVector vector = new IntVector("F_INT", allocator);
     vector.allocateNew();
     vector.setValueCount(size);
@@ -123,17 +125,13 @@ public class TestUtils {
       if (i == nullIndex) {
         vector.setNull(i);
       } else {
-        vector.set(i, i);
+        vector.set(i, offset + (i * step));
       }
     }
     return vector;
   }
 
-  private static FieldVector createBigIntVector(int size, BufferAllocator allocator) {
-    return createBigIntVector(size, -1, allocator);
-  }
-
-  private static FieldVector createBigIntVector(int size, int nullIndex, BufferAllocator allocator) {
+  private static FieldVector createBigIntVector(int size, int offset, int step, int nullIndex, BufferAllocator allocator) {
     BigIntVector vector = new BigIntVector("F_BIGINT", allocator);
     vector.allocateNew();
     vector.setValueCount(size);
@@ -141,17 +139,13 @@ public class TestUtils {
       if (i == nullIndex) {
         vector.setNull(i);
       } else {
-        vector.set(i, i);
+        vector.set(i, offset + (i * step));
       }
     }
     return vector;
   }
 
-  private static FieldVector createVarCharVector(int size, String prefix, BufferAllocator allocator) {
-    return createVarCharVector(size, prefix,-1, allocator);
-  }
-
-  private static FieldVector createVarCharVector(int size, String prefix, int nullIndex, BufferAllocator allocator) {
+  private static FieldVector createVarCharVector(String prefix, int size, int offset, int step, int nullIndex, BufferAllocator allocator) {
     VarCharVector vector = new VarCharVector("F_VARCHAR", allocator);
     vector.allocateNew();
     vector.setValueCount(size);
@@ -159,7 +153,7 @@ public class TestUtils {
       if (i == nullIndex) {
         vector.setNull(i);
       } else {
-        vector.set(i, new Text(prefix + i));
+        vector.set(i, new Text(prefix + (offset + (i * step))));
       }
     }
     return vector;
@@ -182,45 +176,34 @@ public class TestUtils {
     return vector;
   }
 
-  private static FieldVector createTimeVector(int size, BufferAllocator allocator) {
-    return createTimeVector(size, -1, allocator);
-  }
-
-  private static FieldVector createTimeVector(int size, int nullIndex, BufferAllocator allocator) {
+  private static FieldVector createTimeVector(int size, int offset, int interval, int nullIndex, BufferAllocator allocator) {
     TimeSecVector vector = new TimeSecVector("F_TIME", allocator);
     vector.allocateNew();
     vector.setValueCount(size);
-    int offset = 4823; // 01:20:23
+
     for (int i = 0; i < size; i ++) {
       if (i == nullIndex) {
         vector.setNull(i);
       } else {
-        vector.set(i, offset + i * 60 * 60);
+        vector.set(i, offset + i * interval);
       }
     }
     return vector;
   }
 
-  private static FieldVector createDateVector(int size, BufferAllocator allocator) {
-    return createDateVector(size, -1, allocator);
-  }
-  private static FieldVector createDateVector(int size, int nullIndex, BufferAllocator allocator) {
+  private static FieldVector createDateVector(int size, int offset, int interval, int nullIndex, BufferAllocator allocator) {
     DateDayVector vector = new DateDayVector("F_DATE", allocator);
     vector.allocateNew();
     vector.setValueCount(size);
-    int offset = 18385; // 2020-05-03
+
     for (int i = 0; i < size; i ++) {
       if (i == nullIndex) {
         vector.setNull(i);
       } else {
-        vector.set(i, offset + i);
+        vector.set(i, offset + (i * interval));
       }
     }
     return vector;
-  }
-
-  private static FieldVector createDecimalVector(int size, BufferAllocator allocator) {
-    return createDecimalVector(size, -1, allocator);
   }
 
   private static FieldVector createDecimalVector(int size, int nullIndex, BufferAllocator allocator) {
@@ -238,9 +221,6 @@ public class TestUtils {
     return vector;
   }
 
-  private static FieldVector createFloatVector(int size, BufferAllocator allocator) {
-    return createFloatVector(size, -1, allocator);
-  }
   private static FieldVector createFloatVector(int size, int nullIndex, BufferAllocator allocator) {
     Float4Vector vector = new Float4Vector("F_FLOAT", allocator);
     vector.allocateNew();
@@ -256,7 +236,7 @@ public class TestUtils {
     return vector;
   }
 
-  private static FieldVector createDoubleVector(int size, double offset, int nullIndex, BufferAllocator allocator) {
+  private static FieldVector createDoubleVector(int size, double offset, int step, int nullIndex, BufferAllocator allocator) {
     Float8Vector vector = new Float8Vector("F_DOUBLE", allocator);
     vector.allocateNew();
     vector.setValueCount(size);
@@ -264,7 +244,7 @@ public class TestUtils {
       if (i == nullIndex) {
         vector.setNull(i);
       } else {
-        vector.set(i, offset + i);
+        vector.set(i, offset + (i * step));
       }
     }
     return vector;
