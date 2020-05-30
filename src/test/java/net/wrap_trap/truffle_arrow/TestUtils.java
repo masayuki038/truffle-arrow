@@ -87,6 +87,16 @@ public class TestUtils {
         doubleVector = createDoubleVector(10, 0d, 1, -1, allocator);
         break;
 
+      case CASE4:
+        intVector = createIntVector(10, 0, 1, -1, allocator);
+        bigIntVector = createBigIntVector(10, 10, -1, -1, allocator);
+        varCharVector = createVarCharVector("", 10, 0, 1, -1, allocator);
+        timestampVector = createTimestampVector(10, c20200503000000, timestampIntervalByDay, -1, allocator);
+        timeVector = createTimeVector(10, timeOffset, timeInterval, -1, allocator);
+        dateVector = createDateVector(10, dateOffset, 1, -1, allocator);
+        doubleVector = createDoubleVector(10, 10d, -1, -1, allocator);
+        break;
+
       default:
         throw new IllegalArgumentException("Invalid Type:" + dataType);
     }
@@ -250,6 +260,10 @@ public class TestUtils {
     return vector;
   }
 
+  public static void filterTest(String sql, int size) throws SQLException {
+    filterTest(sql, size, null);
+  }
+
   public static void filterTest(String sql, int size, String expectedFirstRow) throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
@@ -258,7 +272,9 @@ public class TestUtils {
     ) {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(size));
-      assertThat(results.get(0), is(expectedFirstRow));
+      if (expectedFirstRow != null) {
+        assertThat(results.get(0), is(expectedFirstRow));
+      }
       assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
     }
   }

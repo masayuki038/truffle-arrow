@@ -2,6 +2,7 @@ package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.types.pojo.Field;
@@ -81,22 +82,26 @@ abstract public class ExprCast extends ExprBase {
           }
         };
       default:
-        throw new IllegalStateException("Unexpected type: " + frameSlotKind);
+        throw new UnsupportedOperationException(
+          String.format("Unsupported operation: CAST(Int As %s)", frameSlotKind));
     }
   }
 
   @Specialization
   protected FieldVector executeLongVector(final BigIntVector vector) {
     FrameSlotKind frameSlotKind = Types.kind(type.getSqlTypeName());
-    if (frameSlotKind == FrameSlotKind.Double) {
-      return new FieldVectorProxy(vector) {
-        @Override
-        public Object getObject(int i) {
-          return vector.getObject(i).doubleValue();
-        }
-      };
+    switch(frameSlotKind) {
+      case Double:
+        return new FieldVectorProxy(vector) {
+          @Override
+          public Object getObject(int i) {
+            return vector.getObject(i).doubleValue();
+          }
+        };
+      default:
+        throw new UnsupportedOperationException(
+          String.format("Unsupported operation: CAST(BigInt As %s)", frameSlotKind));
     }
-    throw new IllegalStateException("Unexpected type: " + frameSlotKind);
   }
 
   @Specialization
@@ -125,7 +130,8 @@ abstract public class ExprCast extends ExprBase {
           }
         };
       default:
-        throw new IllegalStateException("Unexpected type: " + frameSlotKind);
+        throw new UnsupportedOperationException(
+          String.format("Unsupported operation: CAST(VarChar As %s)", frameSlotKind));
     }
   }
 
@@ -140,7 +146,15 @@ abstract public class ExprCast extends ExprBase {
         }
       };
     }
-    throw new IllegalStateException("Unexpected type: " + frameSlotKind);
+    throw new UnsupportedOperationException(
+      String.format("Unsupported operation: CAST(Date As %s)", frameSlotKind));
+  }
+
+  @Specialization
+  protected FieldVector executeFloat8Vector(final Float8Vector vector) {
+    FrameSlotKind frameSlotKind = Types.kind(type.getSqlTypeName());
+    throw new UnsupportedOperationException(
+      String.format("Unsupported operation: CAST(Float8 As %s)", frameSlotKind));
   }
 
   @Specialization

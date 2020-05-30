@@ -4,4 +4,5 @@ public enum TestDataType {
   CASE1,
   CASE2,
   CASE3,
+  CASE4,
 }
