@@ -12,7 +12,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FilterGreaterEqualByFieldVectorTest {
+public class FilterLessEqualVectorTest {
   private static final String EXPECTED0 = "0\t10\t0\t2020-05-03 00:00:00.0\t01:20:23\t2020-05-03\t10.0";
   private static final String EXPECTED5 = "5\t5\t5\t2020-05-08 00:00:00.0\t06:20:23\t2020-05-08\t5.0";
 
@@ -30,29 +30,29 @@ public class FilterGreaterEqualByFieldVectorTest {
   }
 
   @Test
-  public void intGeInt() throws SQLException {
+  public void intLeInt() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_INT >= F_INT",
+      "select * from ALL_FIELDS where F_INT <= F_INT",
       10
     );
   }
 
   @Test
-  public void intGeLong() throws SQLException {
+  public void intLeLong() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where CAST(F_INT AS BIGINT) >= F_BIGINT",
-      5,
-      EXPECTED5
+      "select * from ALL_FIELDS where CAST(F_INT AS BIGINT) <= F_BIGINT",
+      6,
+      EXPECTED0
     );
   }
 
   @Test
-  public void intGeLong2() throws SQLException {
+  public void intLeLong2() throws SQLException {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_INT >= CAST(F_BIGINT AS INT)",
-       5,
-       EXPECTED5
+       "select * from ALL_FIELDS where F_INT <= CAST(F_BIGINT AS INT)",
+       6,
+       EXPECTED0
       )
     );
     assertThat(e.getCause().getMessage(),
@@ -60,65 +60,65 @@ public class FilterGreaterEqualByFieldVectorTest {
   }
 
   @Test
-  public void intGeString() throws SQLException {
+  public void intLeString() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_INT >= F_VARCHAR",
+      "select * from ALL_FIELDS where F_INT <= F_VARCHAR",
       10
     );
   }
 
   @Test
-  public void intGeTimestamp() {
+  public void intLeTimestamp() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-        "select * from ALL_FIELDS where F_INT >= F_TIMESTAMP",
+        "select * from ALL_FIELDS where F_INT <= F_TIMESTAMP",
         10
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<INTEGER> >= <TIMESTAMP(0)>'"));
+      containsString("Cannot apply '<=' to arguments of type '<INTEGER> <= <TIMESTAMP(0)>'"));
   }
 
   @Test
-  public void intGeTime() {
+  public void intLeTime() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_INT >= F_TIME",
+       "select * from ALL_FIELDS where F_INT <= F_TIME",
        10
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<INTEGER> >= <TIME(0)>'"));
+      containsString("Cannot apply '<=' to arguments of type '<INTEGER> <= <TIME(0)>'"));
   }
 
   @Test
-  public void intGeDate() {
+  public void intLeDate() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_INT >= F_DATE",
+       "select * from ALL_FIELDS where F_INT <= F_DATE",
        10
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<INTEGER> >= <DATE>'"));
+      containsString("Cannot apply '<=' to arguments of type '<INTEGER> <= <DATE>'"));
   }
 
   @Test
-  public void intGeDouble() throws SQLException {
+  public void intLeDouble() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where CAST(F_INT AS DOUBLE) >= F_DOUBLE",
-      5,
-      EXPECTED5
+      "select * from ALL_FIELDS where CAST(F_INT AS DOUBLE) <= F_DOUBLE",
+      6,
+      EXPECTED0
     );
   }
 
   @Test
-  public void intGeDouble2() {
+  public void intLeDouble2() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-        "select * from ALL_FIELDS where F_INT >= CAST(F_DOUBLE AS INT)",
-        5,
-        EXPECTED5
+        "select * from ALL_FIELDS where F_INT <= CAST(F_DOUBLE AS INT)",
+        6,
+        EXPECTED0
       )
     );
     assertThat(e.getCause().getMessage(),
@@ -126,82 +126,82 @@ public class FilterGreaterEqualByFieldVectorTest {
   }
 
   @Test
-  public void longGeInt() throws SQLException {
+  public void longLeInt() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_BIGINT >= CAST(F_INT AS BigInt)",
-      6,
-      EXPECTED0
+      "select * from ALL_FIELDS where F_BIGINT <= CAST(F_INT AS BigInt)",
+      5,
+      EXPECTED5
     );
   }
 
   @Test
-  public void longGeLong() throws SQLException {
+  public void longLeLong() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_BIGINT >= F_BIGINT",
+      "select * from ALL_FIELDS where F_BIGINT <= F_BIGINT",
       10
     );
   }
 
   @Test
-  public void longGeString() throws SQLException {
+  public void longLeString() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_BIGINT >= F_VARCHAR",
-      6,
-      EXPECTED0
+      "select * from ALL_FIELDS where F_BIGINT <= F_VARCHAR",
+      5,
+      EXPECTED5
     );
   }
 
   @Test
-  public void longGeTimestamp() {
+  public void longLeTimestamp() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_BIGINT >= F_TIMESTAMP",
+      "select * from ALL_FIELDS where F_BIGINT <= F_TIMESTAMP",
       10
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<BIGINT> >= <TIMESTAMP(0)>'"));
+      containsString("Cannot apply '<=' to arguments of type '<BIGINT> <= <TIMESTAMP(0)>'"));
   }
 
   @Test
-  public void longGeTime() {
+  public void longLeTime() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_BIGINT >= F_TIME",
+       "select * from ALL_FIELDS where F_BIGINT <= F_TIME",
        10
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<BIGINT> >= <TIME(0)>'"));
+      containsString("Cannot apply '<=' to arguments of type '<BIGINT> <= <TIME(0)>'"));
   }
 
   @Test
-  public void longGeDate() {
+  public void longLeDate() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_BIGINT >= F_DATE",
+       "select * from ALL_FIELDS where F_BIGINT <= F_DATE",
        10
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<BIGINT> >= <DATE>'"));
+      containsString("Cannot apply '<=' to arguments of type '<BIGINT> <= <DATE>'"));
   }
 
   @Test
-  public void longGeDouble() throws SQLException {
+  public void longLeDouble() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where CAST(F_BIGINT AS DOUBLE) >= F_DOUBLE",
+      "select * from ALL_FIELDS where CAST(F_BIGINT AS DOUBLE) <= F_DOUBLE",
       10
     );
   }
 
   @Test
-  public void longGeDouble2() {
+  public void longLeDouble2() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_BIGINT >= CAST(F_DOUBLE AS BIGINT)",
-       5,
-       EXPECTED5
+       "select * from ALL_FIELDS where F_BIGINT <= CAST(F_DOUBLE AS BIGINT)",
+       6,
+       EXPECTED0
       )
     );
     assertThat(e.getCause().getMessage(),
@@ -209,35 +209,35 @@ public class FilterGreaterEqualByFieldVectorTest {
   }
 
   @Test
-  public void stringGeInt() throws SQLException {
+  public void stringLeInt() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_VARCHAR >= F_INT",
+      "select * from ALL_FIELDS where F_VARCHAR <= F_INT",
       10
     );
   }
 
   @Test
-  public void stringGeLong() throws SQLException {
+  public void stringLeLong() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_VARCHAR >= F_BIGINT",
-      5,
-      EXPECTED5
+      "select * from ALL_FIELDS where F_VARCHAR <= F_BIGINT",
+      6,
+      EXPECTED0
     );
   }
 
   @Test
-  public void stringGeString() throws SQLException {
+  public void stringLeString() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_VARCHAR >= F_VARCHAR",
+      "select * from ALL_FIELDS where F_VARCHAR <= F_VARCHAR",
       10
     );
   }
 
   @Test
-  public void stringGeTimestamp() {
+  public void stringLeTimestamp() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_VARCHAR >= F_TIMESTAMP",
+       "select * from ALL_FIELDS where F_VARCHAR <= F_TIMESTAMP",
        10
       )
     );
@@ -246,10 +246,10 @@ public class FilterGreaterEqualByFieldVectorTest {
   }
 
   @Test
-  public void stringGeTime() {
+  public void stringLeTime() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_VARCHAR >= F_TIME",
+       "select * from ALL_FIELDS where F_VARCHAR <= F_TIME",
        10
       )
     );
@@ -258,10 +258,10 @@ public class FilterGreaterEqualByFieldVectorTest {
   }
 
   @Test
-  public void stringGeDate() {
+  public void stringLeDate() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_VARCHAR >= F_DATE",
+      "select * from ALL_FIELDS where F_VARCHAR <= F_DATE",
       10
       )
     );
@@ -270,312 +270,312 @@ public class FilterGreaterEqualByFieldVectorTest {
   }
 
   @Test
-  public void stringGeDouble() throws SQLException {
+  public void stringLeDouble() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_VARCHAR >= F_DOUBLE",
+      "select * from ALL_FIELDS where F_VARCHAR <= F_DOUBLE",
+      6,
+      EXPECTED0
+    );
+  }
+
+  @Test
+  public void timestampLeInt() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_TIMESTAMP <= F_INT",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<TIMESTAMP(0)> <= <INTEGER>'"));
+  }
+
+  @Test
+  public void timestampLeLong() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_TIMESTAMP <= F_BIGINT",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<TIMESTAMP(0)> <= <BIGINT>'"));
+  }
+
+  @Test
+  public void timestampLeString() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_TIMESTAMP <= F_VARCHAR",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Unsupported operation: CAST(VarChar As Object)"));
+  }
+
+  @Test
+  public void timestampLeTimestamp() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_TIMESTAMP <= F_TIMESTAMP",
+      10
+    );
+  }
+
+  @Test
+  public void timestampLeTime() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_TIMESTAMP <= F_TIME",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<TIMESTAMP(0)> <= <TIME(0)>'"));
+  }
+
+  @Test
+  public void timestampLeDate() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_TIMESTAMP <= F_DATE",
+      10
+    );
+  }
+
+  @Test
+  public void timestampLeDouble() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_TIMESTAMP <= F_DOUBLE",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<TIMESTAMP(0)> <= <DOUBLE>'"));
+  }
+
+  @Test
+  public void timeLeInt() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_TIME <= F_INT",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<TIME(0)> <= <INTEGER>'"));
+  }
+
+  @Test
+  public void timeLeLong() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_TIME <= F_BIGINT",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<TIME(0)> <= <BIGINT>'"));
+  }
+
+  @Test
+  public void timeLeString() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_TIME <= F_VARCHAR",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Unsupported operation: CAST(VarChar As Object)"));
+  }
+
+  @Test
+  public void timeLeTimestamp() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_TIME <= F_TIMESTAMP",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<TIME(0)> <= <TIMESTAMP(0)>'"));
+  }
+
+  @Test
+  public void timeLeTime() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_TIME <= F_TIME",
+      10
+    );
+  }
+
+  @Test
+  public void timeLeDate() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_TIME <= F_DATE",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<TIME(0)> <= <DATE>'"));
+  }
+
+  @Test
+  public void timeLeDouble() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+        "select * from ALL_FIELDS where F_TIME <= F_DOUBLE",
+        0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<TIME(0)> <= <DOUBLE>'"));
+  }
+
+  @Test
+  public void dateLeInt() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_DATE <= F_INT",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<DATE> <= <INTEGER>'"));
+  }
+
+  @Test
+  public void dateLeLong() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_DATE <= F_BIGINT",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<DATE> <= <BIGINT>'"));
+  }
+
+  @Test
+  public void dateLeString() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_DATE <= F_VARCHAR",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Unsupported operation: CAST(VarChar As Object)"));
+  }
+
+  @Test
+  public void dateLeTimestamp() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_DATE <= F_TIMESTAMP",
+      10
+    );
+  }
+
+  @Test
+  public void dateLeTime() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+        "select * from ALL_FIELDS where F_DATE <= F_TIME",
+        0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<DATE> <= <TIME(0)>'"));
+  }
+
+  @Test
+  public void dateLeDate() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_DATE <= F_DATE",
+      10
+    );
+  }
+
+  @Test
+  public void dateLeDouble() {
+    Throwable e = assertThrows(SQLException.class, () ->
+      TestUtils.filterTest(
+       "select * from ALL_FIELDS where F_DATE <= F_DOUBLE",
+       0
+      )
+    );
+    assertThat(e.getCause().getMessage(),
+      containsString("Cannot apply '<=' to arguments of type '<DATE> <= <DOUBLE>'"));
+  }
+
+  @Test
+  public void doubleLeInt() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_DOUBLE <= CAST(F_INT AS Double)",
       5,
       EXPECTED5
     );
   }
 
   @Test
-  public void timestampGeInt() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_TIMESTAMP >= F_INT",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<TIMESTAMP(0)> >= <INTEGER>'"));
-  }
-
-  @Test
-  public void timestampGeLong() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_TIMESTAMP >= F_BIGINT",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<TIMESTAMP(0)> >= <BIGINT>'"));
-  }
-
-  @Test
-  public void timestampGeString() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_TIMESTAMP >= F_VARCHAR",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(VarChar As Object)"));
-  }
-
-  @Test
-  public void timestampGeTimestamp() throws SQLException {
+  public void doubleLeLong() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_TIMESTAMP >= F_TIMESTAMP",
+      "select * from ALL_FIELDS where F_DOUBLE <= CAST(F_BIGINT AS Double)",
       10
     );
   }
 
   @Test
-  public void timestampGeTime() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_TIMESTAMP >= F_TIME",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<TIMESTAMP(0)> >= <TIME(0)>'"));
-  }
-
-  @Test
-  public void timestampGeDate() throws SQLException {
+  public void doubleLeString() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_TIMESTAMP >= F_DATE",
-      10
+      "select * from ALL_FIELDS where F_DOUBLE <= F_VARCHAR",
+      5,
+      EXPECTED5
     );
   }
 
   @Test
-  public void timestampGeDouble() {
+  public void doubleLeTimestamp() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_TIMESTAMP >= F_DOUBLE",
+       "select * from ALL_FIELDS where F_DOUBLE <= F_TIMESTAMP",
        0
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<TIMESTAMP(0)> >= <DOUBLE>'"));
+      containsString("Cannot apply '<=' to arguments of type '<DOUBLE> <= <TIMESTAMP(0)>'"));
   }
 
   @Test
-  public void timeGeInt() {
+  public void doubleLeTime() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_TIME >= F_INT",
+       "select * from ALL_FIELDS where F_DOUBLE <= F_TIME",
        0
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<TIME(0)> >= <INTEGER>'"));
+      containsString("Cannot apply '<=' to arguments of type '<DOUBLE> <= <TIME(0)>'"));
   }
 
   @Test
-  public void timeGeLong() {
+  public void doubleLeDate() {
     Throwable e = assertThrows(SQLException.class, () ->
       TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_TIME >= F_BIGINT",
+       "select * from ALL_FIELDS where F_DOUBLE <= F_DATE",
        0
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<TIME(0)> >= <BIGINT>'"));
+      containsString("Cannot apply '<=' to arguments of type '<DOUBLE> <= <DATE>'"));
   }
 
   @Test
-  public void timeGeString() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_TIME >= F_VARCHAR",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(VarChar As Object)"));
-  }
-
-  @Test
-  public void timeGeTimestamp() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_TIME >= F_TIMESTAMP",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<TIME(0)> >= <TIMESTAMP(0)>'"));
-  }
-
-  @Test
-  public void timeGeTime() throws SQLException {
+  public void doubleLeDouble() throws SQLException {
     TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_TIME >= F_TIME",
-      10
-    );
-  }
-
-  @Test
-  public void timeGeDate() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_TIME >= F_DATE",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<TIME(0)> >= <DATE>'"));
-  }
-
-  @Test
-  public void timeGeDouble() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-        "select * from ALL_FIELDS where F_TIME >= F_DOUBLE",
-        0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<TIME(0)> >= <DOUBLE>'"));
-  }
-
-  @Test
-  public void dateGeInt() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_DATE >= F_INT",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<DATE> >= <INTEGER>'"));
-  }
-
-  @Test
-  public void dateGeLong() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_DATE >= F_BIGINT",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<DATE> >= <BIGINT>'"));
-  }
-
-  @Test
-  public void dateGeString() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_DATE >= F_VARCHAR",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(VarChar As Object)"));
-  }
-
-  @Test
-  public void dateGeTimestamp() throws SQLException {
-    TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_DATE >= F_TIMESTAMP",
-      10
-    );
-  }
-
-  @Test
-  public void dateGeTime() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-        "select * from ALL_FIELDS where F_DATE >= F_TIME",
-        0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<DATE> >= <TIME(0)>'"));
-  }
-
-  @Test
-  public void dateGeDate() throws SQLException {
-    TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_DATE >= F_DATE",
-      10
-    );
-  }
-
-  @Test
-  public void dateGeDouble() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_DATE >= F_DOUBLE",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<DATE> >= <DOUBLE>'"));
-  }
-
-  @Test
-  public void doubleGeInt() throws SQLException {
-    TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_DOUBLE >= CAST(F_INT AS Double)",
-      6,
-      EXPECTED0
-    );
-  }
-
-  @Test
-  public void doubleGeLong() throws SQLException {
-    TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_DOUBLE >= CAST(F_BIGINT AS Double)",
-      10
-    );
-  }
-
-  @Test
-  public void doubleGeString() throws SQLException {
-    TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_DOUBLE >= F_VARCHAR",
-      6,
-      EXPECTED0
-    );
-  }
-
-  @Test
-  public void doubleGeTimestamp() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_DOUBLE >= F_TIMESTAMP",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<DOUBLE> >= <TIMESTAMP(0)>'"));
-  }
-
-  @Test
-  public void doubleGeTime() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_DOUBLE >= F_TIME",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<DOUBLE> >= <TIME(0)>'"));
-  }
-
-  @Test
-  public void doubleGeDate() {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_DOUBLE >= F_DATE",
-       0
-      )
-    );
-    assertThat(e.getCause().getMessage(),
-      containsString("Cannot apply '>=' to arguments of type '<DOUBLE> >= <DATE>'"));
-  }
-
-  @Test
-  public void doubleGeDouble() throws SQLException {
-    TestUtils.filterTest(
-      "select * from ALL_FIELDS where F_DOUBLE >= F_DOUBLE",
+      "select * from ALL_FIELDS where F_DOUBLE <= F_DOUBLE",
       10
     );
   }

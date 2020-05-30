@@ -12,7 +12,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FilterGreaterThanByFieldVectorTest {
+public class FilterGreaterThanVectorTest {
   private static final String EXPECTED0 = "0\t10\t0\t2020-05-03 00:00:00.0\t01:20:23\t2020-05-03\t10.0";
   private static final String EXPECTED6 = "6\t4\t6\t2020-05-09 00:00:00.0\t07:20:23\t2020-05-09\t4.0";
 
