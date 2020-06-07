@@ -21,6 +21,11 @@ abstract class ExprReadLocal extends ExprBase {
     return FrameUtil.getBooleanSafe(frame, getSlot());
   }
 
+  @Specialization(guards = "isInteger(frame)")
+  protected int readInteger(VirtualFrame frame) {
+    return FrameUtil.getIntSafe(frame, getSlot());
+  }
+
   @Specialization(guards = "isLong(frame)")
   protected long readLong(VirtualFrame frame) {
     return FrameUtil.getLongSafe(frame, getSlot());
@@ -54,6 +59,10 @@ abstract class ExprReadLocal extends ExprBase {
 
   protected boolean isBoolean(VirtualFrame frame) {
     return getSlot().getKind() == FrameSlotKind.Boolean;
+  }
+
+  protected boolean isInteger(VirtualFrame frame) {
+    return getSlot().getKind() == FrameSlotKind.Int;
   }
 
   protected boolean isLong(VirtualFrame frame) {

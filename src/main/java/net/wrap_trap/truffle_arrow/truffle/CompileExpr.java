@@ -3,9 +3,14 @@ package net.wrap_trap.truffle_arrow.truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import net.wrap_trap.truffle_arrow.TruffleArrowConfig;
+import org.apache.calcite.adapter.java.JavaTypeFactory;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
+import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,8 +22,8 @@ import java.util.Objects;
  */
 public class CompileExpr implements RexVisitor<ExprBase> {
 
-  public static ExprBase compile(FrameDescriptor from, RexNode child) {
-    CompileExpr compiler = new CompileExpr(from);
+  public static ExprBase compile(FrameDescriptor from, RexNode child, SinkContext context) {
+    CompileExpr compiler = new CompileExpr(from, context);
 
     return child.accept(compiler);
   }
@@ -29,17 +34,42 @@ public class CompileExpr implements RexVisitor<ExprBase> {
    * Can be empty in queries like SELECT 1
    */
   private final FrameDescriptor from;
+  private SinkContext context;
 
-  CompileExpr(FrameDescriptor from) {
+  CompileExpr(FrameDescriptor from, SinkContext context) {
     this.from = from;
+    this.context = context;
+  }
+
+  private FrameSlotKind getFrameSlotKind(RelDataType relDataType) {
+    JavaTypeFactory typeFactory = TruffleArrowConfig.INSTANCE.typeFactory();
+    Type clazz = typeFactory.getJavaClass(relDataType);
+    if (clazz == Integer.class) {
+      return FrameSlotKind.Int;
+    } else if (clazz == Long.class) {
+      return FrameSlotKind.Long;
+    } else if (clazz == Double.class) {
+      return FrameSlotKind.Double;
+    } else if (clazz == Boolean.class) {
+      return FrameSlotKind.Boolean;
+    } else if (clazz == Byte.class) {
+      return FrameSlotKind.Byte;
+    } else if (clazz == Float.class) {
+      return FrameSlotKind.Float;
+    } else if (clazz == Object.class) {
+      return FrameSlotKind.Object;
+    }
+    throw new IllegalArgumentException("Unexpected Java Class: " + clazz);
   }
 
   @Override
   public ExprBase visitInputRef(RexInputRef inputRef) {
-    FrameSlot slot0 = from.findFrameSlot(0);
-    Objects.requireNonNull(slot0);
+    this.context.addInputRef(inputRef);
+    FrameSlotKind kind = getFrameSlotKind(inputRef.getType());
+    FrameSlot slot = from.addFrameSlot(inputRef.getIndex(), kind);
+    Objects.requireNonNull(slot);
 
-    return ExprReadLocalArrayNodeGen.create(slot0, inputRef.getIndex());
+    return ExprReadLocalNodeGen.create(slot);
   }
 
   @Override
@@ -107,9 +137,6 @@ public class CompileExpr implements RexVisitor<ExprBase> {
         }
         throw new UnsupportedOperationException();
       case EQUALS:
-        if (containsInputRef(call.getOperands())) {
-          return binary(call.getOperands(), ExprFilterNodeGen::create);
-        }
         return binary(call.getOperands(), ExprEqualsNodeGen::create);
       case NOT_EQUALS:
         if (containsInputRef(call.getOperands())) {
@@ -237,7 +264,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 //  }
 
   private ExprBase compile(RexNode rexNode) {
-    return rexNode.accept(new CompileExpr(from));
+    return rexNode.accept(new CompileExpr(from, context));
   }
 
   @FunctionalInterface
@@ -259,8 +286,8 @@ public class CompileExpr implements RexVisitor<ExprBase> {
   private ExprBase binary(List<RexNode> operands, BinaryConstructor then) {
     assert operands.size() == 2;
 
-    ExprBase left = operands.get(0).accept(new CompileExpr(from));
-    ExprBase right = operands.get(1).accept(new CompileExpr(from));
+    ExprBase left = operands.get(0).accept(new CompileExpr(from, context));
+    ExprBase right = operands.get(1).accept(new CompileExpr(from, context));
 
     return then.accept(left, right);
   }
@@ -287,7 +314,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 
   @Override
   public ExprBase visitFieldAccess(RexFieldAccess fieldAccess) {
-    ExprBase receiver = fieldAccess.getReferenceExpr().accept(new CompileExpr(from));
+    ExprBase receiver = fieldAccess.getReferenceExpr().accept(new CompileExpr(from, context));
     String name = fieldAccess.getField().getName();
 
     return ExprReadPropertyNodeGen.create(name, receiver);

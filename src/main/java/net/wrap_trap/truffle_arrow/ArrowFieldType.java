@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Field Type for Apache Arrow
  */
-enum ArrowFieldType {
+public enum ArrowFieldType {
   STRING(String.class),
   BOOLEAN(Primitive.BOOLEAN),
   BYTE(Primitive.BYTE),

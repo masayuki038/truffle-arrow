@@ -15,6 +15,6 @@ public abstract class RowSink extends Node {
     /**
      * Do something with one row. Called once per row of the relational expression.
      */
-    public abstract void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor)
+    public abstract void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context)
       throws UnexpectedResultException;
 }

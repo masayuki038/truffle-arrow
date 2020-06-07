@@ -6,7 +6,6 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExecutableNode;
 import net.wrap_trap.truffle_arrow.truffle.*;
@@ -79,15 +78,9 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
     ThenRowSink sink = resultFrame -> new RowSink() {
       @Override
-      public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor) {
-        FrameSlot slot0 = frameDescriptor.findFrameSlot(0);
-        List<FieldVector> fieldVectors = (List<FieldVector>) frame.getValue(slot0);
-
-        UInt4Vector selectionVector = null;
-        FrameSlot slot1 = frameDescriptor.findFrameSlot(1);
-        if (slot1 != null) {
-          selectionVector = (UInt4Vector) frame.getValue(slot1);
-        }
+      public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context) {
+        List<FieldVector> fieldVectors = context.vectors();
+        UInt4Vector selectionVector = context.selectionVector();
 
         Object[] vectors = new Object[fieldVectors.size()];
         fieldVectors.toArray(vectors);
@@ -140,7 +133,7 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
   private CallTarget compile(RelRoot plan, List<Row> results, ThenRowSink sink) {
     ArrowRel rel = (ArrowRel) plan.rel;
-    RowSource compiled = rel.compile(sink);
+    RowSource compiled = rel.compile(sink, new SinkContext());
     RelRootNode root = new RelRootNode(this, compiled, results);
 
     return Truffle.getRuntime().createCallTarget(root);

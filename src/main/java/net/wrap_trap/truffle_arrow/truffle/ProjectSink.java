@@ -27,18 +27,13 @@ public class ProjectSink extends RowSink {
   }
 
   @Override
-  public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor) throws UnexpectedResultException {
-    try {
-      FrameSlot slot0 = frameDescriptor.findFrameSlot(0);
-      List<FieldVector> input = (List<FieldVector>) frame.getObject(slot0);
-      List<FieldVector> projected = new ArrayList<FieldVector>();
-      for (int i = 0; i < this.projectIndex.length; i ++) {
-        projected.add(input.get(projectIndex[i]));
-      }
-      frame.setObject(slot0, projected);
-      then.executeVoid(frame, frameDescriptor);
-    } catch (FrameSlotTypeException e) {
-      throw new RuntimeException(e);
+  public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context) throws UnexpectedResultException {
+    List<FieldVector> input = context.vectors();
+    List<FieldVector> projected = new ArrayList<FieldVector>();
+    for (int i = 0; i < this.projectIndex.length; i ++) {
+      projected.add(input.get(projectIndex[i]));
     }
+    context.setVectors(projected);
+    then.executeVoid(frame, frameDescriptor, context);
   }
 }

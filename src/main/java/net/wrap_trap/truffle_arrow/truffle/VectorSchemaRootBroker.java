@@ -32,7 +32,6 @@ public class VectorSchemaRootBroker extends RowSink {
       UInt4Vector selectionVector,
       int[] fields,
       ThenRowSink then) {
-    frameDescriptor.addFrameSlot(0, FrameSlotKind.Object);
     RowSink sink = then.apply(frameDescriptor);
     return new VectorSchemaRootBroker(relType, vectorSchemaRoots, selectionVector, fields, sink);
   }
@@ -52,14 +51,15 @@ public class VectorSchemaRootBroker extends RowSink {
   }
 
   @Override
-  public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor) throws UnexpectedResultException {
+  public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context) throws UnexpectedResultException {
     for (VectorSchemaRoot vectorSchemaRoot : vectorSchemaRoots) {
       List<FieldVector> fieldVectors = vectorSchemaRoot.getFieldVectors();
       List<FieldVector> selected = Arrays.stream(this.fields).mapToObj(i -> fieldVectors.get(i))
         .collect(Collectors.toList());
-      FrameSlot slot0 = frameDescriptor.findFrameSlot(0);
-      frame.setObject(slot0, selected);
-      then.executeVoid(frame, frameDescriptor);
+
+      context.setVectors(selected);
+      context.setSelectionVector(this.selectionVector);
+      then.executeVoid(frame, frameDescriptor, context);
     }
   }
 }

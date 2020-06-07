@@ -1,9 +1,6 @@
 package net.wrap_trap.truffle_arrow;
 
-import net.wrap_trap.truffle_arrow.truffle.FilterSink;
-import net.wrap_trap.truffle_arrow.truffle.RowSource;
-import net.wrap_trap.truffle_arrow.truffle.TerminalSink;
-import net.wrap_trap.truffle_arrow.truffle.ThenRowSink;
+import net.wrap_trap.truffle_arrow.truffle.*;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.rel.RelNode;
 
@@ -15,16 +12,16 @@ public interface ArrowRel extends RelNode {
 
   RelNode getInput();
 
-  ThenRowSink createRowSink(ThenRowSink next);
+  ThenRowSink createRowSink(ThenRowSink next, SinkContext context);
 
-  default RowSource compile(ThenRowSink next) {
-    ThenRowSink wrapped = createRowSink(next);
+  default RowSource compile(ThenRowSink next, SinkContext context) {
+    ThenRowSink wrapped = createRowSink(next, context);
 
     RelNode input = getInput();
     if (input != null) {
       ArrowRel arrowRel = (ArrowRel) input;
-      return arrowRel.compile(wrapped);
+      return arrowRel.compile(wrapped, context);
     }
-    return TerminalSink.compile(wrapped);
+    return TerminalSink.compile(context, wrapped);
   }
 }
