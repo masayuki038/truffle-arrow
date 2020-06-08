@@ -44,23 +44,27 @@ public class FilterSink extends RowSink {
       for (int j = 0; j < indices.size(); j ++) {
         int index = indices.get(j);
         FrameSlot slot = frameDescriptor.findFrameSlot(index);
-        ArrowFieldType type = ArrowFieldType.of(vectors.get(j).getField().getFieldType().getType());
+        ArrowFieldType type = ArrowFieldType.of(vectors.get(index).getField().getFieldType().getType());
 
         switch (type) {
           case INT:
-            frame.setInt(slot, (int) vectors.get(j).getObject(i));
-            break;
-          case LONG:
-            frame.setLong(slot, (long) vectors.get(j).getObject(i));
-            break;
-          case DOUBLE:
-            frame.setDouble(slot, (double) vectors.get(j).getObject(i));
-            break;
-          case TIMESTAMP:
           case TIME:
           case DATE:
+            frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Int);
+            frame.setInt(slot, (int) vectors.get(index).getObject(i));
+            break;
+          case LONG:
+          case TIMESTAMP:
+            frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Long);
+            frame.setLong(slot, (long) vectors.get(index).getObject(i));
+            break;
+          case DOUBLE:
+            frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Double);
+            frame.setDouble(slot, (double) vectors.get(index).getObject(i));
+            break;
           case STRING:
-            frame.setObject(slot, vectors.get(j).getObject(i));
+            frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Object);
+            frame.setObject(slot, vectors.get(index).getObject(i));
             break;
           default:
             throw new IllegalArgumentException("Unexpected ArrowFieldType:" + type);

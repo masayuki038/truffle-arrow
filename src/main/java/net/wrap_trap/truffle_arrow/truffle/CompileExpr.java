@@ -40,33 +40,12 @@ public class CompileExpr implements RexVisitor<ExprBase> {
     this.from = from;
     this.context = context;
   }
-
-  private FrameSlotKind getFrameSlotKind(RelDataType relDataType) {
-    JavaTypeFactory typeFactory = TruffleArrowConfig.INSTANCE.typeFactory();
-    Type clazz = typeFactory.getJavaClass(relDataType);
-    if (clazz == Integer.class) {
-      return FrameSlotKind.Int;
-    } else if (clazz == Long.class) {
-      return FrameSlotKind.Long;
-    } else if (clazz == Double.class) {
-      return FrameSlotKind.Double;
-    } else if (clazz == Boolean.class) {
-      return FrameSlotKind.Boolean;
-    } else if (clazz == Byte.class) {
-      return FrameSlotKind.Byte;
-    } else if (clazz == Float.class) {
-      return FrameSlotKind.Float;
-    } else if (clazz == Object.class) {
-      return FrameSlotKind.Object;
-    }
-    throw new IllegalArgumentException("Unexpected Java Class: " + clazz);
-  }
-
+  
   @Override
   public ExprBase visitInputRef(RexInputRef inputRef) {
     this.context.addInputRef(inputRef);
-    FrameSlotKind kind = getFrameSlotKind(inputRef.getType());
-    FrameSlot slot = from.addFrameSlot(inputRef.getIndex(), kind);
+    //FrameSlotKind kind = getFrameSlotKind(inputRef.getType());
+    FrameSlot slot = from.addFrameSlot(inputRef.getIndex());
     Objects.requireNonNull(slot);
 
     return ExprReadLocalNodeGen.create(slot);
