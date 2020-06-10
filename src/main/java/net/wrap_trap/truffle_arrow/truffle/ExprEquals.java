@@ -13,7 +13,6 @@ import java.util.Objects;
 @NodeInfo(shortName = "=")
 abstract class ExprEquals extends ExprBinary {
 
-
   @Specialization
   protected boolean eq(boolean left, boolean right) {
     return left == right;
