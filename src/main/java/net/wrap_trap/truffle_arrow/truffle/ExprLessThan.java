@@ -1,6 +1,5 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import org.apache.arrow.vector.util.Text;
@@ -9,7 +8,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Objects;
 
 @NodeInfo(shortName = "<")
 abstract public class ExprLessThan extends ExprBinary {
