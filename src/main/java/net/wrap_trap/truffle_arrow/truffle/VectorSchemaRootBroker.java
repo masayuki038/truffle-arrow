@@ -21,7 +21,6 @@ public class VectorSchemaRootBroker extends RowSink {
 
   private final RelDataType relType;
   private VectorSchemaRoot[] vectorSchemaRoots;
-  private UInt4Vector selectionVector;
   private int[] fields;
   private RowSink then;
 
@@ -29,21 +28,18 @@ public class VectorSchemaRootBroker extends RowSink {
       FrameDescriptor frameDescriptor,
       RelDataType relType,
       VectorSchemaRoot[] vectorSchemaRoots,
-      UInt4Vector selectionVector,
       int[] fields,
       ThenRowSink then) {
     RowSink sink = then.apply(frameDescriptor);
-    return new VectorSchemaRootBroker(relType, vectorSchemaRoots, selectionVector, fields, sink);
+    return new VectorSchemaRootBroker(relType, vectorSchemaRoots, fields, sink);
   }
 
   private VectorSchemaRootBroker(
       RelDataType relType,
       VectorSchemaRoot[] vectorSchemaRoots,
-      UInt4Vector selectionVector,
       int[] fields, RowSink then) {
     this.relType = relType;
     this.vectorSchemaRoots = vectorSchemaRoots;
-    this.selectionVector = selectionVector;
     this.fields = fields;
     this.then = then;
 
@@ -58,7 +54,6 @@ public class VectorSchemaRootBroker extends RowSink {
         .collect(Collectors.toList());
 
       context.setVectors(selected);
-      context.setSelectionVector(this.selectionVector);
       then.executeVoid(frame, frameDescriptor, context);
     }
   }

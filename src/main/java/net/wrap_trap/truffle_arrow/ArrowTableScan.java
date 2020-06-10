@@ -25,7 +25,6 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
   private RelOptTable relOptTable;
   private ArrowTable arrowTable;
   private VectorSchemaRoot[] vectorSchemaRoots;
-  private UInt4Vector selectionVector;
   private int[] fields;
 
   public ArrowTable getArrowTable() {
@@ -33,19 +32,18 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
   }
 
   public ArrowTableScan(RelOptCluster cluster, RelOptTable relOptTable, ArrowTable arrowTable,
-                        VectorSchemaRoot[] vectorSchemaRoots, UInt4Vector selectionVector, int[] fields) {
+                        VectorSchemaRoot[] vectorSchemaRoots, int[] fields) {
     super(cluster, cluster.traitSetOf(ArrowRel.CONVENTION), relOptTable);
     this.relOptTable = relOptTable;
     this.arrowTable = arrowTable;
     this.vectorSchemaRoots = vectorSchemaRoots;
-    this.selectionVector = selectionVector;
     this.fields = fields;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new ArrowTableScan(getCluster(), this.relOptTable, this.arrowTable, this.vectorSchemaRoots,
-      this.selectionVector, this.fields);
+      this.fields);
   }
 
   @Override
@@ -65,10 +63,6 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
     return this.vectorSchemaRoots;
   }
 
-  public UInt4Vector getSelectionVector() {
-    return this.selectionVector;
-  }
-
   public RelNode getInput() {
     return null;
   }
@@ -78,7 +72,6 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
       frameDescriptor -> VectorSchemaRootBroker.compile(
         frameDescriptor,
         getRowType(),this.vectorSchemaRoots,
-        this.selectionVector,
         this.fields,
         next);
   }

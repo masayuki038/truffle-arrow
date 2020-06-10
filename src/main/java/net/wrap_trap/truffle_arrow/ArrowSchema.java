@@ -54,10 +54,9 @@ public class ArrowSchema extends AbstractSchema {
       Arrays.stream(arrowFiles).forEach(file -> {
         try {
           VectorSchemaRoot[] vectorSchemaRoots = ArrowUtils.load(file.getAbsolutePath());
-          UInt4Vector selectionVector = ArrowUtils.createSelectionVector();
           tableMap.put(
             trim(file.getName(), ".arrow").toUpperCase(),
-            new ArrowTable(vectorSchemaRoots, selectionVector, null));
+            new ArrowTable(vectorSchemaRoots, null));
         } catch (IOException e) {
           throw new IllegalStateException(e);
         }

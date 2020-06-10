@@ -39,7 +39,6 @@ public class ArrowProjectTableScanRule extends RelOptRule {
                           scan.getTable(),
                           scan.getArrowTable(),
                           scan.getVectorSchemaRoots(),
-                          scan.getSelectionVector(),
                           fields));
   }
 

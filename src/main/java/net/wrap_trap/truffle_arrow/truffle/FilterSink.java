@@ -6,6 +6,7 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import net.wrap_trap.truffle_arrow.ArrowFieldType;
+import net.wrap_trap.truffle_arrow.ArrowUtils;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.calcite.rex.RexNode;
@@ -36,7 +37,7 @@ public class FilterSink extends RowSink {
   public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context) throws UnexpectedResultException {
     List<Integer> indices = context.getInputRefIndices();
     List<FieldVector> vectors = context.vectors();
-    UInt4Vector selectionVector = context.selectionVector();
+    UInt4Vector selectionVector = ArrowUtils.createSelectionVector();
     selectionVector.setValueCount(vectors.get(0).getValueCount());
     int s = 0;
 
@@ -75,6 +76,7 @@ public class FilterSink extends RowSink {
       }
     }
     selectionVector.setValueCount(s);
+    context.setSelectionVector(selectionVector);
 
     then.executeVoid(frame, frameDescriptor, context);
   }

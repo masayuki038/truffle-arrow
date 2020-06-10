@@ -28,12 +28,10 @@ import java.util.stream.Collectors;
 public class ArrowTable extends AbstractTable implements QueryableTable, TranslatableTable {
 
   private VectorSchemaRoot[] vectorSchemaRoots;
-  private UInt4Vector selectionVector;
   private RelProtoDataType tProtoRowType;
 
-  public ArrowTable(VectorSchemaRoot[] vectorSchemaRoots, UInt4Vector selectionVector, RelProtoDataType tProtoRowType) {
+  public ArrowTable(VectorSchemaRoot[] vectorSchemaRoots, RelProtoDataType tProtoRowType) {
     this.vectorSchemaRoots = vectorSchemaRoots;
-    this.selectionVector = selectionVector;
     this.tProtoRowType = tProtoRowType;
   }
 
@@ -61,7 +59,7 @@ public class ArrowTable extends AbstractTable implements QueryableTable, Transla
     int fieldCount = relOptTable.getRowType().getFieldCount();
     int[] fields = identityList(fieldCount);
     return new ArrowTableScan(context.getCluster(), relOptTable, this,
-      this.vectorSchemaRoots, this.selectionVector, fields);
+      this.vectorSchemaRoots, fields);
   }
 
   private RelDataType deduceRowType(VectorSchemaRoot vectorSchemaRoot, JavaTypeFactory typeFactory) {
