@@ -111,10 +111,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
         }
         throw new UnsupportedOperationException();
       case IS_NULL:
-        if (containsInputRef(call.getOperands())) {
-          return ExprIsNullFilterNodeGen.create(compile(singleOperand(call.getOperands())));
-        }
-        throw new UnsupportedOperationException();
+        return isNull(call.getOperands());
       case IS_NOT_NULL:
         return ExprIsNotNullFilterNodeGen.create(compile(singleOperand(call.getOperands())));
       case CAST:
@@ -248,6 +245,15 @@ public class CompileExpr implements RexVisitor<ExprBase> {
       acc = reduce.accept(compile(operands.get(i)), acc);
 
     return acc;
+  }
+
+  private ExprBase isNull(List<RexNode> operands) {
+    assert operands.size() == 1;
+
+    ExprBase left = operands.get(0).accept(new CompileExpr(from, context));
+    ExprBase right = ExprLiteral.Null();
+
+    return ExprEqualsNodeGen.create(left, right);
   }
 
   private ExprBase binary(List<RexNode> operands, BinaryConstructor then) {

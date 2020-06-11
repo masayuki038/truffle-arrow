@@ -45,30 +45,35 @@ public class FilterSink extends RowSink {
       for (int j = 0; j < indices.size(); j ++) {
         int index = indices.get(j);
         FrameSlot slot = frameDescriptor.findFrameSlot(index);
-        ArrowFieldType type = ArrowFieldType.of(vectors.get(index).getField().getFieldType().getType());
-
-        switch (type) {
-          case INT:
-          case TIME:
-          case DATE:
-            frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Int);
-            frame.setInt(slot, (int) vectors.get(index).getObject(i));
-            break;
-          case LONG:
-          case TIMESTAMP:
-            frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Long);
-            frame.setLong(slot, (long) vectors.get(index).getObject(i));
-            break;
-          case DOUBLE:
-            frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Double);
-            frame.setDouble(slot, (double) vectors.get(index).getObject(i));
-            break;
-          case STRING:
-            frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Object);
-            frame.setObject(slot, vectors.get(index).getObject(i));
-            break;
-          default:
-            throw new IllegalArgumentException("Unexpected ArrowFieldType:" + type);
+        Object value = vectors.get(index).getObject(i);
+        if (value == null) {
+          frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Object);
+          frame.setObject(slot, SqlNull.INSTANCE);
+        } else {
+          ArrowFieldType type = ArrowFieldType.of(vectors.get(index).getField().getFieldType().getType());
+          switch (type) {
+            case INT:
+            case TIME:
+            case DATE:
+              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Int);
+              frame.setInt(slot, (int) value);
+              break;
+            case LONG:
+            case TIMESTAMP:
+              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Long);
+              frame.setLong(slot, (long) value);
+              break;
+            case DOUBLE:
+              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Double);
+              frame.setDouble(slot, (double) value);
+              break;
+            case STRING:
+              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Object);
+              frame.setObject(slot, value);
+              break;
+            default:
+              throw new IllegalArgumentException("Unexpected ArrowFieldType:" + type);
+          }
         }
       }
       if (this.conditionExpr.executeBoolean(frame)) {

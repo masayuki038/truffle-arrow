@@ -49,7 +49,6 @@ abstract class ExprLiteral extends ExprBase {
       Object executeGeneric(VirtualFrame frame) {
         return value;
       }
-
     };
   }
 

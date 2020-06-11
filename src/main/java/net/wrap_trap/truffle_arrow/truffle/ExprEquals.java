@@ -29,16 +29,6 @@ abstract class ExprEquals extends ExprBinary {
   }
 
   @Specialization
-  protected SqlNull eq(SqlNull left, Object right) {
-    return SqlNull.INSTANCE;
-  }
-
-  @Specialization
-  protected SqlNull eq(Object left, SqlNull right) {
-    return SqlNull.INSTANCE;
-  }
-
-  @Specialization
   protected boolean eq(Text left, String right) {
     return Objects.equals(left.toString(), right);
   }
