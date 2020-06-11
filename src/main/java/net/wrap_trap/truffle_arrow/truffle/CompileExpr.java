@@ -106,10 +106,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
       case EQUALS:
         return binary(call.getOperands(), ExprEqualsNodeGen::create);
       case NOT_EQUALS:
-        if (containsInputRef(call.getOperands())) {
-          return binary(call.getOperands(), ExprNotEqualFilterNodeGen::create);
-        }
-        throw new UnsupportedOperationException();
+        return ExprNotNodeGen.create(binary(call.getOperands(), ExprEqualsNodeGen::create));
       case IS_NULL:
         return isNull(call.getOperands());
       case IS_NOT_NULL:
