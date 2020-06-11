@@ -113,7 +113,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
       case IS_NULL:
         return isNull(call.getOperands());
       case IS_NOT_NULL:
-        return ExprIsNotNullFilterNodeGen.create(compile(singleOperand(call.getOperands())));
+        return ExprNotNodeGen.create(isNull(call.getOperands()));
       case CAST:
         return ExprCastNodeGen.create(call.getType(), compile(singleOperand(call.getOperands())));
 //      case OR:
