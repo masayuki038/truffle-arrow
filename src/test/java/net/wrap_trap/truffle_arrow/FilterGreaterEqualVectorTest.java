@@ -56,7 +56,7 @@ public class FilterGreaterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(BigInt As Int)"));
+      containsString("Unsupported operation: CAST(class java.lang.Long As Int)"));
   }
 
   @Test
@@ -122,7 +122,7 @@ public class FilterGreaterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(Float8 As Int)"));
+      containsString("Unsupported operation: CAST(class java.lang.Double As Int)"));
   }
 
   @Test
@@ -205,7 +205,7 @@ public class FilterGreaterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(Float8 As Long)"));
+      containsString("Unsupported operation: CAST(class java.lang.Double As Long)"));
   }
 
   @Test
@@ -242,7 +242,7 @@ public class FilterGreaterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(VarChar As Object)"));
+      containsString("Unsupported operation: CAST(class org.apache.arrow.vector.util.Text As Timestamp)"));
   }
 
   @Test
@@ -254,7 +254,7 @@ public class FilterGreaterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(VarChar As Object)"));
+      containsString("Unsupported operation: CAST(class org.apache.arrow.vector.util.Text As TIME)"));
   }
 
   @Test
@@ -266,7 +266,7 @@ public class FilterGreaterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(VarChar As Object)"));
+      containsString("Unsupported operation: CAST(class org.apache.arrow.vector.util.Text As DATE)"));
   }
 
   @Test
@@ -311,7 +311,7 @@ public class FilterGreaterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(VarChar As Object)"));
+      containsString("CAST(class org.apache.arrow.vector.util.Text As Timestamp)"));
   }
 
   @Test
@@ -387,7 +387,7 @@ public class FilterGreaterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(VarChar As Object)"));
+      containsString("Unsupported operation: CAST(class org.apache.arrow.vector.util.Text As TIME)"));
   }
 
   @Test
@@ -467,7 +467,7 @@ public class FilterGreaterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(VarChar As Object)"));
+      containsString("Unsupported operation: CAST(class org.apache.arrow.vector.util.Text As DATE)"));
   }
 
   @Test

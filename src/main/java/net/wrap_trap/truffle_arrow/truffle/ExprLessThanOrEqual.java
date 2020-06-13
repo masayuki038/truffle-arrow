@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import org.apache.arrow.vector.util.Text;
@@ -48,8 +49,18 @@ abstract public class ExprLessThanOrEqual extends ExprBinary {
   }
 
   @Specialization
-  protected SqlNull le(Object left, SqlNull right) {
-    return SqlNull.INSTANCE;
+  protected boolean le(Object left, SqlNull right) {
+    return (left == SqlNull.INSTANCE);
+  }
+
+  @Specialization
+  protected boolean le(SqlNull left, Object right) {
+    return (right == SqlNull.INSTANCE);
+  }
+
+  @Specialization
+  protected boolean le(Text left, Text right) {
+    return left.toString().compareTo(right.toString()) <= 0;
   }
 
   @Specialization
@@ -65,6 +76,16 @@ abstract public class ExprLessThanOrEqual extends ExprBinary {
   @Specialization
   protected boolean le(String left, String right) {
     return left.compareTo(right) <= 0;
+  }
+
+  @Specialization
+  protected boolean le(Text left, Object right) {
+    return le(left.toString(), right);
+  }
+
+  @Specialization
+  protected boolean le(Object left, Text right) {
+    return le(left, right.toString());
   }
 
   @Specialization
@@ -95,5 +116,11 @@ abstract public class ExprLessThanOrEqual extends ExprBinary {
   @Specialization
   protected boolean le(LocalDate left, Integer right) {
     return Integer.valueOf((int) left.toEpochDay()).compareTo(right) <= 0;
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  protected boolean le(Object left, Object right) {
+    return ((Comparable) left).compareTo(right) <= 0;
   }
 }

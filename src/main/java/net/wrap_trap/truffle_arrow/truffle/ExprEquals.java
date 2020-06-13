@@ -34,6 +34,16 @@ abstract class ExprEquals extends ExprBinary {
   }
 
   @Specialization
+  protected boolean ge(Object left, SqlNull right) {
+    return (left == SqlNull.INSTANCE);
+  }
+
+  @Specialization
+  protected boolean ge(SqlNull left, Object right) {
+    return (right == SqlNull.INSTANCE);
+  }
+
+  @Specialization
   protected boolean eq(Text left, Text right) {
     return Objects.equals(left.toString(), right.toString());
   }

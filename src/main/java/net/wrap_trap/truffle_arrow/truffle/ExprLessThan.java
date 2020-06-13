@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import org.apache.arrow.vector.util.Text;
@@ -48,8 +49,18 @@ abstract public class ExprLessThan extends ExprBinary {
   }
 
   @Specialization
-  protected SqlNull lt(Object left, SqlNull right) {
-    return SqlNull.INSTANCE;
+  protected boolean lt(Object left, SqlNull right) {
+    return false;
+  }
+
+  @Specialization
+  protected boolean lt(SqlNull left, Object right) {
+    return false;
+  }
+
+  @Specialization
+  protected boolean lt(Text left, Text right) {
+    return left.toString().compareTo(right.toString()) < 0;
   }
 
   @Specialization
@@ -65,6 +76,16 @@ abstract public class ExprLessThan extends ExprBinary {
   @Specialization
   protected boolean lt(String left, String right) {
     return left.compareTo(right) < 0;
+  }
+
+  @Specialization
+  protected boolean lt(Text left, Object right) {
+    return lt(left.toString(), right);
+  }
+
+  @Specialization
+  protected boolean lt(Object left, Text right) {
+    return lt(left, right.toString());
   }
 
   @Specialization
@@ -95,5 +116,11 @@ abstract public class ExprLessThan extends ExprBinary {
   @Specialization
   protected boolean lt(LocalDate left, Integer right) {
     return Integer.valueOf((int) left.toEpochDay()).compareTo(right) < 0;
+  }
+
+  @Specialization
+  @CompilerDirectives.TruffleBoundary
+  protected boolean lt(Object left, Object right) {
+    return ((Comparable) left).compareTo(right) < 0;
   }
 }

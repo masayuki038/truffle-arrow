@@ -19,8 +19,6 @@ abstract public class ExprCast extends ExprBase {
   protected Object castToInt(Object value) {
     if (value instanceof Integer) {
       return value;
-    } else if (value instanceof Long) {
-      return ((Long) value).intValue();
     } else if (value instanceof Text) {
       return Integer.parseInt(value.toString());
     }
@@ -77,8 +75,9 @@ abstract public class ExprCast extends ExprBase {
   }
 
   @Specialization
-  protected SqlNull executeNull(Object any) {
-    return SqlNull.INSTANCE;
+  protected Object cast(Object value) {
+    throw new UnsupportedOperationException(
+      String.format("Unsupported operation: CAST(%s As %s)", value.getClass(), type.getSqlTypeName()));
   }
 
   protected boolean asBoolean() {
