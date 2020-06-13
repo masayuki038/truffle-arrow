@@ -44,8 +44,12 @@ public class CompileExpr implements RexVisitor<ExprBase> {
   @Override
   public ExprBase visitInputRef(RexInputRef inputRef) {
     this.context.addInputRef(inputRef);
-    //FrameSlotKind kind = getFrameSlotKind(inputRef.getType());
-    FrameSlot slot = from.addFrameSlot(inputRef.getIndex());
+
+    int index = inputRef.getIndex();
+    FrameSlot slot = from.findFrameSlot(index);
+    if (slot == null) {
+      slot = from.addFrameSlot(index);
+    }
     Objects.requireNonNull(slot);
 
     return ExprReadLocalNodeGen.create(slot);

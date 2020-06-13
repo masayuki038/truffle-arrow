@@ -2,15 +2,10 @@ package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
-import org.apache.arrow.vector.*;
-import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.type.SqlTypeName;
-
-import java.time.Instant;
-import java.time.LocalDate;
+import org.apache.arrow.vector.util.Text;
 
 @NodeChild("target")
 abstract public class ExprCast extends ExprBase {
@@ -20,141 +15,65 @@ abstract public class ExprCast extends ExprBase {
     this.type = type;
   }
 
-  @Specialization(guards = "asBoolean()")
-  protected boolean executeBoolean(boolean value) {
-    return value;
+  @Specialization(guards = "asInt()")
+  protected Object castToInt(Object value) {
+    if (value instanceof Integer) {
+      return value;
+    } else if (value instanceof Long) {
+      return ((Long) value).intValue();
+    } else if (value instanceof Text) {
+      return Integer.parseInt(value.toString());
+    }
+    throw new UnsupportedOperationException(
+      String.format("Unsupported operation: CAST(%s As Int)", value.getClass()));
   }
 
   @Specialization(guards = "asLong()")
-  protected long executeLong(long value) {
-    return value;
-  }
-
-  @Specialization(guards = "asLong()")
-  protected long executeLong(double value) {
-    return (long) value;
+  protected Object castToLong(Object value) {
+    if (value instanceof Integer) {
+      return ((Integer) value).longValue();
+    } else if (value instanceof Long) {
+      return value;
+    } else if (value instanceof Text) {
+      return Long.parseLong(value.toString());
+    }
+    throw new UnsupportedOperationException(
+      String.format("Unsupported operation: CAST(%s As Long)", value.getClass()));
   }
 
   @Specialization(guards = "asDouble()")
-  protected double executeDouble(double value) {
-    return value;
-  }
-
-  @Specialization(guards = "asDouble()")
-  protected double executeDouble(long value) {
-    return value;
-  }
-
-  @Specialization(guards = "asLocalDate()")
-  protected LocalDate executeLocalDate(LocalDate value) {
-    return value;
-  }
-
-  @Specialization(guards = "asInstant()")
-  protected Instant executeInstant(Instant value) {
-    return value;
+  protected Object castToDouble(Object value) {
+    if (value instanceof Integer) {
+      return ((Integer) value).doubleValue();
+    } else if (value instanceof Long) {
+      return ((Long) value).doubleValue();
+    } else if (value instanceof Text) {
+      return Double.parseDouble(value.toString());
+    }
+    throw new UnsupportedOperationException(
+      String.format("Unsupported operation: CAST(%s As Long)", value.getClass()));
   }
 
   @Specialization(guards = "asString()")
-  protected Object executeString(Object value) {
-    if (value == SqlNull.INSTANCE)
-      return SqlNull.INSTANCE;
-    else
-      return String.valueOf(value);
-  }
-
-  @Specialization
-  protected FieldVector executeIntVector(final IntVector vector) {
-    FrameSlotKind frameSlotKind = Types.kind(type.getSqlTypeName());
-    switch(frameSlotKind) {
-      case Long:
-        return new FieldVectorProxy(vector) {
-          @Override
-          public Object getObject(int i) {
-            return vector.getObject(i).longValue();
-          }
-        };
-      case Double:
-        return new FieldVectorProxy(vector) {
-          @Override
-          public Object getObject(int i) {
-            return vector.getObject(i).doubleValue();
-          }
-        };
-      default:
-        throw new UnsupportedOperationException(
-          String.format("Unsupported operation: CAST(Int As %s)", frameSlotKind));
-    }
-  }
-
-  @Specialization
-  protected FieldVector executeLongVector(final BigIntVector vector) {
-    FrameSlotKind frameSlotKind = Types.kind(type.getSqlTypeName());
-    switch(frameSlotKind) {
-      case Double:
-        return new FieldVectorProxy(vector) {
-          @Override
-          public Object getObject(int i) {
-            return vector.getObject(i).doubleValue();
-          }
-        };
-      default:
-        throw new UnsupportedOperationException(
-          String.format("Unsupported operation: CAST(BigInt As %s)", frameSlotKind));
-    }
-  }
-
-  @Specialization
-  protected FieldVector executeVarCharVector(final VarCharVector vector) {
-    FrameSlotKind frameSlotKind = Types.kind(type.getSqlTypeName());
-    switch(frameSlotKind) {
-      case Int:
-        return new FieldVectorProxy(vector) {
-          @Override
-          public Object getObject(int i) {
-            return Integer.parseInt(vector.getObject(i).toString());
-          }
-        };
-      case Long:
-        return new FieldVectorProxy(vector) {
-          @Override
-          public Object getObject(int i) {
-            return Long.parseLong(vector.getObject(i).toString());
-          }
-        };
-      case Double:
-        return new FieldVectorProxy(vector) {
-          @Override
-          public Object getObject(int i) {
-            return Double.parseDouble(vector.getObject(i).toString());
-          }
-        };
-      default:
-        throw new UnsupportedOperationException(
-          String.format("Unsupported operation: CAST(VarChar As %s)", frameSlotKind));
-    }
-  }
-
-  @Specialization
-  protected FieldVector executeDateDayVector(final DateDayVector vector) {
-    FrameSlotKind frameSlotKind = Types.kind(type.getSqlTypeName());
-    if (frameSlotKind == FrameSlotKind.Object) { // timestamp
-      return new FieldVectorProxy(vector) {
-        @Override
-        public Long getObject(int i) {
-          return vector.getObject(i) * 24 * 60 * 60 * 1000L;
-        }
-      };
+  protected Object castToString(Object value) {
+    if (value instanceof Integer) {
+      return value.toString();
+    } else if (value instanceof Long) {
+      return value.toString();
+    } else if (value instanceof Double) {
+      return value.toString();
     }
     throw new UnsupportedOperationException(
-      String.format("Unsupported operation: CAST(Date As %s)", frameSlotKind));
+      String.format("Unsupported operation: CAST(%s As Long)", value.getClass()));
   }
 
-  @Specialization
-  protected FieldVector executeFloat8Vector(final Float8Vector vector) {
-    FrameSlotKind frameSlotKind = Types.kind(type.getSqlTypeName());
+  @Specialization(guards = "asInstant()")
+  protected Object castToTimestamp(Object value) {
+    if (value instanceof Integer) { // date
+      return ((Integer) value) * 24 * 60 * 60 * 1000L;
+    }
     throw new UnsupportedOperationException(
-      String.format("Unsupported operation: CAST(Float8 As %s)", frameSlotKind));
+      String.format("Unsupported operation: CAST(%s As Timestamp)", value.getClass()));
   }
 
   @Specialization
@@ -164,6 +83,10 @@ abstract public class ExprCast extends ExprBase {
 
   protected boolean asBoolean() {
     return Types.kind(type.getSqlTypeName()) == FrameSlotKind.Boolean;
+  }
+
+  protected boolean asInt() {
+    return Types.kind(type.getSqlTypeName()) == FrameSlotKind.Int;
   }
 
   protected boolean asLong() {

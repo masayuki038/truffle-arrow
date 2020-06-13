@@ -19,6 +19,11 @@ abstract class ExprEquals extends ExprBinary {
   }
 
   @Specialization
+  protected boolean eq(int left, int right) {
+    return left == right;
+  }
+
+  @Specialization
   protected boolean eq(long left, long right) {
     return left == right;
   }
@@ -26,6 +31,11 @@ abstract class ExprEquals extends ExprBinary {
   @Specialization
   protected boolean eq(double left, double right) {
     return left == right;
+  }
+
+  @Specialization
+  protected boolean eq(Text left, Text right) {
+    return Objects.equals(left.toString(), right.toString());
   }
 
   @Specialization
@@ -41,6 +51,16 @@ abstract class ExprEquals extends ExprBinary {
   @Specialization
   protected boolean eq(String left, String right) {
     return Objects.equals(left, right);
+  }
+
+  @Specialization
+  protected boolean eq(Text left, Object right) {
+    return eq(left.toString(), right);
+  }
+
+  @Specialization
+  protected boolean eq(Object left, Text right) {
+    return eq(left, right.toString());
   }
 
   @Specialization
@@ -76,6 +96,6 @@ abstract class ExprEquals extends ExprBinary {
   @Specialization
   @CompilerDirectives.TruffleBoundary
   protected boolean eq(Object left, Object right) {
-    return left == right;
+    return ((Comparable) left).compareTo(right) == 0;
   }
 }
