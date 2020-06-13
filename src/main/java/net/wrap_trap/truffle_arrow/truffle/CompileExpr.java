@@ -3,14 +3,9 @@ package net.wrap_trap.truffle_arrow.truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
-import net.wrap_trap.truffle_arrow.TruffleArrowConfig;
-import org.apache.calcite.adapter.java.JavaTypeFactory;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
-import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Objects;
 
