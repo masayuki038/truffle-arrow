@@ -115,7 +115,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
       case OR:
         return fold(call.getOperands(), 0, ExprOrNodeGen::create);
       case AND:
-        return binary(call.getOperands(), ExprAndNodeGen::create);
+        return fold(call.getOperands(), 0, ExprAndNodeGen::create);
 //      case LIKE:
 //        throw new UnsupportedOperationException();
 //      case SIMILAR:

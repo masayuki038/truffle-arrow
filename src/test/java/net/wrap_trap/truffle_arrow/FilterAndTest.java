@@ -49,4 +49,45 @@ public class FilterAndTest {
       0
     );
   }
+
+  @Test
+  public void threeAreTrue() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_INT=0 AND F_BIGINT=10 AND F_VARCHAR='0'",
+      1,
+      EXPECTED0
+    );
+  }
+
+  @Test
+  public void oneIsTrueButOthersIsFalse() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_INT=0 AND F_BIGINT=9 AND F_VARCHAR='1'",
+      0
+    );
+  }
+
+  @Test
+  public void oneIsFalseButOthersIsTrue() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_INT=0 AND F_BIGINT=10 AND F_VARCHAR='1'",
+      0
+    );
+  }
+
+  @Test
+  public void oneIsFalseButOthersIsTrue2() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_INT=0 AND F_BIGINT=9 AND F_VARCHAR='0'",
+      0
+    );
+  }
+
+  @Test
+  public void threeAreFalse() throws SQLException {
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_INT=-1 AND F_BIGINT=-1 AND F_VARCHAR='-1'",
+      0
+    );
+  }
 }
