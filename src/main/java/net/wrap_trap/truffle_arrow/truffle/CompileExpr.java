@@ -112,10 +112,10 @@ public class CompileExpr implements RexVisitor<ExprBase> {
         return ExprNotNodeGen.create(isNull(call.getOperands()));
       case CAST:
         return ExprCastNodeGen.create(call.getType(), compile(singleOperand(call.getOperands())));
-//      case OR:
-//        return fold(call.getOperands(), 0, ExprOrNodeGen::create);
-//      case AND:
-//        return binary(call.getOperands(), ExprAndNodeGen::create);
+      case OR:
+        return fold(call.getOperands(), 0, ExprOrNodeGen::create);
+      case AND:
+        return binary(call.getOperands(), ExprAndNodeGen::create);
 //      case LIKE:
 //        throw new UnsupportedOperationException();
 //      case SIMILAR:
