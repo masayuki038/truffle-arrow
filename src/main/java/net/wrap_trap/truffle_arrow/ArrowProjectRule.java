@@ -16,8 +16,7 @@ public class ArrowProjectRule extends RelOptRule {
 
   public ArrowProjectRule(RelBuilderFactory relBuilderFactory) {
     super(
-      operand(LogicalProject.class,
-        operand(LogicalFilter.class, any())),
+      operand(LogicalProject.class, any()),
       relBuilderFactory,
       "ArrowProjectRule");
   }

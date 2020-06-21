@@ -88,8 +88,8 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 //        return binary(call.getOperands(), ExprMultiplyNodeGen::create);
 //      case DIVIDE:
 //        return binary(call.getOperands(), ExprDivideNodeGen::create);
-//      case PLUS:
-//        return binary(call.getOperands(), ExprPlusNodeGen::create);
+      case PLUS:
+        return binary(call.getOperands(), ExprPlusNodeGen::create);
 //      case MINUS:
 //        return binary(call.getOperands(), ExprMinusNodeGen::create);
 //      case IN:

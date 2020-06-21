@@ -17,14 +17,14 @@ import java.util.List;
 
 public class ArrowProject  extends Project implements ArrowRel {
 
-  private List<RelDataTypeField> inputFieldList;
+  private List<? extends RexNode> projects;
 
   public ArrowProject(RelOptCluster cluster,
                       RelTraitSet traitSet,
                       RelNode input,
                       List<? extends RexNode> projects, RelDataType rowType) {
     super(cluster, traitSet, input, projects, rowType);
-    this.inputFieldList = input.getRowType().getFieldList();
+    this.projects = projects;
   }
 
   @Override
@@ -38,23 +38,7 @@ public class ArrowProject  extends Project implements ArrowRel {
   }
 
   public ThenRowSink createRowSink(ThenRowSink next, SinkContext context) {
-    int[] projectIndex = createProjectIndex();
     return
-      sourceFrame -> ProjectSink.createSink(sourceFrame, projectIndex, next);
-  }
-
-  private int[] createProjectIndex() {
-    List<String> fieldNames = getRowType().getFieldNames();
-    int[] projectIndex = new int[fieldNames.size()];
-    for (int i = 0; i < fieldNames.size(); i ++) {
-      for (int j = 0; j < this.inputFieldList.size(); j ++) {
-        RelDataTypeField inputField = this.inputFieldList.get(j);
-        if (fieldNames.get(i).equals(inputField.getName())) {
-          projectIndex[i] = inputField.getIndex();
-          break;
-        }
-      }
-    }
-    return projectIndex;
+      sourceFrame -> ProjectSink.createSink(sourceFrame, this.projects, context, next);
   }
 }

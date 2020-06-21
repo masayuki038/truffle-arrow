@@ -64,6 +64,7 @@ public class ArrowCatalogReader implements Prepare.CatalogReader {
     planner.addRule(ArrowProjectTableScanRule.INSTANCE);
     planner.addRule(ArrowFilterTableScanRule.INSTANCE);
     planner.addRule(ArrowProjectRule.INSTANCE);
+    planner.addRule(ArrowAggregateRule.INSTANCE);
   }
 
   @Override

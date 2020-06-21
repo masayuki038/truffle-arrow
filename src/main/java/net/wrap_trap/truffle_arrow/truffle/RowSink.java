@@ -1,9 +1,16 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import net.wrap_trap.truffle_arrow.ArrowFieldType;
+import org.apache.arrow.vector.FieldVector;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * An expression that receives rows.
@@ -11,10 +18,57 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
  * Could transform rows, send them back to the user, or write them to a file somewhere.
  */
 public abstract class RowSink extends Node {
-    // TODO implment array node to handle FieldVector[] for optimization
-    /**
-     * Do something with one row. Called once per row of the relational expression.
-     */
-    public abstract void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context)
-      throws UnexpectedResultException;
+
+  public void executeByRow(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context)
+    throws UnexpectedResultException {}
+
+  // TODO implment array node to handle FieldVector[] for optimization
+  /**
+   * Do something with one row. Called once per row of the relational expression.
+   */
+  public abstract void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context)
+    throws UnexpectedResultException;
+
+  protected void vectorEach(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context, Consumer<Integer> action) {
+    List<Integer> indices = context.getInputRefIndices();
+    List<FieldVector> vectors = context.vectors();
+
+    for (int i = 0; i < vectors.get(0).getValueCount(); i ++) {
+      for (int j = 0; j < indices.size(); j++) {
+        int index = indices.get(j);
+        FrameSlot slot = frameDescriptor.findFrameSlot(index);
+        Object value = vectors.get(index).getObject(i);
+        if (value == null) {
+          frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Object);
+          frame.setObject(slot, SqlNull.INSTANCE);
+        } else {
+          ArrowFieldType type = ArrowFieldType.of(vectors.get(index).getField().getFieldType().getType());
+          switch (type) {
+            case INT:
+            case TIME:
+            case DATE:
+              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Int);
+              frame.setInt(slot, (int) value);
+              break;
+            case LONG:
+            case TIMESTAMP:
+              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Long);
+              frame.setLong(slot, (long) value);
+              break;
+            case DOUBLE:
+              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Double);
+              frame.setDouble(slot, (double) value);
+              break;
+            case STRING:
+              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Object);
+              frame.setObject(slot, value);
+              break;
+            default:
+              throw new IllegalArgumentException("Unexpected ArrowFieldType:" + type);
+          }
+        }
+      }
+      action.accept(i);
+    }
+  }
 }
