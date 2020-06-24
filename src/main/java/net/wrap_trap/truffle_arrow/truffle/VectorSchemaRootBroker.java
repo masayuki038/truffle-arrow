@@ -11,7 +11,9 @@ import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.rel.type.RelDataType;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -19,6 +21,7 @@ public class VectorSchemaRootBroker extends RowSink {
 
   public static final int SLOT_OFFSET = 1;
 
+  private FrameDescriptorPart framePart;
   private final RelDataType relType;
   private VectorSchemaRoot[] vectorSchemaRoots;
   private int[] fields;
@@ -31,13 +34,15 @@ public class VectorSchemaRootBroker extends RowSink {
       int[] fields,
       ThenRowSink then) {
     RowSink sink = then.apply(framePart);
-    return new VectorSchemaRootBroker(relType, vectorSchemaRoots, fields, sink);
+    return new VectorSchemaRootBroker(framePart, relType, vectorSchemaRoots, fields, sink);
   }
 
   private VectorSchemaRootBroker(
+      FrameDescriptorPart framePart,
       RelDataType relType,
       VectorSchemaRoot[] vectorSchemaRoots,
       int[] fields, RowSink then) {
+    this.framePart = framePart;
     this.relType = relType;
     this.vectorSchemaRoots = vectorSchemaRoots;
     this.fields = fields;
@@ -50,11 +55,21 @@ public class VectorSchemaRootBroker extends RowSink {
   public void executeVoid(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
     for (VectorSchemaRoot vectorSchemaRoot : vectorSchemaRoots) {
       List<FieldVector> fieldVectors = vectorSchemaRoot.getFieldVectors();
-      List<FieldVector> selected = Arrays.stream(this.fields).mapToObj(i -> fieldVectors.get(i))
-        .collect(Collectors.toList());
+      Map<Integer, FieldVector> selected = new HashMap<>();
+      for (int i = 0; i < this.fields.length; i ++) {
+        if (context.getInputRefIndices().contains(i)) {
+          selected.put(i, fieldVectors.get(i));
+        }
+      }
 
       context.setVectors(selected);
-      then.executeVoid(frame, context);
+      this.vectorEach(frame, this.framePart, context, i -> {
+        try {
+          then.executeByRow(frame, this.framePart, context);
+        } catch (UnexpectedResultException e) {
+          throw new RuntimeException(e);
+        }
+      });
     }
   }
 }

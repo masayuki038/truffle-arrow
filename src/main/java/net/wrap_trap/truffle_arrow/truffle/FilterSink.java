@@ -1,14 +1,10 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import net.wrap_trap.truffle_arrow.ArrowUtils;
-import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.calcite.rex.RexNode;
-
-import java.util.List;
 
 
 public class FilterSink extends RowSink {
@@ -34,23 +30,11 @@ public class FilterSink extends RowSink {
   }
 
   @Override
-  public void executeVoid(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
-    List<FieldVector> vectors = context.vectors();
-    SelectionVector selectionVector = new SelectionVector(vectors.get(0).getValueCount());
-
-    this.vectorEach(frame, this.framePart, context, i -> {
-      try {
-        if (this.conditionExpr.executeBoolean(frame)) {
-          then.executeByRow(frame, this.framePart, context);
-          selectionVector.add(i);
-        }
-      } catch (UnexpectedResultException e) {
-        throw new RuntimeException(e);
-      }
-    });
-    context.setSelectionVector(selectionVector.getVector());
-    // Call only then.executeByRow
-    // then.executeVoid(frame, frameDescriptor, context);
+  public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context)
+    throws UnexpectedResultException {
+    if (this.conditionExpr.executeBoolean(frame)) {
+      then.executeByRow(frame, this.framePart, context);
+    }
   }
 
   class SelectionVector {

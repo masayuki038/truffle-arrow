@@ -9,6 +9,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExecutableNode;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import net.wrap_trap.truffle_arrow.truffle.*;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.UInt4Vector;
@@ -79,20 +80,13 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
     ThenRowSink sink = resultFrame -> new RowSink() {
       @Override
-      public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) {
-        Object[] values = framePart.getFrameSlots().stream()
-                                .map(slot -> frame.getValue(slot)).toArray();
-        
-      }
-
-      @Override
-      public void executeVoid(VirtualFrame frame, SinkContext context) {
-        List<FieldVector> fieldVectors = context.vectors();
-        UInt4Vector selectionVector = context.selectionVector();
-
-        Object[] vectors = new Object[fieldVectors.size()];
-        fieldVectors.toArray(vectors);
-        results.addAll(convertVectorsToRows(vectors, selectionVector));
+      public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context)
+        throws UnexpectedResultException {
+        List<Object> row = framePart.getFrameSlots().stream().map(slot -> {
+          ArrowFieldType arrowFieldType = context.getArrowFieldType((Integer) slot.getIdentifier());
+          return getValue(frame.getValue(slot), arrowFieldType);
+        }).collect(Collectors.toList());
+        results.add(new Row(row));
       }
     };
 

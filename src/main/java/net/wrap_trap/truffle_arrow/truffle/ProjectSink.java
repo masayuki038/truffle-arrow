@@ -69,5 +69,6 @@ public class ProjectSink extends RowSink {
     for (StatementWriteLocal local : locals) {
       local.executeVoid(frame);
     }
+    then.executeByRow(frame, framePart, context);
   }
 }

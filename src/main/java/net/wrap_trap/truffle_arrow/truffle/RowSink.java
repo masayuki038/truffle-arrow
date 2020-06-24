@@ -1,6 +1,5 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -10,6 +9,8 @@ import net.wrap_trap.truffle_arrow.ArrowFieldType;
 import org.apache.arrow.vector.FieldVector;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -26,16 +27,15 @@ public abstract class RowSink extends Node {
   /**
    * Do something with one row. Called once per row of the relational expression.
    */
-  public abstract void executeVoid(VirtualFrame frame, SinkContext context)
-    throws UnexpectedResultException;
+  public void executeVoid(VirtualFrame frame, SinkContext context)
+    throws UnexpectedResultException {}
 
   protected void vectorEach(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context, Consumer<Integer> action) {
-    List<Integer> indices = context.getInputRefIndices();
-    List<FieldVector> vectors = context.vectors();
+    Set<Integer> inputRefs = context.getInputRefIndices();
+    Map<Integer, FieldVector> vectors = context.vectors();
 
     for (int i = 0; i < vectors.get(0).getValueCount(); i ++) {
-      for (int j = 0; j < indices.size(); j++) {
-        int index = indices.get(j);
+      for (int index: inputRefs) {
         FrameSlot slot = framePart.findFrameSlot(index);
         Object value = vectors.get(index).getObject(i);
         if (value == null) {
