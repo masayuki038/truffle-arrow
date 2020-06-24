@@ -17,7 +17,7 @@ import java.util.Objects;
  */
 public class CompileExpr implements RexVisitor<ExprBase> {
 
-  public static ExprBase compile(FrameDescriptor from, RexNode child, SinkContext context) {
+  public static ExprBase compile(FrameDescriptorPart from, RexNode child, SinkContext context) {
     CompileExpr compiler = new CompileExpr(from, context);
 
     return child.accept(compiler);
@@ -28,10 +28,10 @@ public class CompileExpr implements RexVisitor<ExprBase> {
    *
    * Can be empty in queries like SELECT 1
    */
-  private final FrameDescriptor from;
+  private final FrameDescriptorPart from;
   private SinkContext context;
 
-  CompileExpr(FrameDescriptor from, SinkContext context) {
+  CompileExpr(FrameDescriptorPart from, SinkContext context) {
     this.from = from;
     this.context = context;
   }

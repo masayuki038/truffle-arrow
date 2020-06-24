@@ -13,7 +13,7 @@ import java.util.List;
 public class AggregateSink extends RowSink {
 
   public static AggregateSink createSink(
-    FrameDescriptor frameDescriptor,
+    FrameDescriptorPart framePart,
     boolean indicator,
     ImmutableBitSet groupSet,
     ImmutableList<ImmutableBitSet> groupSets,
@@ -21,10 +21,12 @@ public class AggregateSink extends RowSink {
     RexBuilder rexBuilder,
     SinkContext context,
     ThenRowSink next) {
-    RowSink rowSink = next.apply(frameDescriptor);
-    return new AggregateSink(indicator, groupSet, groupSets, aggCalls, rexBuilder, context, rowSink);
+    FrameDescriptorPart newFramePart = framePart.newPart();
+    RowSink rowSink = next.apply(newFramePart);
+    return new AggregateSink(newFramePart, indicator, groupSet, groupSets, aggCalls, rexBuilder, context, rowSink);
   }
 
+  private FrameDescriptorPart framePart;
   private boolean indicator;
   private ImmutableBitSet groupSet;
   private ImmutableList<ImmutableBitSet> groupSets;
@@ -34,6 +36,7 @@ public class AggregateSink extends RowSink {
   private RowSink then;
 
   private AggregateSink(
+    FrameDescriptorPart framePart,
     boolean indicator,
     ImmutableBitSet groupSet,
     ImmutableList<ImmutableBitSet> groupSets,
@@ -41,6 +44,7 @@ public class AggregateSink extends RowSink {
     RexBuilder rexBuilder,
     SinkContext sinkContext,
     RowSink then) {
+    this.framePart = framePart;
     this.indicator = indicator;
     this.groupSet = groupSet;
     this.groupSets = groupSets;
@@ -51,7 +55,7 @@ public class AggregateSink extends RowSink {
   }
 
   @Override
-  public void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context)
+  public void executeVoid(VirtualFrame frame, SinkContext context)
     throws UnexpectedResultException {
     System.out.println("hoge");
 //    final Map<AggregateCall, RexNode> aggCallMapping = new HashMap<>();

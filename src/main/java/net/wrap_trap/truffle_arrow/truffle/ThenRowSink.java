@@ -4,5 +4,5 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 
 @FunctionalInterface
 public interface ThenRowSink {
-    RowSink apply(FrameDescriptor frame);
+    RowSink apply(FrameDescriptorPart frame);
 }

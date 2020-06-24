@@ -19,27 +19,27 @@ import java.util.function.Consumer;
  */
 public abstract class RowSink extends Node {
 
-  public void executeByRow(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context)
+  public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context)
     throws UnexpectedResultException {}
 
   // TODO implment array node to handle FieldVector[] for optimization
   /**
    * Do something with one row. Called once per row of the relational expression.
    */
-  public abstract void executeVoid(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context)
+  public abstract void executeVoid(VirtualFrame frame, SinkContext context)
     throws UnexpectedResultException;
 
-  protected void vectorEach(VirtualFrame frame, FrameDescriptor frameDescriptor, SinkContext context, Consumer<Integer> action) {
+  protected void vectorEach(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context, Consumer<Integer> action) {
     List<Integer> indices = context.getInputRefIndices();
     List<FieldVector> vectors = context.vectors();
 
     for (int i = 0; i < vectors.get(0).getValueCount(); i ++) {
       for (int j = 0; j < indices.size(); j++) {
         int index = indices.get(j);
-        FrameSlot slot = frameDescriptor.findFrameSlot(index);
+        FrameSlot slot = framePart.findFrameSlot(index);
         Object value = vectors.get(index).getObject(i);
         if (value == null) {
-          frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Object);
+          framePart.setFrameSlotKind(slot, FrameSlotKind.Object);
           frame.setObject(slot, SqlNull.INSTANCE);
         } else {
           ArrowFieldType type = ArrowFieldType.of(vectors.get(index).getField().getFieldType().getType());
@@ -47,20 +47,20 @@ public abstract class RowSink extends Node {
             case INT:
             case TIME:
             case DATE:
-              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Int);
+              framePart.setFrameSlotKind(slot, FrameSlotKind.Int);
               frame.setInt(slot, (int) value);
               break;
             case LONG:
             case TIMESTAMP:
-              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Long);
+              framePart.setFrameSlotKind(slot, FrameSlotKind.Long);
               frame.setLong(slot, (long) value);
               break;
             case DOUBLE:
-              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Double);
+              framePart.setFrameSlotKind(slot, FrameSlotKind.Double);
               frame.setDouble(slot, (double) value);
               break;
             case STRING:
-              frameDescriptor.setFrameSlotKind(slot, FrameSlotKind.Object);
+              framePart.setFrameSlotKind(slot, FrameSlotKind.Object);
               frame.setObject(slot, value);
               break;
             default:
