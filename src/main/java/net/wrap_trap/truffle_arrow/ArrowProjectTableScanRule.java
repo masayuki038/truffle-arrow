@@ -30,16 +30,15 @@ public class ArrowProjectTableScanRule extends RelOptRule {
     final LogicalProject project = call.rel(0);
     final ArrowTableScan scan = call.rel(1);
     int[] fields = getProjectFields(project.getProjects());
-    if (fields == null) {
-      return;
-    }
+
     call.transformTo(
       new ArrowTableScan(
-                          scan.getCluster(),
-                          scan.getTable(),
-                          scan.getArrowTable(),
-                          scan.getVectorSchemaRoots(),
-                          fields));
+        scan.getCluster(),
+        scan.getTable(),
+        scan.getArrowTable(),
+        scan.getVectorSchemaRoots(),
+        project.getProjects(),
+        fields));
   }
 
   private int[] getProjectFields(List<RexNode> exps) {

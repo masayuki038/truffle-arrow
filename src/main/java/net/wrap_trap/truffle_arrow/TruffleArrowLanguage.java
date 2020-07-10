@@ -123,7 +123,7 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
   }
 
   private Object getValue(Object o, ArrowFieldType arrowFieldType) {
-    if (o == null) {
+    if (o == null || o == SqlNull.INSTANCE) {
       return SqlNull.INSTANCE;
     } else if (o instanceof Text) {
       return o.toString();

@@ -28,7 +28,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleEqualFilterByInt() throws SQLException {
+  public void byInt() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -59,7 +59,7 @@ public class FilterTest {
 //  }
 
   @Test
-  public void simpleFilterByLong() throws SQLException {
+  public void byLong() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -74,7 +74,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleFilterByLong2() throws SQLException {
+  public void byLong2() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -89,7 +89,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleFilterByString() throws SQLException {
+  public void byString() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -104,7 +104,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleFilterByString2() throws SQLException {
+  public void byString2() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -119,7 +119,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleFilterByTimestamp() throws SQLException {
+  public void byTimestamp() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -134,7 +134,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleFilterByTimestamp2() throws SQLException {
+  public void byTimestamp2() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -149,7 +149,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleFilterByTime() throws SQLException {
+  public void byTime() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -164,7 +164,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleFilterByTime2() throws SQLException {
+  public void byTime2() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -179,7 +179,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleFilterByDate() throws SQLException {
+  public void byDate() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -194,7 +194,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleFilterByDate2() throws SQLException {
+  public void byDate2() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -225,7 +225,7 @@ public class FilterTest {
 //  }
 
   @Test
-  public void simpleFilterByDouble() throws SQLException {
+  public void byDouble() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -240,7 +240,7 @@ public class FilterTest {
   }
 
   @Test
-  public void simpleFilterByDouble2() throws SQLException {
+  public void byDouble2() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(

@@ -31,18 +31,20 @@ public abstract class RowSink extends Node {
     throws UnexpectedResultException {}
 
   protected void vectorEach(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context, Consumer<Integer> action) {
-    Set<Integer> inputRefs = context.getInputRefIndices();
+    Set<InputRefSlotMap> inputRefMaps = context.getInputRefSlotMaps();
     Map<Integer, FieldVector> vectors = context.vectors();
 
     for (int i = 0; i < vectors.get(0).getValueCount(); i ++) {
-      for (int index: inputRefs) {
-        FrameSlot slot = framePart.findFrameSlot(index);
-        Object value = vectors.get(index).getObject(i);
+      for (InputRefSlotMap inputRefSlotMap: inputRefMaps) {
+        int slotId = inputRefSlotMap.getSlot();
+        FrameSlot slot = framePart.findFrameSlot(slotId);
+        FieldVector fieldVector = vectors.get(slotId);
+        Object value = fieldVector.getObject(i);
         if (value == null) {
           framePart.setFrameSlotKind(slot, FrameSlotKind.Object);
           frame.setObject(slot, SqlNull.INSTANCE);
         } else {
-          ArrowFieldType type = ArrowFieldType.of(vectors.get(index).getField().getFieldType().getType());
+          ArrowFieldType type = ArrowFieldType.of(fieldVector.getField().getFieldType().getType());
           switch (type) {
             case INT:
             case TIME:

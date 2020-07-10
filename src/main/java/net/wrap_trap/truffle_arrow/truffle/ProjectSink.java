@@ -22,7 +22,7 @@ public class ProjectSink extends RowSink {
     ThenRowSink next) {
     FrameDescriptorPart newFramePart = framePart.newPart();
     for (int i = 0; i < projects.size(); i ++) {
-      newFramePart.addFrameSlot(i);
+      newFramePart.addFrameSlot();
     }
     RowSink rowSink = next.apply(newFramePart);
 
@@ -37,7 +37,7 @@ public class ProjectSink extends RowSink {
   }
 
   private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, SinkContext context) {
-    return child.accept(new CompileExpr(framePart, context));
+    return child.accept(new ProjectCompileExpr(framePart, context, false));
   }
 
   private FrameDescriptorPart framePart;
@@ -69,6 +69,6 @@ public class ProjectSink extends RowSink {
     for (StatementWriteLocal local : locals) {
       local.executeVoid(frame);
     }
-    then.executeByRow(frame, framePart, context);
+    then.executeByRow(frame, this.framePart, context);
   }
 }

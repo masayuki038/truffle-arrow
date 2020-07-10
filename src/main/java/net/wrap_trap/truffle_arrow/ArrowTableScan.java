@@ -13,6 +13,8 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexNode;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +27,7 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
   private RelOptTable relOptTable;
   private ArrowTable arrowTable;
   private VectorSchemaRoot[] vectorSchemaRoots;
+  private List<? extends RexNode> projects;
   private int[] fields;
 
   public ArrowTable getArrowTable() {
@@ -32,23 +35,25 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
   }
 
   public ArrowTableScan(RelOptCluster cluster, RelOptTable relOptTable, ArrowTable arrowTable,
-                        VectorSchemaRoot[] vectorSchemaRoots, int[] fields) {
+                        VectorSchemaRoot[] vectorSchemaRoots, List<? extends RexNode> projects,
+                        int[] fields) {
     super(cluster, cluster.traitSetOf(ArrowRel.CONVENTION), relOptTable);
     this.relOptTable = relOptTable;
     this.arrowTable = arrowTable;
     this.vectorSchemaRoots = vectorSchemaRoots;
+    this.projects = projects;
     this.fields = fields;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new ArrowTableScan(getCluster(), this.relOptTable, this.arrowTable, this.vectorSchemaRoots,
-      this.fields);
+      this.projects, this.fields);
   }
 
   @Override
   public RelWriter explainTerms(RelWriter rw) {
-    return super.explainTerms(rw).item("fields", Primitive.asList(this.fields));
+    return super.explainTerms(rw).item("fields", this.projects);
   }
 
   @Override
@@ -56,6 +61,8 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
     List<RelDataTypeField> fieldList = this.relOptTable.getRowType().getFieldList();
     RelDataTypeFactory.FieldInfoBuilder builder = getCluster().getTypeFactory().builder();
     Arrays.stream(this.fields).forEach(i -> builder.add(fieldList.get(i)));
+//    Arrays.stream(this.getProjectFields(this.projects))
+//      .forEach(i -> builder.add(fieldList.get(i)));
     return builder.build();
   }
 
@@ -72,7 +79,22 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
       frameDescriptor -> VectorSchemaRootBroker.compile(
         frameDescriptor,
         getRowType(),this.vectorSchemaRoots,
+        this.projects,
         this.fields,
+        context,
         next);
+  }
+
+  private int[] getProjectFields(List<? extends RexNode> exps) {
+    final int[] fields = new int[exps.size()];
+    for (int i = 0; i < exps.size(); i++) {
+      final RexNode exp = exps.get(i);
+      if (exp instanceof RexInputRef) {
+        fields[i] = ((RexInputRef) exp).getIndex();
+      } else {
+        return null; // not a simple projection
+      }
+    }
+    return fields;
   }
 }

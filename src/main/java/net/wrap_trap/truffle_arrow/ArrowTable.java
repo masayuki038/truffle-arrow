@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow;
 
+import com.google.common.collect.Lists;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
@@ -59,7 +60,7 @@ public class ArrowTable extends AbstractTable implements QueryableTable, Transla
     int fieldCount = relOptTable.getRowType().getFieldCount();
     int[] fields = identityList(fieldCount);
     return new ArrowTableScan(context.getCluster(), relOptTable, this,
-      this.vectorSchemaRoots, fields);
+      this.vectorSchemaRoots, Lists.newArrayList(), fields);
   }
 
   private RelDataType deduceRowType(VectorSchemaRoot vectorSchemaRoot, JavaTypeFactory typeFactory) {

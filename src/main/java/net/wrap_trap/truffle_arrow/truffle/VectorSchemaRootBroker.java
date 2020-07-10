@@ -9,6 +9,7 @@ import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexNode;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,31 +25,45 @@ public class VectorSchemaRootBroker extends RowSink {
   private FrameDescriptorPart framePart;
   private final RelDataType relType;
   private VectorSchemaRoot[] vectorSchemaRoots;
-  private int[] fields;
+  private       List<? extends RexNode> projects;
   private RowSink then;
 
   public static VectorSchemaRootBroker compile(
       FrameDescriptorPart framePart,
       RelDataType relType,
       VectorSchemaRoot[] vectorSchemaRoots,
+      List<? extends RexNode> projects,
       int[] fields,
+      SinkContext context,
       ThenRowSink then) {
+    if (projects.size() > 0) {
+      for (int i = 0; i < projects.size(); i ++) {
+        RexNode child = projects.get(i);
+        compile(framePart, child, context);
+      }
+    } else {
+      for (int i = 0; i < fields.length; i ++ ) {
+        context.addInputRefSlotMap(fields[i], fields[i]);
+      }
+    }
     RowSink sink = then.apply(framePart);
-    return new VectorSchemaRootBroker(framePart, relType, vectorSchemaRoots, fields, sink);
+    return new VectorSchemaRootBroker(framePart, relType, vectorSchemaRoots, projects, sink);
+  }
+
+  private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, SinkContext context) {
+    return child.accept(new CompileExpr(framePart, context, true));
   }
 
   private VectorSchemaRootBroker(
       FrameDescriptorPart framePart,
       RelDataType relType,
       VectorSchemaRoot[] vectorSchemaRoots,
-      int[] fields, RowSink then) {
+      List<? extends RexNode> projects, RowSink then) {
     this.framePart = framePart;
     this.relType = relType;
     this.vectorSchemaRoots = vectorSchemaRoots;
-    this.fields = fields;
+    this.projects = projects;
     this.then = then;
-
-    assert relType.getFieldCount() == fields.length;
   }
 
   @Override
@@ -56,10 +71,8 @@ public class VectorSchemaRootBroker extends RowSink {
     for (VectorSchemaRoot vectorSchemaRoot : vectorSchemaRoots) {
       List<FieldVector> fieldVectors = vectorSchemaRoot.getFieldVectors();
       Map<Integer, FieldVector> selected = new HashMap<>();
-      for (int i = 0; i < this.fields.length; i ++) {
-        if (context.getInputRefIndices().contains(i)) {
-          selected.put(i, fieldVectors.get(i));
-        }
+      for (InputRefSlotMap inputRefSlotMap : context.getInputRefSlotMaps()) {
+        selected.put(inputRefSlotMap.getSlot(), fieldVectors.get(inputRefSlotMap.getIndex()));
       }
 
       context.setVectors(selected);

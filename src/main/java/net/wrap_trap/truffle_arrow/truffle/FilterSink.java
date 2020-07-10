@@ -14,9 +14,8 @@ public class FilterSink extends RowSink {
     RexNode condition,
     SinkContext context,
     ThenRowSink next) {
-    FrameDescriptorPart newFramePart = framePart.newPart();
-    RowSink rowSink = next.apply(newFramePart);
-    return new FilterSink(newFramePart, CompileExpr.compile(newFramePart, condition, context), rowSink);
+    RowSink rowSink = next.apply(framePart);
+    return new FilterSink(framePart, CompileExpr.compile(framePart, condition, context, false), rowSink);
   }
 
   FrameDescriptorPart framePart;

@@ -12,10 +12,10 @@ public class SinkContext {
   private Map<Integer, FieldVector> vectors;
   private Map<Integer, ArrowFieldType> arrowFieldTypes;
   private UInt4Vector selectionVector;
-  private List<RexInputRef> inputRefs;
+  private Set<InputRefSlotMap> inputRefSlotMaps;
 
   public SinkContext() {
-    this.inputRefs = new ArrayList<>();
+    this.inputRefSlotMaps = new HashSet<>();
   }
 
   public void setVectors(Map<Integer, FieldVector> vectors) {
@@ -47,11 +47,11 @@ public class SinkContext {
     return selectionVector;
   }
 
-  public void addInputRef(RexInputRef rexInputRef) {
-    this.inputRefs.add(rexInputRef);
+  public void addInputRefSlotMap(int index, int slot) {
+    this.inputRefSlotMaps.add(new InputRefSlotMap(index, slot));
   }
 
-  public Set<Integer> getInputRefIndices() {
-    return this.inputRefs.stream().map(inputRef -> inputRef.getIndex()).collect(Collectors.toSet());
+  public Set<InputRefSlotMap> getInputRefSlotMaps() {
+    return this.inputRefSlotMaps;
   }
 }

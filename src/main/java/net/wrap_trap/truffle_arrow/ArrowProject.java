@@ -15,7 +15,7 @@ import org.apache.calcite.rex.RexNode;
 
 import java.util.List;
 
-public class ArrowProject  extends Project implements ArrowRel {
+public class ArrowProject extends Project implements ArrowRel {
 
   private List<? extends RexNode> projects;
 

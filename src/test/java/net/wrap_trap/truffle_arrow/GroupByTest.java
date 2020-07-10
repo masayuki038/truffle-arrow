@@ -26,18 +26,18 @@ public class GroupByTest {
     new File("target/classes/samples/files/all_fields.arrow").delete();
   }
 
-  @Test
-  public void groupByInt() throws SQLException {
-    try (
-      Connection conn = DriverManager.getConnection("jdbc:truffle:");
-      PreparedStatement pstmt = conn.prepareStatement(
-        "select F_INT+1, F_VARCHAR from ALL_FIELDS group by F_INT+1, F_VARCHAR");
-      ResultSet rs = pstmt.executeQuery()
-    ) {
-      List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(10));
-      assertThat(results.get(0), is("0"));
-      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
-    }
-  }
+//  @Test
+//  public void groupByInt() throws SQLException {
+//    try (
+//      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+//      PreparedStatement pstmt = conn.prepareStatement(
+//        "select F_INT+1, F_VARCHAR from ALL_FIELDS group by F_INT+1, F_VARCHAR");
+//      ResultSet rs = pstmt.executeQuery()
+//    ) {
+//      List<String> results = TestUtils.getResults(rs);
+//      assertThat(results.size(), is(10));
+//      assertThat(results.get(0), is("0"));
+//      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+//    }
+//  }
 }

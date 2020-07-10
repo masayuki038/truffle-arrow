@@ -17,9 +17,8 @@ import java.util.Objects;
  */
 public class CompileExpr implements RexVisitor<ExprBase> {
 
-  public static ExprBase compile(FrameDescriptorPart from, RexNode child, SinkContext context) {
-    CompileExpr compiler = new CompileExpr(from, context);
-
+  public static ExprBase compile(FrameDescriptorPart from, RexNode child, SinkContext context, boolean scan) {
+    CompileExpr compiler = new CompileExpr(from, context, scan);
     return child.accept(compiler);
   }
 
@@ -28,22 +27,26 @@ public class CompileExpr implements RexVisitor<ExprBase> {
    *
    * Can be empty in queries like SELECT 1
    */
-  private final FrameDescriptorPart from;
-  private SinkContext context;
+  protected final FrameDescriptorPart from;
+  protected SinkContext context;
+  protected boolean scan;
 
-  CompileExpr(FrameDescriptorPart from, SinkContext context) {
+  CompileExpr(FrameDescriptorPart from, SinkContext context, boolean scan) {
     this.from = from;
     this.context = context;
+    this.scan = scan;
   }
   
   @Override
   public ExprBase visitInputRef(RexInputRef inputRef) {
-    this.context.addInputRef(inputRef);
-
     int index = inputRef.getIndex();
-    FrameSlot slot = from.findFrameSlot(index);
-    if (slot == null) {
-      slot = from.addFrameSlot(index);
+
+    FrameSlot slot;
+    if (scan) {
+      slot = from.addFrameSlot();
+      this.context.addInputRefSlotMap(index, from.getCurrentSlotPosition());
+    } else {
+      slot = from.findFrameSlot(index);
     }
     Objects.requireNonNull(slot);
 
@@ -224,7 +227,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 //  }
 
   private ExprBase compile(RexNode rexNode) {
-    return rexNode.accept(new CompileExpr(from, context));
+    return rexNode.accept(new CompileExpr(from, context, scan));
   }
 
   @FunctionalInterface
@@ -246,7 +249,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
   private ExprBase isNull(List<RexNode> operands) {
     assert operands.size() == 1;
 
-    ExprBase left = operands.get(0).accept(new CompileExpr(from, context));
+    ExprBase left = operands.get(0).accept(new CompileExpr(from, context, scan));
     ExprBase right = ExprLiteral.Null();
 
     return ExprEqualsNodeGen.create(left, right);
@@ -255,8 +258,8 @@ public class CompileExpr implements RexVisitor<ExprBase> {
   private ExprBase binary(List<RexNode> operands, BinaryConstructor then) {
     assert operands.size() == 2;
 
-    ExprBase left = operands.get(0).accept(new CompileExpr(from, context));
-    ExprBase right = operands.get(1).accept(new CompileExpr(from, context));
+    ExprBase left = operands.get(0).accept(new CompileExpr(from, context, scan));
+    ExprBase right = operands.get(1).accept(new CompileExpr(from, context, scan));
 
     return then.accept(left, right);
   }
@@ -283,7 +286,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 
   @Override
   public ExprBase visitFieldAccess(RexFieldAccess fieldAccess) {
-    ExprBase receiver = fieldAccess.getReferenceExpr().accept(new CompileExpr(from, context));
+    ExprBase receiver = fieldAccess.getReferenceExpr().accept(new CompileExpr(from, context, scan));
     String name = fieldAccess.getField().getName();
 
     return ExprReadPropertyNodeGen.create(name, receiver);
