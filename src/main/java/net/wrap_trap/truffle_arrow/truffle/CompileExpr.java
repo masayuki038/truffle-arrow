@@ -1,13 +1,10 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
-import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Compiles RexNode into ExprBase.
@@ -15,12 +12,7 @@ import java.util.Objects;
  * ExprBase is our representation of an executable expression:
  * an ExprBase reads column values from VirtualFrame and produces a value.
  */
-public class CompileExpr implements RexVisitor<ExprBase> {
-
-  public static ExprBase compile(FrameDescriptorPart from, RexNode child, SinkContext context, boolean scan) {
-    CompileExpr compiler = new CompileExpr(from, context, scan);
-    return child.accept(compiler);
-  }
+public abstract class CompileExpr implements RexVisitor<ExprBase> {
 
   /**
    * FROM clause of SQL query.
@@ -29,29 +21,15 @@ public class CompileExpr implements RexVisitor<ExprBase> {
    */
   protected final FrameDescriptorPart from;
   protected SinkContext context;
-  protected boolean scan;
 
-  CompileExpr(FrameDescriptorPart from, SinkContext context, boolean scan) {
+  CompileExpr(FrameDescriptorPart from, SinkContext context) {
     this.from = from;
     this.context = context;
-    this.scan = scan;
   }
   
-  @Override
-  public ExprBase visitInputRef(RexInputRef inputRef) {
-    int index = inputRef.getIndex();
+  abstract public ExprBase visitInputRef(RexInputRef inputRef);
 
-    FrameSlot slot;
-    if (scan) {
-      slot = from.addFrameSlot();
-      this.context.addInputRefSlotMap(index, from.getCurrentSlotPosition());
-    } else {
-      slot = from.findFrameSlot(index);
-    }
-    Objects.requireNonNull(slot);
-
-    return ExprReadLocalNodeGen.create(slot);
-  }
+  abstract protected CompileExpr createCompileExpr(FrameDescriptorPart from, SinkContext context);
 
   @Override
   public ExprBase visitLocalRef(RexLocalRef localRef) {
@@ -227,7 +205,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 //  }
 
   private ExprBase compile(RexNode rexNode) {
-    return rexNode.accept(new CompileExpr(from, context, scan));
+    return rexNode.accept(createCompileExpr(from, context));
   }
 
   @FunctionalInterface
@@ -249,7 +227,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
   private ExprBase isNull(List<RexNode> operands) {
     assert operands.size() == 1;
 
-    ExprBase left = operands.get(0).accept(new CompileExpr(from, context, scan));
+    ExprBase left = operands.get(0).accept(createCompileExpr(from, context));
     ExprBase right = ExprLiteral.Null();
 
     return ExprEqualsNodeGen.create(left, right);
@@ -258,8 +236,8 @@ public class CompileExpr implements RexVisitor<ExprBase> {
   private ExprBase binary(List<RexNode> operands, BinaryConstructor then) {
     assert operands.size() == 2;
 
-    ExprBase left = operands.get(0).accept(new CompileExpr(from, context, scan));
-    ExprBase right = operands.get(1).accept(new CompileExpr(from, context, scan));
+    ExprBase left = operands.get(0).accept(createCompileExpr(from, context));
+    ExprBase right = operands.get(1).accept(createCompileExpr(from, context));
 
     return then.accept(left, right);
   }
@@ -286,7 +264,7 @@ public class CompileExpr implements RexVisitor<ExprBase> {
 
   @Override
   public ExprBase visitFieldAccess(RexFieldAccess fieldAccess) {
-    ExprBase receiver = fieldAccess.getReferenceExpr().accept(new CompileExpr(from, context, scan));
+    ExprBase receiver = fieldAccess.getReferenceExpr().accept(createCompileExpr(from, context));
     String name = fieldAccess.getField().getName();
 
     return ExprReadPropertyNodeGen.create(name, receiver);

@@ -1,31 +1,21 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
-import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 
 public class VectorSchemaRootBroker extends RowSink {
 
-  public static final int SLOT_OFFSET = 1;
-
   private FrameDescriptorPart framePart;
-  private final RelDataType relType;
   private VectorSchemaRoot[] vectorSchemaRoots;
-  private       List<? extends RexNode> projects;
   private RowSink then;
 
   public static VectorSchemaRootBroker compile(
@@ -51,7 +41,7 @@ public class VectorSchemaRootBroker extends RowSink {
   }
 
   private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, SinkContext context) {
-    return child.accept(new CompileExpr(framePart, context, true));
+    return ScanCompileExpr.compile(framePart, child, context);
   }
 
   private VectorSchemaRootBroker(
@@ -60,9 +50,7 @@ public class VectorSchemaRootBroker extends RowSink {
       VectorSchemaRoot[] vectorSchemaRoots,
       List<? extends RexNode> projects, RowSink then) {
     this.framePart = framePart;
-    this.relType = relType;
     this.vectorSchemaRoots = vectorSchemaRoots;
-    this.projects = projects;
     this.then = then;
   }
 

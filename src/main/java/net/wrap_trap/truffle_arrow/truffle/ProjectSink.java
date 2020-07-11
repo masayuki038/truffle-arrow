@@ -1,15 +1,10 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import org.apache.arrow.vector.FieldVector;
 import org.apache.calcite.rex.RexNode;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -37,7 +32,7 @@ public class ProjectSink extends RowSink {
   }
 
   private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, SinkContext context) {
-    return child.accept(new ProjectCompileExpr(framePart, context, false));
+    return ProjectCompileExpr.compile(framePart, child, context);
   }
 
   private FrameDescriptorPart framePart;
