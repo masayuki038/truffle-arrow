@@ -66,4 +66,9 @@ public class ProjectSink extends RowSink {
     }
     then.executeByRow(frame, this.framePart, context);
   }
+
+  @Override
+  public void afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
+    then.afterExecute(frame, context);
+  }
 }

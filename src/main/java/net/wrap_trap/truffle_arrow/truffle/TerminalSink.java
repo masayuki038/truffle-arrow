@@ -2,6 +2,7 @@ package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 public class TerminalSink extends RowSource {
@@ -23,8 +24,8 @@ public class TerminalSink extends RowSource {
 
   @Override
   protected void executeVoid() throws UnexpectedResultException {
-    then.executeVoid(
-      Truffle.getRuntime().createVirtualFrame(new Object[] { }, this.framePart.frame()),
-      this.context);
+    VirtualFrame frame = Truffle.getRuntime().createVirtualFrame(new Object[] { }, this.framePart.frame());
+    then.executeVoid(frame, this.context);
+    then.afterExecute(frame, this.context);
   }
 }

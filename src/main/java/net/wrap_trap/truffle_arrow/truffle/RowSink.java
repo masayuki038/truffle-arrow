@@ -30,6 +30,8 @@ public abstract class RowSink extends Node {
   public void executeVoid(VirtualFrame frame, SinkContext context)
     throws UnexpectedResultException {}
 
+  public void afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {}
+
   protected void vectorEach(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context, Consumer<Integer> action) {
     Set<InputRefSlotMap> inputRefMaps = context.getInputRefSlotMaps();
     Map<Integer, FieldVector> vectors = context.vectors();

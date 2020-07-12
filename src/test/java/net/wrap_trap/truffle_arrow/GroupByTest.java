@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -26,17 +27,82 @@ public class GroupByTest {
     new File("target/classes/samples/files/all_fields.arrow").delete();
   }
 
+  @Test
+  public void groupByInt() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_INT from ALL_FIELDS group by F_INT");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(10));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("0"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
+  @Test
+  public void groupByLong() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_BIGINT from ALL_FIELDS group by F_BIGINT");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(10));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("0"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
+  @Test
+  public void groupByVarchar() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_VARCHAR from ALL_FIELDS group by F_VARCHAR");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(10));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("test0"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
+  @Test
+  public void groupByTimestamp() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_TIMESTAMP from ALL_FIELDS group by F_TIMESTAMP");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(10));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("2020-05-04 13:48:11.0"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
 //  @Test
-//  public void groupByInt() throws SQLException {
+//  public void groupByTime() throws SQLException {
 //    try (
 //      Connection conn = DriverManager.getConnection("jdbc:truffle:");
 //      PreparedStatement pstmt = conn.prepareStatement(
-//        "select F_INT+1, F_VARCHAR from ALL_FIELDS group by F_INT+1, F_VARCHAR");
+//        "select F_TIME from ALL_FIELDS group by F_TIME");
 //      ResultSet rs = pstmt.executeQuery()
 //    ) {
 //      List<String> results = TestUtils.getResults(rs);
 //      assertThat(results.size(), is(10));
-//      assertThat(results.get(0), is("0"));
+//      results.sort(Comparator.naturalOrder());
+//      assertThat(results.get(0), is("01:20:23"));
 //      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
 //    }
 //  }

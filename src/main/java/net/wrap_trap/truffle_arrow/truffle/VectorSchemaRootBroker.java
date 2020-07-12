@@ -73,4 +73,9 @@ public class VectorSchemaRootBroker extends RowSink {
       });
     }
   }
+
+  @Override
+  public void afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
+    then.afterExecute(frame, context);
+  }
 }

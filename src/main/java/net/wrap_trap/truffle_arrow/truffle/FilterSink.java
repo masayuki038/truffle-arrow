@@ -36,6 +36,11 @@ public class FilterSink extends RowSink {
     }
   }
 
+  @Override
+  public void afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
+    then.afterExecute(frame, context);
+  }
+
   class SelectionVector {
     private UInt4Vector selectionVector;
     private int index = 0;
