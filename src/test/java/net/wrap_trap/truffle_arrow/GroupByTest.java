@@ -91,19 +91,19 @@ public class GroupByTest {
     }
   }
 
-//  @Test
-//  public void groupByTime() throws SQLException {
-//    try (
-//      Connection conn = DriverManager.getConnection("jdbc:truffle:");
-//      PreparedStatement pstmt = conn.prepareStatement(
-//        "select F_TIME from ALL_FIELDS group by F_TIME");
-//      ResultSet rs = pstmt.executeQuery()
-//    ) {
-//      List<String> results = TestUtils.getResults(rs);
-//      assertThat(results.size(), is(10));
-//      results.sort(Comparator.naturalOrder());
-//      assertThat(results.get(0), is("01:20:23"));
-//      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
-//    }
-//  }
+  @Test
+  public void groupByTime() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_TIME from ALL_FIELDS group by F_TIME");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(10));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("01:20:23"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
 }

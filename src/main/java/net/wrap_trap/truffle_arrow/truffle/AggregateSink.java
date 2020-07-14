@@ -27,7 +27,7 @@ public class AggregateSink extends RowSink {
     SinkContext context,
     ThenRowSink next) {
     FrameDescriptorPart newFramePart = framePart.newPart();
-    for (int i = 0; i < groupSet.size(); i ++) {
+    for (int i = 0; i < groupSet.toList().size(); i ++) {
       newFramePart.addFrameSlot();
     }
     RowSink rowSink = next.apply(newFramePart);
