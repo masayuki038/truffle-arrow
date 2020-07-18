@@ -84,8 +84,7 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
       public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context)
         throws UnexpectedResultException {
         List<Object> row = framePart.getFrameSlots().stream().map(slot -> {
-          ArrowFieldType arrowFieldType = context.getArrowFieldType((Integer) slot.getIdentifier());
-          return getValue(frame.getValue(slot), arrowFieldType);
+          return getValue(frame.getValue(slot));
         }).collect(Collectors.toList());
         results.add(new Row(row));
       }
@@ -117,13 +116,12 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
   private Row createRow(Object[] vectors, int rowIndex) {
     List<Object> row = Arrays.stream(vectors).map(v -> {
       FieldVector fieldVector = (FieldVector) v;
-      ArrowFieldType arrowFieldType = ArrowFieldType.of(fieldVector.getField().getFieldType().getType());
-      return getValue(fieldVector.getObject(rowIndex), arrowFieldType);
+      return getValue(fieldVector.getObject(rowIndex));
     }).collect(Collectors.toList());
     return new Row(row);
   }
 
-  private Object getValue(Object o, ArrowFieldType arrowFieldType) {
+  private Object getValue(Object o) {
     if (o == null || o == SqlNull.INSTANCE) {
       return SqlNull.INSTANCE;
     } else if (o instanceof Text) {

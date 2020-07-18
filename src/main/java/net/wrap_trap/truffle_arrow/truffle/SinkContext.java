@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 public class SinkContext {
   private Map<Integer, FieldVector> vectors;
-  private Map<Integer, ArrowFieldType> arrowFieldTypes;
   private UInt4Vector selectionVector;
   private Set<InputRefSlotMap> inputRefSlotMaps;
 
@@ -20,16 +19,6 @@ public class SinkContext {
 
   public void setVectors(Map<Integer, FieldVector> vectors) {
     this.vectors = vectors;
-    this.arrowFieldTypes = new HashMap<>();
-    for (Map.Entry<Integer, FieldVector> entry: vectors.entrySet()) {
-      ArrowFieldType arrowFieldType =
-        ArrowFieldType.of(entry.getValue().getField().getFieldType().getType());
-      this.arrowFieldTypes.put(entry.getKey(), arrowFieldType);
-    }
-  }
-
-  public ArrowFieldType getArrowFieldType(int index) {
-    return this.arrowFieldTypes.get(index);
   }
 
   public Map<Integer, FieldVector> vectors() {
