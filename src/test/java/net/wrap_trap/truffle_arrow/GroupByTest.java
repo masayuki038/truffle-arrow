@@ -106,4 +106,36 @@ public class GroupByTest {
       assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
     }
   }
+
+  @Test
+  public void groupByDate() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_DATE from ALL_FIELDS group by F_DATE");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(10));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("2020-05-03"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
+  @Test
+  public void groupByDouble() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_DOUBLE from ALL_FIELDS group by F_DOUBLE");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(10));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("123.456"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
 }
