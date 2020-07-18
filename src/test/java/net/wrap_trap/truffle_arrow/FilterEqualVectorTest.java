@@ -228,7 +228,7 @@ public class FilterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String"));
+      containsString("java.lang.ClassCastException: net.wrap_trap.truffle_arrow.type.ArrowTimeSec cannot be cast to java.lang.String"));
   }
 
   @Test
@@ -372,7 +372,7 @@ public class FilterEqualVectorTest {
       )
     );
     assertThat(e.getCause().getMessage(),
-      containsString("java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Integer"));
+      containsString("java.lang.ClassCastException: java.lang.String cannot be cast to net.wrap_trap.truffle_arrow.type.ArrowTimeSec"));
   }
 
   @Test

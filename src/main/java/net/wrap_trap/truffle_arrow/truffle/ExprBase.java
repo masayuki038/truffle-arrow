@@ -5,6 +5,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import net.wrap_trap.truffle_arrow.type.ArrowTimeSec;
 
 /**
  * Base of all SQL expressions.
@@ -28,7 +29,19 @@ public abstract class ExprBase extends Node {
     return SqlTypesGen.expectLong(executeGeneric(frame));
   }
 
+  int executeInteger(VirtualFrame frame) throws UnexpectedResultException {
+    return SqlTypesGen.expectInteger(executeGeneric(frame));
+  }
+
   double executeDouble(VirtualFrame frame) throws UnexpectedResultException {
     return SqlTypesGen.expectDouble(executeGeneric(frame));
+  }
+
+  String executeString(VirtualFrame frame) throws UnexpectedResultException {
+    return SqlTypesGen.expectString(executeGeneric(frame));
+  }
+
+  ArrowTimeSec executeArrowTimeSec(VirtualFrame frame) throws UnexpectedResultException {
+    return SqlTypesGen.expectArrowTimeSec(executeGeneric(frame));
   }
 }

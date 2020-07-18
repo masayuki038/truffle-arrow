@@ -3,6 +3,7 @@ package net.wrap_trap.truffle_arrow.truffle;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.NodeInfo;
+import net.wrap_trap.truffle_arrow.type.ArrowTimeSec;
 import org.apache.arrow.vector.util.Text;
 
 import java.time.Instant;
@@ -84,13 +85,13 @@ abstract class ExprEquals extends ExprBinary {
   }
 
   @Specialization
-  protected boolean eq(Integer left, LocalTime right) {
-    return Objects.equals(left, right.toSecondOfDay());
+  protected boolean eq(ArrowTimeSec left, LocalTime right) {
+    return Objects.equals(left.timeSec(), right.toSecondOfDay());
   }
 
   @Specialization
-  protected boolean eq(LocalTime left, Integer right) {
-    return Objects.equals(left.toSecondOfDay(), right);
+  protected boolean eq(LocalTime left, ArrowTimeSec right) {
+    return Objects.equals(left.toSecondOfDay(), right.timeSec());
   }
 
   @Specialization

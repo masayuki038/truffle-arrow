@@ -3,6 +3,7 @@ package net.wrap_trap.truffle_arrow.truffle;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.NodeInfo;
+import net.wrap_trap.truffle_arrow.type.ArrowTimeSec;
 import org.apache.arrow.vector.util.Text;
 
 import java.math.BigDecimal;
@@ -99,13 +100,18 @@ abstract public class ExprGreaterThanOrEqual extends ExprBinary {
   }
 
   @Specialization
-  protected boolean ge(Integer left, LocalTime right) {
-    return left.compareTo(right.toSecondOfDay()) >= 0;
+  protected boolean ge(ArrowTimeSec left, LocalTime right) {
+    return left.timeSec().compareTo(right.toSecondOfDay()) >= 0;
   }
 
   @Specialization
-  protected boolean ge(LocalTime left, Integer right) {
-    return Integer.valueOf(left.toSecondOfDay()).compareTo(right) >= 0;
+  protected boolean ge(ArrowTimeSec left, ArrowTimeSec right) {
+    return left.timeSec().compareTo(right.timeSec()) >= 0;
+  }
+
+  @Specialization
+  protected boolean ge(LocalTime left, ArrowTimeSec right) {
+    return Integer.valueOf(left.toSecondOfDay()).compareTo(right.timeSec()) >= 0;
   }
 
   @Specialization

@@ -6,6 +6,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import net.wrap_trap.truffle_arrow.ArrowFieldType;
+import net.wrap_trap.truffle_arrow.type.ArrowTimeSec;
 import org.apache.arrow.vector.FieldVector;
 
 import java.util.List;
@@ -49,10 +50,13 @@ public abstract class RowSink extends Node {
           ArrowFieldType type = ArrowFieldType.of(fieldVector.getField().getFieldType().getType());
           switch (type) {
             case INT:
-            case TIME:
             case DATE:
               framePart.setFrameSlotKind(slot, FrameSlotKind.Int);
               frame.setInt(slot, (int) value);
+              break;
+            case TIME:
+              framePart.setFrameSlotKind(slot, FrameSlotKind.Object);
+              frame.setObject(slot, new ArrowTimeSec((int) value));
               break;
             case LONG:
             case TIMESTAMP:

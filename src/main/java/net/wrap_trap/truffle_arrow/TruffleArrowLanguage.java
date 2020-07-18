@@ -11,6 +11,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExecutableNode;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import net.wrap_trap.truffle_arrow.truffle.*;
+import net.wrap_trap.truffle_arrow.type.ArrowTimeSec;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.util.Text;
@@ -127,8 +128,8 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
       return SqlNull.INSTANCE;
     } else if (o instanceof Text) {
       return o.toString();
-    } else if (arrowFieldType == ArrowFieldType.TIME) {
-      return ((Integer) o).intValue() * 1000;
+    } else if (o instanceof ArrowTimeSec) {
+      return ((ArrowTimeSec) o).timeSec() * 1000;
     }
     return o;
   }
