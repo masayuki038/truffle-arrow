@@ -18,7 +18,7 @@ public class GroupByTest {
   @BeforeAll
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
-    TestUtils.generateTestFile("target/classes/samples/files/all_fields.arrow");
+    TestUtils.generateTestFile("target/classes/samples/files/all_fields.arrow", TestDataType.CASE5);
     TruffleArrowConfig.INSTANCE.reload();
   }
 
@@ -52,7 +52,7 @@ public class GroupByTest {
       ResultSet rs = pstmt.executeQuery()
     ) {
       List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(10));
+      assertThat(results.size(), is(5));
       results.sort(Comparator.naturalOrder());
       assertThat(results.get(0), is("0"));
       assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
@@ -68,7 +68,7 @@ public class GroupByTest {
       ResultSet rs = pstmt.executeQuery()
     ) {
       List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(10));
+      assertThat(results.size(), is(5));
       results.sort(Comparator.naturalOrder());
       assertThat(results.get(0), is("test0"));
       assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
@@ -84,7 +84,7 @@ public class GroupByTest {
       ResultSet rs = pstmt.executeQuery()
     ) {
       List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(10));
+      assertThat(results.size(), is(5));
       results.sort(Comparator.naturalOrder());
       assertThat(results.get(0), is("2020-05-04 13:48:11.0"));
       assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
@@ -100,7 +100,7 @@ public class GroupByTest {
       ResultSet rs = pstmt.executeQuery()
     ) {
       List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(10));
+      assertThat(results.size(), is(5));
       results.sort(Comparator.naturalOrder());
       assertThat(results.get(0), is("01:20:23"));
       assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
@@ -116,7 +116,7 @@ public class GroupByTest {
       ResultSet rs = pstmt.executeQuery()
     ) {
       List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(10));
+      assertThat(results.size(), is(5));
       results.sort(Comparator.naturalOrder());
       assertThat(results.get(0), is("2020-05-03"));
       assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
@@ -132,7 +132,7 @@ public class GroupByTest {
       ResultSet rs = pstmt.executeQuery()
     ) {
       List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(10));
+      assertThat(results.size(), is(5));
       results.sort(Comparator.naturalOrder());
       assertThat(results.get(0), is("123.456"));
       assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));

@@ -97,6 +97,22 @@ public class TestUtils {
         doubleVector = createDoubleVector(10, 10d, -1, -1, allocator);
         break;
 
+      case CASE5:
+        intVector = createIntVector(10, 0, 1, -1, allocator);
+        bigIntVector = createBigIntVector(5, 0, 1, -1, allocator);
+        merge(bigIntVector, createBigIntVector(5, 0, 1, -1, allocator));
+        varCharVector = createVarCharVector("test", 5, 0, 1, -1, allocator);
+        merge(varCharVector, createVarCharVector("test", 5, 0, 1, -1, allocator));
+        timestampVector = createTimestampVector(5, c20200504134811, timestampIntervalByDay, -1, allocator);
+        merge(timestampVector, createTimestampVector(5, c20200504134811, timestampIntervalByDay, -1, allocator));
+        timeVector = createTimeVector(5, timeOffset, timeInterval, -1, allocator);
+        merge(timeVector, createTimeVector(5, timeOffset, timeInterval, -1, allocator));
+        dateVector = createDateVector(5, dateOffset, 1, -1, allocator);
+        merge(dateVector, createDateVector(5, dateOffset, 1, -1, allocator));
+        doubleVector = createDoubleVector(5, 123.456d, 1, -1, allocator);
+        merge(doubleVector, createDoubleVector(5, 123.456d, 1, -1, allocator));
+        break;
+
       default:
         throw new IllegalArgumentException("Invalid Type:" + dataType);
     }
@@ -139,6 +155,14 @@ public class TestUtils {
       }
     }
     return vector;
+  }
+
+  private static void merge(FieldVector mergeTo, FieldVector mergeFrom) {
+    int baseSize = mergeTo.getValueCount();
+    mergeTo.setValueCount(baseSize + mergeFrom.getValueCount());
+    for (int i = 0; i < mergeFrom.getValueCount(); i ++) {
+      mergeTo.copyFrom(i, baseSize + i, mergeFrom);
+    }
   }
 
   private static FieldVector createBigIntVector(int size, int offset, int step, int nullIndex, BufferAllocator allocator) {

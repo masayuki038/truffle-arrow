@@ -20,7 +20,10 @@ public class ArrowTimeSec implements Comparable<ArrowTimeSec> {
 
   @Override
   public boolean equals(Object obj) {
-    return this.timeSec.equals(obj);
+    if (obj instanceof ArrowTimeSec) {
+      return this.timeSec.equals(((ArrowTimeSec) obj).timeSec());
+    }
+    return false;
   }
 
   @Override
