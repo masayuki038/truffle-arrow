@@ -118,7 +118,6 @@ public class TruffleArrowMeta extends  MetaImpl {
   private Meta.Signature createSignature(String sql) {
     SqlValidator validator = TruffleArrowConfig.INSTANCE.sqlValidator();
     JavaTypeFactory typeFactory = TruffleArrowConfig.INSTANCE.typeFactory();
-
     SqlNode sqlNode = SqlParser.parse(sql);
     validator.validate(sqlNode);
     RelDataType type = validator.getValidatedNodeType(sqlNode);
@@ -138,6 +137,15 @@ public class TruffleArrowMeta extends  MetaImpl {
         ColumnMetaData.Rep.of(typeFactory.getJavaClass(field.getType()))
       );
 
+      String columnName = null;
+      String schemaName = null;
+      String tableName = null;
+      if (origins != null) {
+        columnName = origins.get(2);
+        schemaName = origins.get(0);
+        tableName = origins.get(1);
+      }
+
       ColumnMetaData metadata =  new ColumnMetaData(
          i,
          false,
@@ -150,15 +158,15 @@ public class TruffleArrowMeta extends  MetaImpl {
          true,
          type.getPrecision(),
          field.getName(),
-         origins.get(2),
-         origins.get(0),
+         columnName,
+         schemaName,
          type.getPrecision() == RelDataType.PRECISION_NOT_SPECIFIED
            ? 0
            : type.getPrecision(),
          type.getScale() == RelDataType.SCALE_NOT_SPECIFIED
            ? 0
            :  type.getScale(),
-         origins.get(1),
+         tableName,
          null,
          avaticaType,
          true,

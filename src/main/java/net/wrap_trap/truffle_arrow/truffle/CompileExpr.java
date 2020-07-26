@@ -1,10 +1,12 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
+import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Compiles RexNode into ExprBase.
@@ -12,7 +14,7 @@ import java.util.List;
  * ExprBase is our representation of an executable expression:
  * an ExprBase reads column values from VirtualFrame and produces a value.
  */
-public abstract class CompileExpr implements RexVisitor<ExprBase> {
+public abstract class CompileExpr implements TruffleArrowRexVisitor<ExprBase> {
 
   /**
    * FROM clause of SQL query.
@@ -137,8 +139,8 @@ public abstract class CompileExpr implements RexVisitor<ExprBase> {
 //        throw new UnsupportedOperationException();
 //      case UNNEST:
 //        throw new UnsupportedOperationException();
-//      case COUNT:
-//        throw new UnsupportedOperationException();
+      case COUNT:
+        return count(call.getOperands());
 //      case SUM:
 //        throw new UnsupportedOperationException();
 //      case MIN:
@@ -242,6 +244,13 @@ public abstract class CompileExpr implements RexVisitor<ExprBase> {
     return then.accept(left, right);
   }
 
+  private ExprBase count(List<RexNode> operands) {
+    assert operands.size() == 1;
+
+    ExprBase accumulator = operands.get(0).accept(createCompileExpr(from, context));
+    return ExprPlusNodeGen.create(accumulator, ExprLiteral.Int(1));
+  }
+
   @Override
   public ExprBase visitOver(RexOver over) {
     throw new UnsupportedOperationException();
@@ -267,7 +276,7 @@ public abstract class CompileExpr implements RexVisitor<ExprBase> {
     ExprBase receiver = fieldAccess.getReferenceExpr().accept(createCompileExpr(from, context));
     String name = fieldAccess.getField().getName();
 
-    return ExprReadPropertyNodeGen.create(name, receiver);
+    return ExprReadPropertyNodeGen.create(receiver, ExprLiteral.Object(name));
   }
 
   @Override
@@ -285,12 +294,12 @@ public abstract class CompileExpr implements RexVisitor<ExprBase> {
     throw new UnsupportedOperationException();
   }
 
-  private boolean containsInputRef(List<RexNode> rexNodes) {
-    for (RexNode rexNode: rexNodes) {
-      if (rexNode instanceof RexInputRef) {
-        return true;
-      }
-    }
-    return false;
+  @Override
+  public ExprBase visitFrameSlotRef(RexFrameSlotRef rexFrameSlotRef) {
+    int index = rexFrameSlotRef.getIndex();
+    FrameSlot slot = from.findFrameSlot(index);
+    Objects.requireNonNull(slot);
+
+    return ExprReadLocalNodeGen.create(slot);
   }
 }
