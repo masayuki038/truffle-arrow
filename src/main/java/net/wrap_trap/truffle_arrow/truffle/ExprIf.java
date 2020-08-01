@@ -23,13 +23,11 @@ public final class ExprIf extends ExprBase {
   }
 
   @Override
-  public Void executeGeneric(VirtualFrame frame) {
+  public Object executeGeneric(VirtualFrame frame) {
     if (condition.profile(evaluateCondition(frame))) {
-      thenPartNode.executeGeneric(frame);
-    } else {
-      if (elsePartNode != null) {
-        elsePartNode.executeGeneric(frame);
-      }
+      return thenPartNode.executeGeneric(frame);
+    } else if (elsePartNode != null) {
+      return elsePartNode.executeGeneric(frame);
     }
     return null;
   }

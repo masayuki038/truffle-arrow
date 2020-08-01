@@ -12,11 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 
-public class VectorSchemaRootBroker extends RowSink {
+public class VectorSchemaRootBroker extends RelRowSink {
 
   private FrameDescriptorPart framePart;
   private VectorSchemaRoot[] vectorSchemaRoots;
-  private RowSink then;
 
   public static VectorSchemaRootBroker compile(
       FrameDescriptorPart framePart,
@@ -49,6 +48,7 @@ public class VectorSchemaRootBroker extends RowSink {
       RelDataType relType,
       VectorSchemaRoot[] vectorSchemaRoots,
       List<? extends RexNode> projects, RowSink then) {
+    super(then);
     this.framePart = framePart;
     this.vectorSchemaRoots = vectorSchemaRoots;
     this.then = then;

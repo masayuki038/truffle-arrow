@@ -8,7 +8,7 @@ import org.apache.calcite.rex.RexNode;
 import java.util.List;
 
 
-public class ProjectSink extends RowSink {
+public class ProjectSink extends RelRowSink {
 
   public static ProjectSink createSink(
     FrameDescriptorPart framePart,
@@ -37,12 +37,11 @@ public class ProjectSink extends RowSink {
 
   private FrameDescriptorPart framePart;
   private StatementWriteLocal[] locals;
-  private RowSink then;
 
   private ProjectSink(FrameDescriptorPart framePart, StatementWriteLocal[] locals, RowSink then) {
+    super(then);
     this.framePart = framePart;
     this.locals = locals;
-    this.then = then;
   }
 
   @Override

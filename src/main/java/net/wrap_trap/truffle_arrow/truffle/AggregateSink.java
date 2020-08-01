@@ -1,37 +1,24 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.AggregateCall;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexLocalRef;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.fun.SqlCountAggFunction;
-import org.apache.calcite.sql.type.SqlTypeUtil;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class AggregateSink extends RowSink {
+public class AggregateSink extends RelRowSink {
 
   public static AggregateSink createSink(
     FrameDescriptorPart framePart,
-    boolean indicator,
     ImmutableBitSet groupSet,
     ImmutableList<ImmutableBitSet> groupSets,
     List<AggregateCall> aggCalls,
-    RelNode input,
-    RexBuilder rexBuilder,
     SinkContext context,
     ThenRowSink next) {
     FrameDescriptorPart newFramePart = framePart.newPart();
@@ -40,83 +27,83 @@ public class AggregateSink extends RowSink {
     }
     RowSink rowSink = next.apply(newFramePart);
 
-
-    AggregateCall call = aggCalls.get(0);
     newFramePart.addFrameSlot();
     FrameSlot slot = newFramePart.findFrameSlot(newFramePart.getCurrentSlotPosition());
     newFramePart.frame().setFrameSlotKind(slot, FrameSlotKind.Long);
 
-    RexNode rexNode = rexBuilder.makeCall(call.getAggregation(), Lists.newArrayList());
-    RexCall rexCall = (RexCall) rexNode;
-    RexCall newRexCall = rexCall.clone(rexCall.getType(), Lists.newArrayList(new RexFrameSlotRef(1)));
-
-    ExprBase expr = compile(newFramePart, newRexCall, context);
-
     return new AggregateSink(
-      newFramePart, indicator, groupSet, groupSets, aggCalls, Lists.newArrayList(expr), context, rowSink);
+      newFramePart, groupSet, groupSets, aggCalls, context, rowSink);
   }
 
   private FrameDescriptorPart framePart;
-  private boolean indicator;
   private ImmutableBitSet groupSet;
   private ImmutableList<ImmutableBitSet> groupSets;
   private List<AggregateCall> aggCalls;
-  private List<ExprBase> exprs;
   private SinkContext sinkContext;
-  private RowSink then;
-  private Map<List<Object>, Object> map;
-  private TANewObject object;
-  private FrameSlot tempFrameSlot;
-  private ExprBase count;
+  private Map<List<Object>, List<Object>> map;
+  private List<TANewObject> objects;
+  private FrameSlot keyFrameSlot;
+  private List<FrameSlot> receiverFrameSlots;
+  private List<ExprBase> aggFunctions;
 
   private AggregateSink(
     FrameDescriptorPart framePart,
-    boolean indicator,
     ImmutableBitSet groupSet,
     ImmutableList<ImmutableBitSet> groupSets,
     List<AggregateCall> aggCalls,
-    List<ExprBase> exprs,
     SinkContext sinkContext,
     RowSink then) {
+    super(then);
     this.framePart = framePart;
-    this.indicator = indicator;
     this.groupSet = groupSet;
     this.groupSets = groupSets;
     this.aggCalls = aggCalls;
-    this.exprs = exprs;
     this.sinkContext = sinkContext;
-    this.then = then;
     this.map = new HashMap<>();
-    this.object = TANewObjectNodeGen.create();
-    this.tempFrameSlot = this.framePart.frame().addFrameSlot("tmpKey", FrameSlotKind.Object);
+    this.aggFunctions = new ArrayList<>();
+    this.keyFrameSlot = this.framePart.frame().addFrameSlot("tmpKey", FrameSlotKind.Object);
+    this.receiverFrameSlots = new ArrayList<>();
+    this.objects = new ArrayList<>();
 
-    // 複数の statement を作って実行するカンジ？
-    // if (aa == null) {
-    //   writeProperty(1, object)
-    // } else {
-    //   a = readProperty(object, 'a')
-    //   writeProperty(a + 1, object)
-    // }
+    for (AggregateCall aggCall: this.aggCalls) {
+      SqlKind kind = aggCall.getAggregation().kind;
+      switch(kind) {
+        case COUNT:
+          FrameSlot receiverFrameSlot = this.framePart.frame().addFrameSlot(
+            "receiver" + this.receiverFrameSlots.size(), FrameSlotKind.Object);
+          this.receiverFrameSlots.add(receiverFrameSlot);
 
-    ExprBase key = ExprReadLocalNodeGen.create(this.tempFrameSlot);
-    ExprBase hasMember = ExprHasMemberNodeGen.create(this.object, key);
+          ExprBase key = ExprReadLocalNodeGen.create(this.keyFrameSlot);
+          ExprBase receiver = ExprReadLocalNodeGen.create(receiverFrameSlot);
+          ExprBase hasMember = ExprHasMemberNodeGen.create(receiver, key);
 
-    ExprBase readProperty = ExprReadPropertyNodeGen.create(this.object, key);
-    ExprBase inc = ExprPlusNodeGen.create(readProperty, ExprLiteral.Int(1));
-    ExprBase writeProperty = ExprWritePropertyNodeGen.create(this.object, key, inc);
+          ExprBase readProperty = ExprReadPropertyNodeGen.create(receiver, key);
+          ExprBase inc = ExprPlusNodeGen.create(readProperty, ExprLiteral.Long(1));
+          ExprBase writeProperty = ExprWritePropertyNodeGen.create(receiver, key, inc);
+          ExprBase initProperty = ExprWritePropertyNodeGen.create(receiver, key, ExprLiteral.Long(1));
 
-    ExprBase initProperty = ExprWritePropertyNodeGen.create(this.object, key, ExprLiteral.Int(0));
+          aggFunctions.add(new ExprIf(hasMember, writeProperty, initProperty));
+          this.insert(hasMember);
+          this.insert(initProperty);
+          this.insert(writeProperty);
+          break;
 
-    this.count = new ExprIf(hasMember, writeProperty, initProperty);
-
-  }
-
-  private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, SinkContext context) {
-    return ProjectCompileExpr.compile(framePart, child, context);
+        default:
+          throw new UnsupportedOperationException("Unsupported function: " + kind);
+      }
+    }
   }
 
   @Override
   public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) throws UnexpectedResultException {
+
+    if (this.receiverFrameSlots.size() > 0 && this.objects.size() == 0) {
+      for (FrameSlot receiverFrameSlot: this.receiverFrameSlots) {
+        TANewObject object = TANewObjectNodeGen.create();
+        this.objects.add(object);
+        StatementWriteLocalNodeGen.create(object, receiverFrameSlot).executeVoid(frame);
+      }
+    }
     List<Object> grouping = new ArrayList<>();
     for (Integer i : groupSet) {
       FrameSlot slot = this.framePart.findFrameSlotInPrevious(i);
@@ -125,43 +112,11 @@ public class AggregateSink extends RowSink {
       grouping.add(value);
     }
     StatementWriteLocalNodeGen.create(
-      ExprLiteral.Object(grouping.toString()), this.tempFrameSlot).executeVoid(frame);
-
-
-//    List<StatementWriteLocal> locals = map.get(grouping);
-//    if (locals == null) {
-//      int index = 0;
-//      for (Object part: grouping) {
-//        FrameSlot newSlot = this.framePart.findFrameSlot(index ++);
-//        locals.add(StatementWriteLocalNodeGen.create(ExprLiteral.Object(part), newSlot));
-//      }
-//    }
-//    int index = this.groupSet.toList().size();
-//    for (ExprBase expr: this.exprs) {
-//      FrameSlot newSlot = this.framePart.findFrameSlot(index ++);
-//      locals.add(StatementWriteLocalNodeGen.create(expr, newSlot));
-//    }
-    map.put(grouping, this.count.executeGeneric(frame));
+      ExprLiteral.Object(grouping.toString()), this.keyFrameSlot).executeVoid(frame);
+    List<Object> funcResults = this.aggFunctions.stream().map(f -> f.executeGeneric((frame)))
+                                 .collect(Collectors.toList());
+    map.put(grouping, funcResults);
   }
-
-  private static RelDataType getFieldType(RelNode relNode, int i) {
-    final RelDataTypeField inputField =
-      relNode.getRowType().getFieldList().get(i);
-    return inputField.getType();
-  }
-
-//  @Override
-//  public void executeVoid(VirtualFrame frame, SinkContext context)
-//    throws UnexpectedResultException {
-//    final List<RelDataType> argTypes =
-//      call.getOperator() instanceof SqlCountAggFunction
-//        ? new ArrayList<>(call.getOperandList().size())
-//        : null;
-//    final Map<AggregateCall, RexNode> aggCallMapping = new HashMap<>();
-//    RexNode rexNode = rexBuilder.addAggCall(this.aggCalls.get(0), this.groupSet.size(), this.aggCalls, aggCallMapping, argTypes);
-//
-//
-//  }
 
   @Override
   public void afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
@@ -171,9 +126,10 @@ public class AggregateSink extends RowSink {
         StatementWriteLocalNodeGen.create(
           ExprLiteral.Object(keyList.get(0)), this.framePart.findFrameSlot(i)).executeVoid(frame);
       }
-      StatementWriteLocalNodeGen.create(
-        ExprLiteral.Object(this.map.get(keyList)), this.framePart.findFrameSlot(i ++)).executeVoid(frame);
-
+      for (Object funcResult: this.map.get(keyList)) {
+        StatementWriteLocalNodeGen.create(
+          ExprLiteral.Object(funcResult), this.framePart.findFrameSlot(i ++)).executeVoid(frame);
+      }
       then.executeByRow(frame, this.framePart, context);
     }
     then.afterExecute(frame, context);

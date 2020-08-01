@@ -21,7 +21,7 @@ public abstract class ExprWriteProperty extends ExprBase {
     try {
       objectLibrary.writeMember(receiver, name, value);
     } catch (UnsupportedMessageException | UnknownIdentifierException | UnsupportedTypeException e) {
-      throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException(e);
     }
     return value;
   }

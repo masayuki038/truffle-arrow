@@ -9,6 +9,14 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
  * Could be a literal, or a file somewhere.
  */
 public abstract class RowSource extends Node {
+
+    protected RowSink then;
+
+    protected RowSource(RowSink then) {
+        this.then = then;
+        this.insert(then);
+    }
+
     /**
      * Flush all rows. Called once for the entire execution of the query.
      */

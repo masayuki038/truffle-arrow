@@ -7,7 +7,7 @@ import org.apache.arrow.vector.UInt4Vector;
 import org.apache.calcite.rex.RexNode;
 
 
-public class FilterSink extends RowSink {
+public class FilterSink extends RelRowSink {
 
   public static FilterSink createSink(
     FrameDescriptorPart framePart,
@@ -19,13 +19,12 @@ public class FilterSink extends RowSink {
   }
 
   FrameDescriptorPart framePart;
-  RowSink then;
   ExprBase conditionExpr;
 
   private FilterSink(FrameDescriptorPart framePart, ExprBase conditionExpr, RowSink then) {
+    super(then);
     this.framePart = framePart;
     this.conditionExpr = conditionExpr;
-    this.then = then;
   }
 
   @Override

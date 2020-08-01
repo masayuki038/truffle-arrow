@@ -10,6 +10,7 @@
 
     <properties>
         <calcite.version>1.21.0</calcite.version>
+        <graal.version>20.1.0</graal.version>
     </properties>
 
     <dependencies>
@@ -89,17 +90,17 @@
         <dependency>
             <groupId>org.graalvm.truffle</groupId>
             <artifactId>truffle-api</artifactId>
-            <version>19.3.0.2</version>
+            <version>${graal.version}</version>
         </dependency>
         <dependency>
             <groupId>org.graalvm.truffle</groupId>
             <artifactId>truffle-tck</artifactId>
-            <version>19.3.0.2</version>
+            <version>${graal.version}</version>
         </dependency>
         <dependency>
             <groupId>org.graalvm.truffle</groupId>
             <artifactId>truffle-dsl-processor</artifactId>
-            <version>19.3.0.2</version>
+            <version>${graal.version}</version>
         </dependency>
         <dependency>
             <groupId>com.intellij</groupId>

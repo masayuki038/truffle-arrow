@@ -1,14 +1,12 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 public class TerminalSink extends RowSource {
 
   private SinkContext context;
-  private RowSink then;
   private FrameDescriptorPart framePart;
 
   public static RowSource compile(SinkContext context, ThenRowSink next) {
@@ -17,9 +15,9 @@ public class TerminalSink extends RowSource {
   }
 
   private TerminalSink(FrameDescriptorPart framePart, SinkContext context, RowSink then) {
+    super(then);
     this.framePart = framePart;
     this.context =context;
-    this.then = then;
   }
 
   @Override

@@ -38,8 +38,57 @@ public class GroupByWithFuncTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(10));
       results.sort(Comparator.naturalOrder());
-      assertThat(results.get(0), is("0"));
+      assertThat(results.get(0), is("0\t1"));
+      assertThat(results.get(1), is("1\t1"));
+      assertThat(results.get(2), is("2\t1"));
+      assertThat(results.get(3), is("3\t1"));
+      assertThat(results.get(4), is("4\t1"));
+      assertThat(results.get(5), is("5\t1"));
+      assertThat(results.get(6), is("6\t1"));
+      assertThat(results.get(7), is("7\t1"));
+      assertThat(results.get(8), is("8\t1"));
+      assertThat(results.get(9), is("9\t1"));
       assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
     }
   }
+
+  @Test
+  public void countByLong() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_BIGINT, COUNT(F_BIGINT) AS CNT from ALL_FIELDS group by F_BIGINT");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(5));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("0\t2"));
+      assertThat(results.get(1), is("1\t2"));
+      assertThat(results.get(2), is("2\t2"));
+      assertThat(results.get(3), is("3\t2"));
+      assertThat(results.get(4), is("4\t2"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
+//  @Test
+//  public void countByLong2() throws SQLException {
+//    try (
+//      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+//      PreparedStatement pstmt = conn.prepareStatement(
+//        "select COUNT(F_BIGINT) AS CNT, F_BIGINT from ALL_FIELDS group by F_BIGINT");
+//      ResultSet rs = pstmt.executeQuery()
+//    ) {
+//      List<String> results = TestUtils.getResults(rs);
+//      assertThat(results.size(), is(5));
+//      results.sort(Comparator.naturalOrder());
+//      assertThat(results.get(0), is("2\t0"));
+//      assertThat(results.get(1), is("2\t1"));
+//      assertThat(results.get(2), is("2\t2"));
+//      assertThat(results.get(3), is("2\t3"));
+//      assertThat(results.get(4), is("2\t4"));
+//      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+//    }
+//  }
 }

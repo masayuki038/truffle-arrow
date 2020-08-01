@@ -19,10 +19,6 @@ public abstract class TANewObject extends ExprBase {
     object = emptyShape.newInstance();
     return object;
   }
-
-  public static class TAObjectType extends ObjectType {
-    public static final TAObjectType SINGLETON = new TAObjectType();
-  }
 }
 
 
