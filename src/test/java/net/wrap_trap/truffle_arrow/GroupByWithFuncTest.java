@@ -72,23 +72,23 @@ public class GroupByWithFuncTest {
     }
   }
 
-//  @Test
-//  public void countByLong2() throws SQLException {
-//    try (
-//      Connection conn = DriverManager.getConnection("jdbc:truffle:");
-//      PreparedStatement pstmt = conn.prepareStatement(
-//        "select COUNT(F_BIGINT) AS CNT, F_BIGINT from ALL_FIELDS group by F_BIGINT");
-//      ResultSet rs = pstmt.executeQuery()
-//    ) {
-//      List<String> results = TestUtils.getResults(rs);
-//      assertThat(results.size(), is(5));
-//      results.sort(Comparator.naturalOrder());
-//      assertThat(results.get(0), is("2\t0"));
-//      assertThat(results.get(1), is("2\t1"));
-//      assertThat(results.get(2), is("2\t2"));
-//      assertThat(results.get(3), is("2\t3"));
-//      assertThat(results.get(4), is("2\t4"));
-//      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
-//    }
-//  }
+  @Test
+  public void countByLong2() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select COUNT(F_BIGINT) AS CNT, F_BIGINT from ALL_FIELDS group by F_BIGINT");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(5));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("2\t0"));
+      assertThat(results.get(1), is("2\t1"));
+      assertThat(results.get(2), is("2\t2"));
+      assertThat(results.get(3), is("2\t3"));
+      assertThat(results.get(4), is("2\t4"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
 }

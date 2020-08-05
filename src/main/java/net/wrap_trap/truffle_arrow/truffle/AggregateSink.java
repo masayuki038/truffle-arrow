@@ -25,11 +25,12 @@ public class AggregateSink extends RelRowSink {
     for (int i = 0; i < groupSet.toList().size(); i ++) {
       newFramePart.addFrameSlot();
     }
-    RowSink rowSink = next.apply(newFramePart);
 
     newFramePart.addFrameSlot();
     FrameSlot slot = newFramePart.findFrameSlot(newFramePart.getCurrentSlotPosition());
     newFramePart.frame().setFrameSlotKind(slot, FrameSlotKind.Long);
+
+    RowSink rowSink = next.apply(newFramePart);
 
     return new AggregateSink(
       newFramePart, groupSet, groupSets, aggCalls, context, rowSink);
