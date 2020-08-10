@@ -24,11 +24,14 @@ public class GroupByWithFuncTest {
 
   @AfterAll
   public static void teardownOnce() {
-    new File("target/classes/samples/files/all_fields.arrow").delete();
+    File file = new File("target/classes/samples/files/all_fields.arrow");
+    if (!file.delete()) {
+      throw new IllegalStateException("Failed to remove `all_fields.arrow`");
+    }
   }
 
   @Test
-  public void groupByInt() throws SQLException {
+  public void countByInt() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -88,6 +91,106 @@ public class GroupByWithFuncTest {
       assertThat(results.get(2), is("2\t2"));
       assertThat(results.get(3), is("2\t3"));
       assertThat(results.get(4), is("2\t4"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
+  @Test
+  public void countByVarchar() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_VARCHAR, COUNT(F_VARCHAR) AS CNT from ALL_FIELDS group by F_VARCHAR");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(5));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("test0\t2"));
+      assertThat(results.get(1), is("test1\t2"));
+      assertThat(results.get(2), is("test2\t2"));
+      assertThat(results.get(3), is("test3\t2"));
+      assertThat(results.get(4), is("test4\t2"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
+  @Test
+  public void countByTimestamp() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_TIMESTAMP, COUNT(F_TIMESTAMP) AS CNT from ALL_FIELDS group by F_TIMESTAMP");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(5));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("2020-05-04 13:48:11.0\t2"));
+      assertThat(results.get(1), is("2020-05-05 13:48:11.0\t2"));
+      assertThat(results.get(2), is("2020-05-06 13:48:11.0\t2"));
+      assertThat(results.get(3), is("2020-05-07 13:48:11.0\t2"));
+      assertThat(results.get(4), is("2020-05-08 13:48:11.0\t2"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
+  @Test
+  public void countByTime() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_TIME, COUNT(F_TIME) AS CNT from ALL_FIELDS group by F_TIME");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(5));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("01:20:23\t2"));
+      assertThat(results.get(1), is("02:20:23\t2"));
+      assertThat(results.get(2), is("03:20:23\t2"));
+      assertThat(results.get(3), is("04:20:23\t2"));
+      assertThat(results.get(4), is("05:20:23\t2"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
+  @Test
+  public void countByDate() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_DATE, COUNT(F_DATE) AS CNT from ALL_FIELDS group by F_DATE");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(5));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("2020-05-03\t2"));
+      assertThat(results.get(1), is("2020-05-04\t2"));
+      assertThat(results.get(2), is("2020-05-05\t2"));
+      assertThat(results.get(3), is("2020-05-06\t2"));
+      assertThat(results.get(4), is("2020-05-07\t2"));
+      assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
+    }
+  }
+
+  @Test
+  public void countByDouble() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      PreparedStatement pstmt = conn.prepareStatement(
+        "select F_DOUBLE, COUNT(F_DOUBLE) AS CNT from ALL_FIELDS group by F_DOUBLE");
+      ResultSet rs = pstmt.executeQuery()
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      assertThat(results.size(), is(5));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("123.456\t2"));
+      assertThat(results.get(1), is("124.456\t2"));
+      assertThat(results.get(2), is("125.456\t2"));
+      assertThat(results.get(3), is("126.456\t2"));
+      assertThat(results.get(4), is("127.456\t2"));
       assertThat(LastPlan.INSTANCE.includes(ArrowAggregate.class), is(true));
     }
   }
