@@ -13,7 +13,7 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class GroupByTest {
+public class AggregateTest {
 
   @BeforeAll
   public static void setupOnce() throws ClassNotFoundException, IOException {
