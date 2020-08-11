@@ -9,6 +9,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class TruffleDriver extends UnregisteredDriver {
+
+    public static final String DRIVER_PREFIX = "jdbc:truffle:";
+
     static {
         try {
             DriverManager.registerDriver(new TruffleDriver());
@@ -24,7 +27,7 @@ public class TruffleDriver extends UnregisteredDriver {
 
     @Override
     protected String getConnectStringPrefix() {
-        return "jdbc:truffle:";
+        return DRIVER_PREFIX;
     }
 
     @Override
