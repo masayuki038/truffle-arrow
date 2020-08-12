@@ -15,14 +15,11 @@ import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.graalvm.polyglot.*;
 import java.sql.DatabaseMetaData;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class TruffleArrowMeta extends  MetaImpl {
+public class TruffleArrowMeta extends MetaImpl {
 
   private Context context;
   private final Map<Integer, Running> runningQueries = new ConcurrentHashMap<>();
@@ -50,7 +47,19 @@ public class TruffleArrowMeta extends  MetaImpl {
 
   @Override
   public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) throws NoSuchStatementException {
-    throw new UnsupportedOperationException();
+    Value value = context.eval("ta", sql);
+    List result = value.as(List.class);
+    this.runningQueries.put(h.id, new Running(result, null));
+
+    try {
+      h.signature = createSignature(sql);
+      Frame firstFrame = fetch(h, 0, maxRowsInFirstFrame);
+      MetaResultSet metaResultSet =
+        MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
+      return new ExecuteResult(Collections.singletonList(metaResultSet));
+    } catch (MissingResultsException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
@@ -184,6 +193,20 @@ public class TruffleArrowMeta extends  MetaImpl {
                                Meta.CursorFactory.ARRAY,
                                Meta.StatementType.SELECT
     );
+  }
+
+  @Override
+  public Map<DatabaseProperty, Object> getDatabaseProperties(ConnectionHandle ch) {
+    Map<DatabaseProperty, Object> map = new HashMap<>();
+    map.put(DatabaseProperty.AVATICA_VERSION, "1.15.0");
+    map.put(DatabaseProperty.GET_DATABASE_MAJOR_VERSION, "0");
+    map.put(DatabaseProperty.GET_DATABASE_MINOR_VERSION, "1");
+    map.put(DatabaseProperty.GET_DRIVER_NAME, "truffle-arrow JDBC Driver");
+    map.put(DatabaseProperty.GET_DRIVER_MAJOR_VERSION, "0");
+    map.put(DatabaseProperty.GET_DRIVER_MINOR_VERSION, "1");
+    map.put(DatabaseProperty.GET_DATABASE_PRODUCT_NAME, "truffle-arrow");
+    map.put(DatabaseProperty.GET_DATABASE_PRODUCT_VERSION, "0.1");
+    return map;
   }
 
   private static class Running {

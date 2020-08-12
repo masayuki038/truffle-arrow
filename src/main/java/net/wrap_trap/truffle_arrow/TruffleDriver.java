@@ -10,29 +10,28 @@ import java.sql.SQLException;
 
 public class TruffleDriver extends UnregisteredDriver {
 
-    public static final String DRIVER_PREFIX = "jdbc:truffle:";
+  public static final String DRIVER_PREFIX = "jdbc:truffle:";
 
-    static {
-        try {
-            DriverManager.registerDriver(new TruffleDriver());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+  static {
+    try {
+      DriverManager.registerDriver(new TruffleDriver());
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    @Override
-    protected DriverVersion createDriverVersion() {
-        return new DriverVersion("Truffle JDBC driver", "0.1", "Truffle", "0.1", true, 0, 1, 0, 1);
-    }
+  @Override
+  protected DriverVersion createDriverVersion() {
+    return new DriverVersion("truffle-arrow JDBC Driver", "0.1", "Truffle", "0.1", true, 0, 1, 0, 1);
+  }
 
-    @Override
-    protected String getConnectStringPrefix() {
-        return DRIVER_PREFIX;
-    }
+  @Override
+  protected String getConnectStringPrefix() {
+    return DRIVER_PREFIX;
+  }
 
-    @Override
-    public Meta createMeta(AvaticaConnection connection) {
-        return new TruffleArrowMeta(connection);
-    }
-
+  @Override
+  public Meta createMeta(AvaticaConnection connection) {
+    return new TruffleArrowMeta(connection);
+  }
 }
