@@ -58,18 +58,17 @@ public class JdbcTest {
   }
 
   @Test
-  public void filterIsNull() {
-    // a is null
-    // a is not null
-  }
-
-  @Test
-  public void filterAndOr() {
-    // a = 1 and b = 2
-    // a = 1 or b = 2
-    // a = 1 and (b = 2 and c = 3)
-    // a = 1 or (b = 2 or (c = 3 or d = 4))
-    // (a = 1 and b = 2) or (c = 3 and (d = 4 or e = 5))
-    // ((a = 1 or b = 2) and c = 3) or (d = 4 or (e = 5 and f = 6))
+  public void testStatementExecuteQuery() throws SQLException {
+    try (
+      Connection conn = DriverManager.getConnection("jdbc:truffle:");
+      ResultSet rs = conn.createStatement().executeQuery(
+        "select N_NATIONKEY, N_NAME, N_REGIONKEY from NATIONSSF");
+    ) {
+      List<String> results = TestUtils.getResults(rs);
+      System.out.println(results);
+      assertThat(results.size(), is(25));
+      assertThat(results.get(0), is("0\tALGERIA\t0"));
+      assertThat(results.get(24), is("24\tUNITED STATES\t1"));
+    }
   }
 }

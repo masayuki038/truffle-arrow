@@ -15,6 +15,7 @@ import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.graalvm.polyglot.*;
 import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -53,12 +54,22 @@ public class TruffleArrowMeta extends MetaImpl {
 
     try {
       h.signature = createSignature(sql);
-      Frame firstFrame = fetch(h, 0, maxRowsInFirstFrame);
+      int rows =  (maxRowsInFirstFrame < 0) ? Integer.MAX_VALUE: maxRowsInFirstFrame;
+      Frame firstFrame = fetch(h, 0, rows);
+
+      synchronized (callback.getMonitor()) {
+        callback.clear();
+        callback.assign(h.signature, firstFrame, -1);
+        callback.execute();
+      }
+
       MetaResultSet metaResultSet =
         MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
       return new ExecuteResult(Collections.singletonList(metaResultSet));
     } catch (MissingResultsException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
+    } catch (SQLException e) {
+      throw new IllegalStateException(e);
     }
   }
 
