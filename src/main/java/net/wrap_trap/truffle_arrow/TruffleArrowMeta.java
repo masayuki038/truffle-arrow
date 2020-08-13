@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.avatica.*;
 import org.apache.calcite.avatica.remote.TypedValue;
@@ -14,6 +15,8 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.graalvm.polyglot.*;
+
+import java.lang.reflect.Field;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.*;
@@ -24,6 +27,7 @@ public class TruffleArrowMeta extends MetaImpl {
 
   private Context context;
   private final Map<Integer, Running> runningQueries = new ConcurrentHashMap<>();
+  private NoSuchFieldException e;
 
   public TruffleArrowMeta(AvaticaConnection connection) {
     super(connection);
@@ -218,6 +222,71 @@ public class TruffleArrowMeta extends MetaImpl {
     map.put(DatabaseProperty.GET_DATABASE_PRODUCT_NAME, "truffle-arrow");
     map.put(DatabaseProperty.GET_DATABASE_PRODUCT_VERSION, "0.1");
     return map;
+  }
+
+  @Override
+  public MetaResultSet getTables(ConnectionHandle ch,
+                                 String catalog,
+                                 Pat schemaPattern,
+                                 Pat tableNamePattern,
+                                 List<String> typeList) {
+    return createResultSet(
+      Lists.newArrayList(
+        new MetaTable(
+          "SIMPLE",
+          "SIMPLE",
+          "NATIONSSF",
+          "TABLE")),
+      MetaTable.class,
+      "TABLE_CAT",
+      "TABLE_SCHEM",
+      "TABLE_NAME",
+      "TABLE_TYPE");
+  }
+
+  @Override
+  public MetaResultSet getSchemas(ConnectionHandle ch, String catalog, Pat schemaPattern) {
+    return createResultSet(Lists.newArrayList(new MetaSchema("SIMPLE", "SIMPLE")),
+      MetaSchema.class,
+      "TABLE_SCHEM",
+      "TABLE_CATALOG");
+  }
+
+  @Override
+  public MetaResultSet getCatalogs(ConnectionHandle ch) {
+    return createResultSet(Lists.newArrayList(new MetaCatalog("SIMPLE")),
+      MetaCatalog.class,
+      "TABLE_CAT");
+  }
+
+  @Override
+  public MetaResultSet getTableTypes(ConnectionHandle ch) {
+    return createResultSet(Lists.newArrayList(new MetaTableType("TABLE")),
+      MetaTableType.class,
+      "TABLE_TYPE");
+  }
+
+  // From CalciteMetaImpl
+  private MetaResultSet createResultSet(List<Object> results,
+                                            Class clazz, String... names) {
+    List<ColumnMetaData> columns = new ArrayList<>();
+    List<Field> fields = new ArrayList<>();
+    List<String> fieldNames = new ArrayList<>();
+
+    try {
+      for (int i = 0; i < names.length; i ++) {
+        String fieldName = AvaticaUtils.toCamelCase(names[i]);
+        Field field = clazz.getField(fieldName);
+        columns.add(columnMetaData(names[i], i, field.getType(), false));
+        fields.add(field);
+        fieldNames.add(fieldName);
+      }
+      return createResultSet(Collections.emptyMap(),
+        columns, CursorFactory.record(clazz, fields, fieldNames),
+        new Frame(0, true, results));
+    } catch (NoSuchFieldException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
   private static class Running {
