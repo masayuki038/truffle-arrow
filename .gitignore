@@ -25,3 +25,6 @@ hs_err_pid*
 .idea
 project
 target
+
+src/main/resources/samples
+src/main/resources/log4j2.xml
