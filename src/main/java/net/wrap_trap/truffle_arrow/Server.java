@@ -11,6 +11,8 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.ServerConnector;
 
 import java.sql.SQLException;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class Server {
 
@@ -20,7 +22,7 @@ public class Server {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
 
     LocalService service = new LocalService(createMeta());
-    AbstractAvaticaHandler handler = new AvaticaJsonHandler(service);
+    AbstractAvaticaHandler handler = new AvaticaProtobufHandler(service);
     HttpServer server = new HttpServer(PORT, handler) {
       @Override
       protected ServerConnector configureConnector(
@@ -36,6 +38,10 @@ public class Server {
   }
 
   private static Meta createMeta() throws SQLException {
-    return new JdbcMeta(TruffleDriver.DRIVER_PREFIX);
+    Properties props = new Properties();
+    props.setProperty(JdbcMeta.ConnectionCacheSettings.EXPIRY_DURATION.key(), "1");
+    props.setProperty(JdbcMeta.ConnectionCacheSettings.EXPIRY_UNIT.key(), TimeUnit.SECONDS.name());
+
+    return new JdbcMeta(TruffleDriver.DRIVER_PREFIX, props);
   }
 }

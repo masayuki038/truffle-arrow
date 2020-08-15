@@ -11,7 +11,73 @@
     <properties>
         <calcite.version>1.21.0</calcite.version>
         <graal.version>20.1.0</graal.version>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <jar.dir>${project.build.directory}/jars</jar.dir>
+        <test.argLine>--upgrade-module-path='${jar.dir}/truffle-api.jar' --add-opens org.graalvm.sdk/org.graalvm.polyglot=ALL-UNNAMED --add-exports java.base/jdk.internal.module=ALL-UNNAMED</test.argLine>
+
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-eclipse-plugin</artifactId>
+                <configuration>
+                    <downloadSources>true</downloadSources>
+                    <downloadJavadocs>true</downloadJavadocs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.9</version>
+                <configuration>
+                    <includes>
+                        <include>**/*TestSuite.java</include>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <argLine>-Dgraalvm.locatorDisabled=true ${test.argLine}</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>truffle-arrow</finalName>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>junit:junit</exclude>
+                                    <exclude>org.graalvm.truffle:truffle-api</exclude>
+                                    <exclude>org.graalvm.truffle:truffle-dsl-processor</exclude>
+                                    <exclude>org.graalvm.truffle:truffle-tck</exclude>
+                                    <exclude>org.graalvm:graal-sdk</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <packaging>jar</packaging>
 
     <dependencies>
         <!-- Sorted by groupId, artifactId; calcite dependencies first. Put versions

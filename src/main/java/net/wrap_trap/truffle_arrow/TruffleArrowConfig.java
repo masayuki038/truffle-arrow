@@ -39,6 +39,7 @@ public class TruffleArrowConfig {
 
   void reload() {
     SqlOperatorTable operatorTable = SqlStdOperatorTable.instance();
+    // TODO
     ArrowSchema schema = new ArrowSchema(new File("target/classes/samples/files"));
     CalciteSchema rootSchema = CalciteSchema.createRootSchema(false, true, "SAMPLES", schema);
     this.typeFactory = new JavaTypeFactoryImpl();

@@ -1,35 +1,31 @@
 package net.wrap_trap.truffle_arrow;
 
-import org.apache.arrow.memory.BufferAllocator;
-import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
-import org.apache.arrow.vector.ipc.ArrowFileReader;
-import org.apache.arrow.vector.ipc.SeekableReadChannel;
-import org.apache.arrow.vector.util.ByteArrayReadableSeekableByteChannel;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.impl.AbstractSchema;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Schema for Apache Arrow
  */
 public class ArrowSchema extends AbstractSchema {
 
+  private static final Logger log = LoggerFactory.getLogger(ArrowSchema.class);
+
   private Map<String, Table> tableMap;
   private File directory;
 
   public ArrowSchema(File directory) {
     this.directory = directory;
+    log.debug("directory: " + directory.getAbsolutePath());
   }
 
   private String trim(String s, String suffix) {
@@ -53,7 +49,9 @@ public class ArrowSchema extends AbstractSchema {
       File[] arrowFiles = directory.listFiles((dir, name) -> name.endsWith(".arrow"));
       Arrays.stream(arrowFiles).forEach(file -> {
         try {
-          VectorSchemaRoot[] vectorSchemaRoots = ArrowUtils.load(file.getAbsolutePath());
+          String path = file.getAbsolutePath();
+          log.debug("Found: " + path);
+          VectorSchemaRoot[] vectorSchemaRoots = ArrowUtils.load(path);
           tableMap.put(
             trim(file.getName(), ".arrow").toUpperCase(),
             new ArrowTable(vectorSchemaRoots, null));
