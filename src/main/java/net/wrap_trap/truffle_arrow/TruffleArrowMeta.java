@@ -15,6 +15,8 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.graalvm.polyglot.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.sql.DatabaseMetaData;
@@ -25,17 +27,19 @@ import java.util.stream.Collectors;
 
 public class TruffleArrowMeta extends MetaImpl {
 
-  private Context context;
+  private static final Logger log = LoggerFactory.getLogger(TruffleArrowMeta.class);
+
   private final Map<Integer, Running> runningQueries = new ConcurrentHashMap<>();
-  private NoSuchFieldException e;
 
   public TruffleArrowMeta(AvaticaConnection connection) {
     super(connection);
-    this.context = Context.newBuilder("ta").build();
+    log.info("Instanciated TruffleArrowMeta");
   }
 
   @Override
   public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
+    log.info(String.format("prepare, ch: %s, sql: %s, maxRowCount: %d", ch.id, sql, maxRowCount));
+    Context context = Context.newBuilder("ta").build();
     Value value = context.eval("ta", sql);
     List result = value.as(List.class);
 
@@ -46,12 +50,15 @@ public class TruffleArrowMeta extends MetaImpl {
   }
 
   @Override
-  public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, PrepareCallback callback) throws NoSuchStatementException {
+  public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, PrepareCallback callback) {
+    log.info(String.format("prepareAndExecute, h: %s, sql: %s, maxRowCount: %d, callback: %s", h.id, sql, maxRowCount, callback));
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) throws NoSuchStatementException {
+    log.info(String.format("prepareAndExecute, h: %s, sql: %s, maxRowCount: %d, maxRowsInFirstFrame: %d, callback: %s", h.id, sql, maxRowCount, maxRowsInFirstFrame, callback));
+    Context context = Context.newBuilder("ta").build();
     Value value = context.eval("ta", sql);
     List result = value.as(List.class);
     this.runningQueries.put(h.id, new Running(result, null));
@@ -70,25 +77,26 @@ public class TruffleArrowMeta extends MetaImpl {
       MetaResultSet metaResultSet =
         MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
       return new ExecuteResult(Collections.singletonList(metaResultSet));
-    } catch (MissingResultsException e) {
-      throw new IllegalStateException(e);
     } catch (SQLException e) {
       throw new IllegalStateException(e);
     }
   }
 
   @Override
-  public ExecuteBatchResult prepareAndExecuteBatch(StatementHandle h, List<String> sqlCommands) throws NoSuchStatementException {
+  public ExecuteBatchResult prepareAndExecuteBatch(StatementHandle h, List<String> sqlCommands) {
+    log.info(String.format("prepareAndExecuteBatch, h: %s, sqlCommands: %s", h.id, sqlCommands));
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public ExecuteBatchResult executeBatch(StatementHandle h, List<List<TypedValue>> parameterValues) throws NoSuchStatementException {
+  public ExecuteBatchResult executeBatch(StatementHandle h, List<List<TypedValue>> parameterValues) {
+    log.info(String.format("executeBatch, h: %s, parameterValues: %s", h.id, parameterValues));
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) throws NoSuchStatementException, MissingResultsException {
+  public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) {
+    log.info(String.format("fetch, h: %s, offset: %d, fetchMaxRowCount: %d", h.id, offset, fetchMaxRowCount));
     Running running = runningQueries.get(h.id);
     List<Object> slice = running.rows
                            .stream()
@@ -100,12 +108,14 @@ public class TruffleArrowMeta extends MetaImpl {
   }
 
   @Override
-  public ExecuteResult execute(StatementHandle h, List<TypedValue> parameterValues, long maxRowCount) throws NoSuchStatementException {
+  public ExecuteResult execute(StatementHandle h, List<TypedValue> parameterValues, long maxRowCount) {
+    log.info(String.format("execute, h: %s, parameterValues: %s, maxRowCount: %d", h.id, parameterValues, maxRowCount));
     return null;
   }
 
   @Override
-  public ExecuteResult execute(StatementHandle h, List<TypedValue> parameterValues, int maxRowsInFirstFrame) throws NoSuchStatementException {
+  public ExecuteResult execute(StatementHandle h, List<TypedValue> parameterValues, int maxRowsInFirstFrame) {
+    log.info(String.format("execute, h: %s, parameterValues: %s, maxRowsInFirstFrame: %d", h.id, parameterValues, maxRowsInFirstFrame));
     MetaResultSet metaResultSet =
       MetaResultSet.create(h.connectionId, h.id, false, h.signature, null);
     return new ExecuteResult(Collections.singletonList(metaResultSet));
@@ -113,20 +123,24 @@ public class TruffleArrowMeta extends MetaImpl {
 
   @Override
   public void closeStatement(StatementHandle h) {
+    log.info(String.format("closeStatement, h: %s", h.id));
   }
 
   @Override
-  public boolean syncResults(StatementHandle sh, QueryState state, long offset) throws NoSuchStatementException {
+  public boolean syncResults(StatementHandle sh, QueryState state, long offset) {
+    log.info(String.format("syncResults, sh: %s, state: %s, offset: %d", sh.id, state, offset));
     return false;
   }
 
   @Override
   public void commit(ConnectionHandle ch) {
+    log.info(String.format("commit, ch: %s", ch.id));
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void rollback(ConnectionHandle ch) {
+    log.info(String.format("rollback, ch: %s", ch.id));
     throw new UnsupportedOperationException();
   }
 

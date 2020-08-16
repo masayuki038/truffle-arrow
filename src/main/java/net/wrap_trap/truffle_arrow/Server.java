@@ -4,7 +4,6 @@ import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.jdbc.JdbcMeta;
 import org.apache.calcite.avatica.remote.LocalService;
 import org.apache.calcite.avatica.server.AbstractAvaticaHandler;
-import org.apache.calcite.avatica.server.AvaticaJsonHandler;
 import org.apache.calcite.avatica.server.AvaticaProtobufHandler;
 import org.apache.calcite.avatica.server.HttpServer;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -39,7 +38,7 @@ public class Server {
 
   private static Meta createMeta() throws SQLException {
     Properties props = new Properties();
-    props.setProperty(JdbcMeta.ConnectionCacheSettings.EXPIRY_DURATION.key(), "1");
+    props.setProperty(JdbcMeta.ConnectionCacheSettings.EXPIRY_DURATION.key(), "10");
     props.setProperty(JdbcMeta.ConnectionCacheSettings.EXPIRY_UNIT.key(), TimeUnit.SECONDS.name());
 
     return new JdbcMeta(TruffleDriver.DRIVER_PREFIX, props);
