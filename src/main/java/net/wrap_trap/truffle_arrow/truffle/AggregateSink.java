@@ -125,7 +125,7 @@ public class AggregateSink extends RelRowSink {
       int i;
       for (i = 0; i < keyList.size(); i ++) {
         StatementWriteLocalNodeGen.create(
-          ExprLiteral.Object(keyList.get(0)), this.framePart.findFrameSlot(i)).executeVoid(frame);
+          ExprLiteral.Object(keyList.get(i)), this.framePart.findFrameSlot(i)).executeVoid(frame);
       }
       for (Object funcResult: this.map.get(keyList)) {
         StatementWriteLocalNodeGen.create(
