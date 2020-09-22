@@ -20,15 +20,15 @@ public class ArrowSchema extends AbstractSchema {
 
   private static final Logger log = LoggerFactory.getLogger(ArrowSchema.class);
 
-  private Map<String, Table> tableMap;
-  private File directory;
+  protected Map<String, Table> tableMap;
+  protected File directory;
 
   public ArrowSchema(File directory) {
     this.directory = directory;
     log.debug("directory: " + directory.getAbsolutePath());
   }
 
-  private String trim(String s, String suffix) {
+  protected String trim(String s, String suffix) {
     String trimmed = trimOrNull(s, suffix);
     if (trimmed == null) {
       return s;

@@ -1,6 +1,7 @@
 package net.wrap_trap.truffle_arrow;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptTable;
@@ -14,19 +15,28 @@ import org.apache.calcite.sql.validate.SqlModality;
 import org.apache.calcite.sql.validate.SqlMonotonicity;
 import org.apache.calcite.util.ImmutableBitSet;
 
+import java.io.File;
 import java.util.List;
 
 public class ArrowPreparingTable extends Prepare.AbstractPreparingTable {
 
   private List<String> names;
-  private ArrowTable table;
+  private AbstractArrowTable table;
   private RelDataTypeFactory typeFactory;
 
-  public ArrowPreparingTable(List<String> names, ArrowTable table,
+  public ArrowPreparingTable(List<String> names, AbstractArrowTable table,
                              RelDataTypeFactory typeFactory) {
     this.names = names;
     this.table = table;
     this.typeFactory = typeFactory;
+  }
+
+  public Schema getSchema() {
+    return this.table.getSchema();
+  }
+
+  public File getTableDirectory() {
+    return this.table.getTableDirectory();
   }
 
   @Override

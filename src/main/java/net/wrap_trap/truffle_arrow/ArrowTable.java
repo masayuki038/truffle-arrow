@@ -1,7 +1,6 @@
 package net.wrap_trap.truffle_arrow;
 
 import com.google.common.collect.Lists;
-import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.linq4j.QueryProvider;
@@ -16,7 +15,6 @@ import org.apache.calcite.schema.QueryableTable;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Schemas;
 import org.apache.calcite.schema.TranslatableTable;
-import org.apache.calcite.schema.impl.AbstractTable;
 import org.apache.calcite.util.Pair;
 
 import java.lang.reflect.Type;
@@ -26,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Table for Apache Arrow
  */
-public class ArrowTable extends AbstractTable implements QueryableTable, TranslatableTable {
+public class ArrowTable extends AbstractArrowTable implements QueryableTable, TranslatableTable {
 
   private VectorSchemaRoot[] vectorSchemaRoots;
   private RelProtoDataType tProtoRowType;

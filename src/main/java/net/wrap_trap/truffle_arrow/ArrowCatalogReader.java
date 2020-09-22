@@ -1,6 +1,7 @@
 package net.wrap_trap.truffle_arrow;
 
 import com.google.common.collect.ImmutableList;
+import net.wrap_trap.truffle_arrow.storage.columnar.ArrowColumnarProjectTableScanRule;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.ConventionTraitDef;
@@ -29,7 +30,7 @@ public class ArrowCatalogReader implements Prepare.CatalogReader {
   private SqlNameMatcher nameMatcher;
 
   public ArrowCatalogReader(ArrowSchema schema, CalciteSchema calciteSchema, List<String> defaultSchema,
-                             RelDataTypeFactory typeFactory) {
+                            RelDataTypeFactory typeFactory) {
     this.calciteSchema = calciteSchema;
     this.typeFactory = typeFactory;
     this.arrowSchema = schema;
@@ -49,7 +50,7 @@ public class ArrowCatalogReader implements Prepare.CatalogReader {
 
   @Override
   public Prepare.PreparingTable getTable(List<String> names) {
-    ArrowTable table = (ArrowTable) this.arrowSchema.getTableMap().get(names.get(1));
+    AbstractArrowTable table = (AbstractArrowTable) this.arrowSchema.getTableMap().get(names.get(1));
     return new ArrowPreparingTable(names, table, this.typeFactory);
   }
 
@@ -65,6 +66,7 @@ public class ArrowCatalogReader implements Prepare.CatalogReader {
     planner.addRule(ArrowFilterTableScanRule.INSTANCE);
     planner.addRule(ArrowProjectRule.INSTANCE);
     planner.addRule(ArrowAggregateRule.INSTANCE);
+    planner.addRule(ArrowColumnarProjectTableScanRule.INSTANCE);
   }
 
   @Override

@@ -160,7 +160,7 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
     RelOptCluster cluster = RelOptCluster.create(planner, new RexBuilder(typeFactory));
     SqlToRelConverter.Config config =
-      SqlToRelConverter.configBuilder().withTrimUnusedFields(true).build();
+      SqlToRelConverter.configBuilder().withTrimUnusedFields(true).withConvertTableAccess(false).build();
     SqlToRelConverter converter = new SqlToRelConverter(
                                                          TruffleArrowLanguage::expandView,
                                                          validator,

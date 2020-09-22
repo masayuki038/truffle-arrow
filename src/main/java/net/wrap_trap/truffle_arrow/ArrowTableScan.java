@@ -1,9 +1,7 @@
 package net.wrap_trap.truffle_arrow;
 
 import net.wrap_trap.truffle_arrow.truffle.*;
-import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
-import org.apache.calcite.linq4j.tree.Primitive;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
@@ -13,7 +11,6 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 
 import java.util.Arrays;
@@ -83,18 +80,5 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
         this.fields,
         context,
         next);
-  }
-
-  private int[] getProjectFields(List<? extends RexNode> exps) {
-    final int[] fields = new int[exps.size()];
-    for (int i = 0; i < exps.size(); i++) {
-      final RexNode exp = exps.get(i);
-      if (exp instanceof RexInputRef) {
-        fields[i] = ((RexInputRef) exp).getIndex();
-      } else {
-        return null; // not a simple projection
-      }
-    }
-    return fields;
   }
 }

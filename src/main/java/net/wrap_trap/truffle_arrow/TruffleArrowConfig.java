@@ -1,6 +1,7 @@
 package net.wrap_trap.truffle_arrow;
 
 import com.google.common.collect.ImmutableList;
+import net.wrap_trap.truffle_arrow.storage.columnar.ArrowColumnarSchema;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
@@ -40,7 +41,7 @@ public class TruffleArrowConfig {
   void reload() {
     SqlOperatorTable operatorTable = SqlStdOperatorTable.instance();
     // TODO
-    ArrowSchema schema = new ArrowSchema(new File("target/classes/samples/files"));
+    ArrowSchema schema = new ArrowColumnarSchema(new File("target/classes/samples/files"));
     CalciteSchema rootSchema = CalciteSchema.createRootSchema(false, true, "SAMPLES", schema);
     this.typeFactory = new JavaTypeFactoryImpl();
     this.catalogReader =
