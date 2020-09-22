@@ -1,6 +1,8 @@
 package net.wrap_trap.truffle_arrow;
 
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.channels.Channels;
@@ -9,6 +11,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.BigIntVector;
@@ -37,6 +40,10 @@ public class TestUtils {
   }
 
   public static void generateTestFile(String path, TestDataType dataType) throws IOException {
+
+  }
+
+  public static void generateTestFiles(String dirPath, TestDataType dataType) throws IOException {
     RootAllocator allocator = new RootAllocator(Integer.MAX_VALUE);
     FieldVector intVector, bigIntVector, varCharVector, timestampVector, timeVector, dateVector, doubleVector;
 
@@ -56,7 +63,7 @@ public class TestUtils {
 
     int dateOffset = 18385; // 2020-05-03
 
-    switch(dataType) {
+    switch (dataType) {
       case CASE1:
         intVector = createIntVector(10, 0, 1, -1, allocator);
         bigIntVector = createBigIntVector(10, 0, 1, -1, allocator);
@@ -64,7 +71,7 @@ public class TestUtils {
         timestampVector = createTimestampVector(10, c20200504134811, timestampIntervalByHour, -1, allocator);
         timeVector = createTimeVector(10, timeOffset, timeInterval, -1, allocator);
         dateVector = createDateVector(10, dateOffset, 1, -1, allocator);
-        doubleVector = createDoubleVector(10,123.456d, 1, -1, allocator);
+        doubleVector = createDoubleVector(10, 123.456d, 1, -1, allocator);
         break;
 
       case CASE2: // null values
@@ -136,10 +143,29 @@ public class TestUtils {
         doubleVector),
       10);
 
-    try (FileOutputStream out = new FileOutputStream(path)) {
+
+    File dir = new File(dirPath);
+    dir.mkdir();
+    try (FileWriter writer = new FileWriter(dirPath + "/schema.json")) {
+      writer.write(root.getSchema().toJson());
+    }
+
+    Lists.newArrayList(intVector, bigIntVector, varCharVector, timestampVector, timeVector, dateVector, doubleVector)
+      .stream()
+      .forEach(fieldVector -> {
+        VectorSchemaRoot r = new VectorSchemaRoot(Arrays.asList(fieldVector.getField()), Arrays.asList(fieldVector), 10);
+        writeArrowFile(r, dirPath + "/" + fieldVector.getField().getName().toUpperCase() + ".arrow");
+        r.clear();
+      });
+  }
+
+  private static void writeArrowFile(VectorSchemaRoot root, String filePath) {
+    try (FileOutputStream out = new FileOutputStream(filePath)) {
       try (ArrowWriter writer = new ArrowFileWriter(root, null, Channels.newChannel(out))) {
         writer.writeBatch();
       }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 

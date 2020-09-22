@@ -42,7 +42,7 @@ public class JdbcTest {
   }
 
   @Test
-  public void simpleProjection() throws SQLException {
+  public void testPreparedStatementExecuteQuery() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
@@ -58,7 +58,7 @@ public class JdbcTest {
   }
 
   @Test
-  public void testStatementExecuteQuery() throws SQLException {
+  public void testCreateStatementExecuteQuery() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       ResultSet rs = conn.createStatement().executeQuery(
