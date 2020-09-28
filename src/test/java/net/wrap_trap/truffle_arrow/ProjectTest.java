@@ -23,8 +23,8 @@ public class ProjectTest {
   }
 
   @AfterAll
-  public static void teardownOnce() {
-    new File("target/classes/samples/files/all_fields").delete();
+  public static void teardownOnce() throws IOException {
+    TestUtils.deleteDirectory("target/classes/samples/files/all_fields");
   }
 
   @Test

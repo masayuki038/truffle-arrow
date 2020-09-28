@@ -6,9 +6,14 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -18,16 +23,13 @@ public class AggregateCountTest {
   @BeforeAll
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
-    TestUtils.generateTestFile("target/classes/samples/files/all_fields.arrow", TestDataType.CASE5);
+    TestUtils.generateTestFiles("target/classes/samples/files/all_fields", TestDataType.CASE5);
     TruffleArrowConfig.INSTANCE.reload();
   }
 
   @AfterAll
-  public static void teardownOnce() {
-    File file = new File("target/classes/samples/files/all_fields.arrow");
-    if (!file.delete()) {
-      throw new IllegalStateException("Failed to remove `all_fields.arrow`");
-    }
+  public static void teardownOnce() throws IOException {
+    TestUtils.deleteDirectory("target/classes/samples/files/all_fields");
   }
 
   @Test

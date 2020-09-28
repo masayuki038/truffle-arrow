@@ -6,10 +6,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.channels.Channels;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import org.apache.arrow.memory.BufferAllocator;
@@ -34,14 +38,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 
 public class TestUtils {
-
-  public static void generateTestFile(String path) throws IOException {
-    generateTestFile(path, TestDataType.CASE1);
-  }
-
-  public static void generateTestFile(String path, TestDataType dataType) throws IOException {
-
-  }
 
   public static void generateTestFiles(String dirPath, TestDataType dataType) throws IOException {
     RootAllocator allocator = new RootAllocator(Integer.MAX_VALUE);
@@ -344,6 +340,16 @@ public class TestUtils {
     return new ResultSetSpliterator<>(rs, r -> getResultAsList(r)
        .stream().map(o -> o == null ? "_NULL_" : o.toString()).collect(Collectors.joining("\t")))
        .stream().collect(Collectors.toList());
+  }
+
+  public static void deleteDirectory(String path) throws IOException {
+    Path dir = Paths.get(path);
+    try(Stream<Path> walk = Files.walk(dir)) {
+      walk.map(Path::toFile).forEach(File::delete);
+      if (!dir.toFile().delete()) {
+        throw new IllegalStateException("Failed to remove `all_fields`");
+      }
+    }
   }
 
   private static List<Object> getResultAsList(ResultSet rs) throws SQLException {

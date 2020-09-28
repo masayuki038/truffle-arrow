@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.List;
 
+import net.wrap_trap.truffle_arrow.storage.columnar.ArrowColumnarTableScan;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,13 +19,13 @@ public class TableScanTest {
   @BeforeAll
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
-    TestUtils.generateTestFile("target/classes/samples/files/all_fields.arrow");
+    TestUtils.generateTestFiles("target/classes/samples/files/all_fields", TestDataType.CASE1);
     TruffleArrowConfig.INSTANCE.reload();
   }
 
   @AfterAll
-  public static void teardownOnce() {
-    new File("target/classes/samples/files/all_fields.arrow").delete();
+  public static void teardownOnce() throws IOException {
+    TestUtils.deleteDirectory("target/classes/samples/files/all_fields");
   }
 
   @Test
@@ -38,7 +39,7 @@ public class TableScanTest {
       List<String> results = TestUtils.getResults(rs);
       assertThat(results.size(), is(1));
       assertThat(results.get(0), is("3\ttest3\t2020-05-04 16:48:11.0"));
-      assertThat(LastPlan.INSTANCE.includes(ArrowTableScan.class), is(true));
+      assertThat(LastPlan.INSTANCE.includes(ArrowColumnarTableScan.class), is(true));
     }
   }
 }

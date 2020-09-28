@@ -35,20 +35,24 @@ public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
   private int[] fields;
 
   public ArrowColumnarTableScan(RelOptCluster cluster, RelOptTable relOptTable,
-                                File dir, Schema schema, List<? extends RexNode> projects,
-                                int[] fields) {
+                                File dir, Schema schema, List<? extends RexNode> projects) {
     super(cluster, cluster.traitSetOf(ArrowRel.CONVENTION), relOptTable);
     this.relOptTable = relOptTable;
     this.dir = dir;
     this.schema = schema;
-    this.projects = projects;
-    this.fields = fields;
+    if (projects != null) {
+      this.projects = projects;
+      this.fields = getProjectFields(projects);
+    } else {
+      this.fields = this.relOptTable.getRowType().getFieldList().stream()
+                      .mapToInt(f -> f.getIndex()).toArray();
+    }
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new ArrowColumnarTableScan(
-      getCluster(), this.relOptTable, this.dir, this.schema, this.projects, this.fields);
+      getCluster(), this.relOptTable, this.dir, this.schema, this.projects);
   }
 
   @Override
@@ -60,7 +64,14 @@ public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
   public RelDataType deriveRowType() {
     List<RelDataTypeField> fieldList = this.relOptTable.getRowType().getFieldList();
     RelDataTypeFactory.FieldInfoBuilder builder = getCluster().getTypeFactory().builder();
-    Arrays.stream(this.fields).forEach(i -> builder.add(fieldList.get(i)));
+
+    if (this.fields == null) {
+      for (RelDataTypeField relDataTypeField: fieldList) {
+        builder.add(relDataTypeField);
+      }
+    } else {
+      Arrays.stream(this.fields).forEach(i -> builder.add(fieldList.get(i)));
+    }
     return builder.build();
   }
 
@@ -125,8 +136,8 @@ public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
   }
 
   private List<VectorSchemaRoot[]> loadArrowFiles() {
-    return this.projects.stream().map(project -> {
-      Field field = this.schema.getFields().get(((RexInputRef) project).getIndex());
+    return Arrays.stream(this.fields).mapToObj(index -> {
+      Field field = this.schema.getFields().get(index);
       File arrowFile = new File(dir, field.getName().toUpperCase() + ".arrow");
       String arrowFilePath = arrowFile.getAbsolutePath();
       if (!arrowFile.exists()) {

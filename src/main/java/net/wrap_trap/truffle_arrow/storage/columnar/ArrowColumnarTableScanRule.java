@@ -29,7 +29,6 @@ public class ArrowColumnarTableScanRule extends RelOptRule {
     RelOptTable relOptTable = scan.getTable();
     assert relOptTable instanceof ArrowPreparingTable;
     ArrowPreparingTable table = (ArrowPreparingTable) relOptTable;
-    int[] fields = getProjectFields(scan.getChildExps());
 
     call.transformTo(
       new ArrowColumnarTableScan(
@@ -37,20 +36,6 @@ public class ArrowColumnarTableScanRule extends RelOptRule {
         relOptTable,
         table.getTableDirectory(),
         table.getSchema(),
-        scan.getChildExps(),
-        fields));
-  }
-
-  private int[] getProjectFields(List<? extends RexNode> exps) {
-    final int[] fields = new int[exps.size()];
-    for (int i = 0; i < exps.size(); i++) {
-      final RexNode exp = exps.get(i);
-      if (exp instanceof RexInputRef) {
-        fields[i] = ((RexInputRef) exp).getIndex();
-      } else {
-        return null; // not a simple projection
-      }
-    }
-    return fields;
+        null));
   }
 }

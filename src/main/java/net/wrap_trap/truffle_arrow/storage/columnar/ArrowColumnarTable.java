@@ -72,9 +72,8 @@ public class ArrowColumnarTable extends AbstractArrowTable implements QueryableT
 
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable relOptTable) {
     int fieldCount = relOptTable.getRowType().getFieldCount();
-    int[] fields = identityList(fieldCount);
     return new ArrowColumnarTableScan(context.getCluster(), relOptTable, this.dir,
-      this.schema, Lists.newArrayList(), fields);
+      this.schema, Lists.newArrayList());
   }
 
   @Override
@@ -93,13 +92,5 @@ public class ArrowColumnarTable extends AbstractArrowTable implements QueryableT
       return new Pair<>(field.getName(), relDataType);
     }).collect(Collectors.toList());
     return typeFactory.createStructType(ret);
-  }
-
-  static int[] identityList(int n) {
-    int[] ret = new int[n];
-    for (int i = 0; i < n; i++) {
-      ret[i] = i;
-    }
-    return ret;
   }
 }

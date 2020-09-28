@@ -16,6 +16,7 @@ public class VectorSchemaRootBroker extends RelRowSink {
 
   private FrameDescriptorPart framePart;
   private VectorSchemaRoot[] vectorSchemaRoots;
+  private int[] fields;
 
   public static VectorSchemaRootBroker compile(
       FrameDescriptorPart framePart,
@@ -25,7 +26,7 @@ public class VectorSchemaRootBroker extends RelRowSink {
       int[] fields,
       SinkContext context,
       ThenRowSink then) {
-    if (projects.size() > 0) {
+    if (projects != null && projects.size() > 0) {
       for (int i = 0; i < projects.size(); i ++) {
         RexNode child = projects.get(i);
         compile(framePart, child, context);
@@ -36,7 +37,7 @@ public class VectorSchemaRootBroker extends RelRowSink {
       }
     }
     RowSink sink = then.apply(framePart);
-    return new VectorSchemaRootBroker(framePart, relType, vectorSchemaRoots, projects, sink);
+    return new VectorSchemaRootBroker(framePart, relType, vectorSchemaRoots, projects, fields, sink);
   }
 
   private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, SinkContext context) {
@@ -47,20 +48,24 @@ public class VectorSchemaRootBroker extends RelRowSink {
       FrameDescriptorPart framePart,
       RelDataType relType,
       VectorSchemaRoot[] vectorSchemaRoots,
-      List<? extends RexNode> projects, RowSink then) {
+      List<? extends RexNode> projects,
+      int[] fields, RowSink then) {
     super(then);
     this.framePart = framePart;
     this.vectorSchemaRoots = vectorSchemaRoots;
+    this.fields = fields;
     this.then = then;
   }
 
   @Override
   public void executeVoid(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
+    Map<Integer, Integer> indexesMap = createFieldIndexesMap();
     for (VectorSchemaRoot vectorSchemaRoot : vectorSchemaRoots) {
       List<FieldVector> fieldVectors = vectorSchemaRoot.getFieldVectors();
       Map<Integer, FieldVector> selected = new HashMap<>();
       for (InputRefSlotMap inputRefSlotMap : context.getInputRefSlotMaps()) {
-        selected.put(inputRefSlotMap.getSlot(), fieldVectors.get(inputRefSlotMap.getIndex()));
+        int fieldVectorIndex = indexesMap.get(inputRefSlotMap.getIndex());
+        selected.put(inputRefSlotMap.getSlot(), fieldVectors.get(fieldVectorIndex));
       }
 
       context.setVectors(selected);
@@ -78,4 +83,13 @@ public class VectorSchemaRootBroker extends RelRowSink {
   public void afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
     then.afterExecute(frame, context);
   }
+
+  private Map<Integer, Integer> createFieldIndexesMap() {
+    Map<Integer, Integer> map = new HashMap<>();
+    for (int i = 0; i < this.fields.length; i ++) {
+      map.put(this.fields[i], i);
+    }
+    return map;
+  }
+
 }

@@ -14,14 +14,14 @@ public class FilterNullTest {
   @BeforeAll
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
-    TestUtils.generateTestFile(
-      "target/classes/samples/files/all_nullable_fields.arrow", TestDataType.CASE2);
+    TestUtils.generateTestFiles(
+      "target/classes/samples/files/all_nullable_fields", TestDataType.CASE2);
     TruffleArrowConfig.INSTANCE.reload();
   }
 
   @AfterAll
-  public static void teardownOnce() {
-    new File("target/classes/samples/files/all_nullable_fields.arrow").delete();
+  public static void teardownOnce() throws IOException {
+    TestUtils.deleteDirectory("target/classes/samples/files/all_nullable_fields");
   }
 
   @Test

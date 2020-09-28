@@ -2,6 +2,7 @@ package net.wrap_trap.truffle_arrow;
 
 import com.google.common.collect.ImmutableList;
 import net.wrap_trap.truffle_arrow.storage.columnar.ArrowColumnarProjectTableScanRule;
+import net.wrap_trap.truffle_arrow.storage.columnar.ArrowColumnarTableScanRule;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.ConventionTraitDef;
@@ -67,6 +68,7 @@ public class ArrowCatalogReader implements Prepare.CatalogReader {
     planner.addRule(ArrowProjectRule.INSTANCE);
     planner.addRule(ArrowAggregateRule.INSTANCE);
     planner.addRule(ArrowColumnarProjectTableScanRule.INSTANCE);
+    planner.addRule(ArrowColumnarTableScanRule.INSTANCE);
   }
 
   @Override
