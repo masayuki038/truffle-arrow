@@ -21,6 +21,8 @@ abstract public class ExprCast extends ExprBase {
       return value;
     } else if (value instanceof Text) {
       return Integer.parseInt(value.toString());
+    } else if (value instanceof String) {
+      return Integer.parseInt((String) value);
     }
     throw new UnsupportedOperationException(
       String.format("Unsupported operation: CAST(%s As Int)", value.getClass()));
