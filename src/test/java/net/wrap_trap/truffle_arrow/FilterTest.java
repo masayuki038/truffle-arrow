@@ -207,22 +207,6 @@ public class FilterTest {
     }
   }
 
-  // TODO Need to implement 'CAST'
-//  @Test
-//  public void simpleFilterByFloat() throws SQLException {
-//    try (
-//      Connection conn = DriverManager.getConnection("jdbc:truffle:");
-//      PreparedStatement pstmt = conn.prepareStatement(
-//        "select F_INT, F_FLOAT from ALL_FIELDS where F_FLOAT=126.456");
-//      ResultSet rs = pstmt.executeQuery()
-//    ) {
-//      List<String> results = TestUtils.getResults(rs);
-//      assertThat(results.size(), is(1));
-//      assertThat(results.get(0), is("3\t126.456"));
-//      assertThat(LastPlan.INSTANCE.includes(ArrowFilter.class), is(true));
-//    }
-//  }
-
   @Test
   public void byDouble() throws SQLException {
     try (
