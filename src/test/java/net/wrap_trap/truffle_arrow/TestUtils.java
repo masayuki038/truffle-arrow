@@ -44,11 +44,11 @@ public class TestUtils {
     FieldVector intVector, bigIntVector, varCharVector, timestampVector, timeVector, dateVector, doubleVector;
 
     Calendar c20200504134811 = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.of("GMT")));
-    c20200504134811.set(2020, 4, 4, 13, 48, 11);
+    c20200504134811.set(2020, Calendar.MAY, 4, 13, 48, 11);
     c20200504134811.set(Calendar.MILLISECOND, 0);
 
     Calendar c20200503000000 = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.of("GMT")));
-    c20200503000000.set(2020, 4, 3, 0, 0, 0);
+    c20200503000000.set(2020, Calendar.MAY, 3, 0, 0, 0);
     c20200503000000.set(Calendar.MILLISECOND, 0);
 
     long timestampIntervalByHour = 60 * 60 * 1000L;
@@ -147,7 +147,6 @@ public class TestUtils {
     }
 
     Lists.newArrayList(intVector, bigIntVector, varCharVector, timestampVector, timeVector, dateVector, doubleVector)
-      .stream()
       .forEach(fieldVector -> {
         VectorSchemaRoot r = new VectorSchemaRoot(Arrays.asList(fieldVector.getField()), Arrays.asList(fieldVector), 10);
         writeArrowFile(r, dirPath + "/" + fieldVector.getField().getName().toUpperCase() + ".arrow");
@@ -216,7 +215,7 @@ public class TestUtils {
   }
 
   private static FieldVector createTimestampVector(int size, Calendar offset, long interval, int nullIndex, BufferAllocator allocator) {
-    // TODO create TimeStampSecTZVector instead of TiemsStampMilliTZVector
+    //  Create TimeStampSecTZVector instance instead of TiemsStampMilliTZVector
     //  because timestamp literal of Calcite generate java.time.Instant that has only seconds
     TimeStampSecTZVector vector = new TimeStampSecTZVector("F_TIMESTAMP", allocator, "GMT");
     vector.allocateNew();
