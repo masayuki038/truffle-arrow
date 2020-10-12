@@ -22,13 +22,17 @@ import java.util.function.Consumer;
 public abstract class RowSink extends Node {
 
   public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context)
-    throws UnexpectedResultException {}
+    throws UnexpectedResultException {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Do something with one row. Called once per row of the relational expression.
    */
   public void executeVoid(VirtualFrame frame, SinkContext context)
-    throws UnexpectedResultException {}
+    throws UnexpectedResultException {
+    throw new UnsupportedOperationException();
+  }
 
   public void afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {}
 

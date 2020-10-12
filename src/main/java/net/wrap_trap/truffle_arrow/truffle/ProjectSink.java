@@ -45,20 +45,6 @@ public class ProjectSink extends RelRowSink {
   }
 
   @Override
-  public void executeVoid(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
-    this.vectorEach(frame, this.framePart, context, i -> {
-      try {
-        this.executeByRow(frame, this.framePart, context);
-        this.then.executeByRow(frame, this.framePart, context);
-      } catch (UnexpectedResultException e) {
-        throw new RuntimeException(e);
-      }
-    });
-
-    then.executeVoid(frame, context);
-  }
-
-  @Override
   public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) throws UnexpectedResultException {
     for (StatementWriteLocal local : locals) {
       local.executeVoid(frame);
