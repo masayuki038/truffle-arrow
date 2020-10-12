@@ -24,7 +24,6 @@ public abstract class RowSink extends Node {
   public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context)
     throws UnexpectedResultException {}
 
-  // TODO implment array node to handle FieldVector[] for optimization
   /**
    * Do something with one row. Called once per row of the relational expression.
    */
