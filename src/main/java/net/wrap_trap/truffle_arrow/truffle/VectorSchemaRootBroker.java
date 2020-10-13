@@ -27,13 +27,12 @@ public class VectorSchemaRootBroker extends RelRowSink {
       SinkContext context,
       ThenRowSink then) {
     if (projects != null && projects.size() > 0) {
-      for (int i = 0; i < projects.size(); i ++) {
-        RexNode child = projects.get(i);
+      for (RexNode child : projects) {
         compile(framePart, child, context);
       }
     } else {
-      for (int i = 0; i < fields.length; i ++ ) {
-        context.addInputRefSlotMap(fields[i], fields[i]);
+      for (int field : fields) {
+        context.addInputRefSlotMap(field, field);
       }
     }
     RowSink sink = then.apply(framePart);
@@ -58,7 +57,7 @@ public class VectorSchemaRootBroker extends RelRowSink {
   }
 
   @Override
-  public void executeVoid(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
+  public void executeVoid(VirtualFrame frame, SinkContext context) {
     Map<Integer, Integer> indexesMap = createFieldIndexesMap();
     for (VectorSchemaRoot vectorSchemaRoot : vectorSchemaRoots) {
       List<FieldVector> fieldVectors = vectorSchemaRoot.getFieldVectors();
@@ -79,11 +78,6 @@ public class VectorSchemaRootBroker extends RelRowSink {
     }
   }
 
-  @Override
-  public void afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
-    then.afterExecute(frame, context);
-  }
-
   private Map<Integer, Integer> createFieldIndexesMap() {
     Map<Integer, Integer> map = new HashMap<>();
     for (int i = 0; i < this.fields.length; i ++) {
@@ -91,5 +85,4 @@ public class VectorSchemaRootBroker extends RelRowSink {
     }
     return map;
   }
-
 }
