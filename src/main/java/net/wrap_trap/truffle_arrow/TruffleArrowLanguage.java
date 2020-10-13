@@ -46,27 +46,12 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
   }
 
   @Override
-  protected ExecutableNode parse(TruffleLanguage.InlineParsingRequest request) throws Exception {
+  protected ExecutableNode parse(TruffleLanguage.InlineParsingRequest request) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  protected Object findExportedSymbol(TruffleArrowContext context, String globalName, boolean onlyExplicit) {
-    return null;
-  }
-
-  @Override
-  protected Object getLanguageGlobal(TruffleArrowContext context) {
-    return context;
-  }
-
-  @Override
-  protected boolean isObjectOfLanguage(Object object) {
-    return false;
-  }
-
-  @Override
-  protected CallTarget parse(ParsingRequest request) throws Exception {
+  protected CallTarget parse(ParsingRequest request) {
     String sql = request.getSource().getCharacters().toString();
     SqlNode sqlNode = SqlParser.parse(sql);
     RelRoot root = createPlan(sqlNode);
@@ -79,44 +64,15 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
     ThenRowSink sink = resultFrame -> new RowSink() {
       @Override
-      public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context)
-        throws UnexpectedResultException {
-        List<Object> row = framePart.getFrameSlots().stream().map(slot -> {
-          return getValue(frame.getValue(slot));
-        }).collect(Collectors.toList());
+      public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) {
+        List<Object> row = framePart.getFrameSlots().stream()
+                               .map(slot -> getValue(frame.getValue(slot)))
+                               .collect(Collectors.toList());
         results.add(new Row(row));
       }
     };
 
-    CallTarget callTarget = compile(plan, results, sink);
-    return callTarget;
-  }
-
-  private List<Row> convertVectorsToRows(Object[] vectors, UInt4Vector selectionVector) {
-    List<Row> ret = Lists.newArrayList();
-    if (vectors.length > 0) {
-      if (selectionVector != null) {
-        for (int i = 0; i < selectionVector.getValueCount(); i++) {
-          int rowIndex = selectionVector.get(i);
-          Row row = createRow(vectors, rowIndex);
-          ret.add(row);
-        }
-      } else {
-        for (int i = 0; i < ((FieldVector) vectors[0]).getValueCount(); i++) {
-          Row row = createRow(vectors, i);
-          ret.add(row);
-        }
-      }
-    }
-    return ret;
-  }
-
-  private Row createRow(Object[] vectors, int rowIndex) {
-    List<Object> row = Arrays.stream(vectors).map(v -> {
-      FieldVector fieldVector = (FieldVector) v;
-      return getValue(fieldVector.getObject(rowIndex));
-    }).collect(Collectors.toList());
-    return new Row(row);
+    return compile(plan, results, sink);
   }
 
   private Object getValue(Object o) {
