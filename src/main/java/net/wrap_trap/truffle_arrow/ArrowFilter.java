@@ -49,7 +49,7 @@ public class ArrowFilter extends SingleRel implements ArrowRel {
     return this.input;
   }
 
-  public ThenRowSink createRowSink(ThenRowSink next, SinkContext context) {
+  public ThenRowSink createRowSink(ThenRowSink next, CompileContext context) {
     return
       sourceFrame ->  FilterSink.createSink(sourceFrame, this.condition, context, next);
   }

@@ -24,23 +24,23 @@ public class VectorSchemaRootBroker extends RelRowSink {
       VectorSchemaRoot[] vectorSchemaRoots,
       List<? extends RexNode> projects,
       int[] fields,
-      SinkContext context,
+      CompileContext compileContext,
       ThenRowSink then) {
     if (projects != null && projects.size() > 0) {
       for (RexNode child : projects) {
-        compile(framePart, child, context);
+        compile(framePart, child, compileContext);
       }
     } else {
       for (int field : fields) {
-        context.addInputRefSlotMap(field, field);
+        compileContext.addInputRefSlotMap(field, field);
       }
     }
     RowSink sink = then.apply(framePart);
     return new VectorSchemaRootBroker(framePart, relType, vectorSchemaRoots, projects, fields, sink);
   }
 
-  private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, SinkContext context) {
-    return ScanCompileExpr.compile(framePart, child, context);
+  private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, CompileContext compileContext) {
+    return ScanCompileExpr.compile(framePart, child, compileContext);
   }
 
   private VectorSchemaRootBroker(
@@ -67,10 +67,10 @@ public class VectorSchemaRootBroker extends RelRowSink {
         selected.put(inputRefSlotMap.getSlot(), fieldVectors.get(fieldVectorIndex));
       }
 
-      context.setVectors(selected);
-      this.vectorEach(frame, this.framePart, context, i -> {
+      SinkContext newContext = new SinkContext(selected, context.getInputRefSlotMaps());
+      this.vectorEach(frame, this.framePart, newContext, i -> {
         try {
-          then.executeByRow(frame, this.framePart, context);
+          then.executeByRow(frame, this.framePart, newContext);
         } catch (UnexpectedResultException e) {
           throw new RuntimeException(e);
         }

@@ -8,13 +8,13 @@ import java.util.Objects;
 
 public class FilterCompileExpr extends CompileExpr {
 
-  public static ExprBase compile(FrameDescriptorPart from, RexNode child, SinkContext context) {
-    CompileExpr compiler = new FilterCompileExpr(from, context);
+  public static ExprBase compile(FrameDescriptorPart from, RexNode child, CompileContext compileContext) {
+    CompileExpr compiler = new FilterCompileExpr(from, compileContext);
     return child.accept(compiler);
   }
 
-  FilterCompileExpr(FrameDescriptorPart from, SinkContext context) {
-    super(from, context);
+  FilterCompileExpr(FrameDescriptorPart from, CompileContext compileContext) {
+    super(from, compileContext);
   }
 
   @Override
@@ -27,7 +27,7 @@ public class FilterCompileExpr extends CompileExpr {
   }
 
   @Override
-  protected CompileExpr createCompileExpr(FrameDescriptorPart from, SinkContext context) {
-    return new FilterCompileExpr(from, context);
+  protected CompileExpr createCompileExpr(FrameDescriptorPart from, CompileContext compileContext) {
+    return new FilterCompileExpr(from, compileContext);
   }
 }

@@ -7,26 +7,26 @@ import org.apache.calcite.rex.RexNode;
 import java.util.Objects;
 
 public class ScanCompileExpr extends CompileExpr {
-  public static ExprBase compile(FrameDescriptorPart from, RexNode child, SinkContext context) {
-    CompileExpr compiler = new ScanCompileExpr(from, context);
+  public static ExprBase compile(FrameDescriptorPart from, RexNode child, CompileContext compileContext) {
+    CompileExpr compiler = new ScanCompileExpr(from, compileContext);
     return child.accept(compiler);
   }
 
-  ScanCompileExpr(FrameDescriptorPart from, SinkContext context) {
-    super(from, context);
+  ScanCompileExpr(FrameDescriptorPart from, CompileContext compileContext) {
+    super(from, compileContext);
   }
 
   @Override
   public ExprBase visitInputRef(RexInputRef inputRef) {
     FrameSlot slot = from.addFrameSlot();
-    this.context.addInputRefSlotMap(inputRef.getIndex(), from.getCurrentSlotPosition());
+    this.compileContext.addInputRefSlotMap(inputRef.getIndex(), from.getCurrentSlotPosition());
     Objects.requireNonNull(slot);
 
     return ExprReadLocalNodeGen.create(slot);
   }
 
   @Override
-  protected CompileExpr createCompileExpr(FrameDescriptorPart from, SinkContext context) {
-    return new ScanCompileExpr(from, context);
+  protected CompileExpr createCompileExpr(FrameDescriptorPart from, CompileContext compileContext) {
+    return new ScanCompileExpr(from, compileContext);
   }
 }

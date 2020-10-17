@@ -13,7 +13,7 @@ public class ProjectSink extends RelRowSink {
   public static ProjectSink createSink(
     FrameDescriptorPart framePart,
     List<? extends RexNode> projects,
-    SinkContext context,
+    CompileContext compileContext,
     ThenRowSink next) {
     FrameDescriptorPart newFramePart = framePart.newPart();
     for (int i = 0; i < projects.size(); i ++) {
@@ -24,15 +24,15 @@ public class ProjectSink extends RelRowSink {
     StatementWriteLocal[] locals = new StatementWriteLocal[projects.size()];
     for (int i = 0; i < projects.size(); i ++) {
       RexNode child = projects.get(i);
-      ExprBase compiled = compile(newFramePart, child, context);
+      ExprBase compiled = compile(newFramePart, child, compileContext);
       FrameSlot slot = newFramePart.findFrameSlot(i);
       locals[i] = StatementWriteLocalNodeGen.create(compiled, slot);
     }
     return new ProjectSink(newFramePart, locals, rowSink);
   }
 
-  private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, SinkContext context) {
-    return ProjectCompileExpr.compile(framePart, child, context);
+  private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, CompileContext compileContext) {
+    return ProjectCompileExpr.compile(framePart, child, compileContext);
   }
 
   private FrameDescriptorPart framePart;

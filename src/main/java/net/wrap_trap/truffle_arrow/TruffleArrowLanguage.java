@@ -88,7 +88,7 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
   private CallTarget compile(RelRoot plan, List<Row> results, ThenRowSink sink) {
     ArrowRel rel = (ArrowRel) plan.rel;
-    RowSource compiled = rel.compile(sink, new SinkContext());
+    RowSource compiled = rel.compile(sink, new CompileContext());
     RelRootNode root = new RelRootNode(this, compiled, results);
 
     return Truffle.getRuntime().createCallTarget(root);

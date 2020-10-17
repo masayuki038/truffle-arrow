@@ -8,13 +8,13 @@ import java.util.Objects;
 
 public class ProjectCompileExpr extends CompileExpr {
 
-  public static ExprBase compile(FrameDescriptorPart from, RexNode child, SinkContext context) {
-    CompileExpr compiler = new ProjectCompileExpr(from, context);
+  public static ExprBase compile(FrameDescriptorPart from, RexNode child, CompileContext compileContext) {
+    CompileExpr compiler = new ProjectCompileExpr(from, compileContext);
     return child.accept(compiler);
   }
 
-  ProjectCompileExpr(FrameDescriptorPart from, SinkContext context) {
-    super(from, context);
+  ProjectCompileExpr(FrameDescriptorPart from, CompileContext compileContext) {
+    super(from, compileContext);
   }
 
   @Override
@@ -27,7 +27,7 @@ public class ProjectCompileExpr extends CompileExpr {
   }
 
   @Override
-  protected CompileExpr createCompileExpr(FrameDescriptorPart from, SinkContext context) {
+  protected CompileExpr createCompileExpr(FrameDescriptorPart from, CompileContext context) {
     return new ProjectCompileExpr(from, context);
   }
 }

@@ -12,10 +12,10 @@ public class FilterSink extends RelRowSink {
   public static FilterSink createSink(
     FrameDescriptorPart framePart,
     RexNode condition,
-    SinkContext context,
+    CompileContext compileContext,
     ThenRowSink next) {
     RowSink rowSink = next.apply(framePart);
-    return new FilterSink(framePart, FilterCompileExpr.compile(framePart, condition, context), rowSink);
+    return new FilterSink(framePart, FilterCompileExpr.compile(framePart, condition, compileContext), rowSink);
   }
 
   FrameDescriptorPart framePart;
@@ -32,25 +32,6 @@ public class FilterSink extends RelRowSink {
     throws UnexpectedResultException {
     if (this.conditionExpr.executeBoolean(frame)) {
       then.executeByRow(frame, this.framePart, context);
-    }
-  }
-
-  class SelectionVector {
-    private UInt4Vector selectionVector;
-    private int index = 0;
-
-    SelectionVector(int valueCount) {
-      this.selectionVector = ArrowUtils.createSelectionVector();
-      this.selectionVector.setValueCount(valueCount);
-    }
-
-    void add(int i) {
-      this.selectionVector.set(this.index ++, i);
-    }
-
-    UInt4Vector getVector() {
-      this.selectionVector.setValueCount(this.index);
-      return this.selectionVector;
     }
   }
 }

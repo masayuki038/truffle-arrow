@@ -22,16 +22,16 @@ public abstract class CompileExpr implements TruffleArrowRexVisitor<ExprBase> {
    * Can be empty in queries like SELECT 1
    */
   protected final FrameDescriptorPart from;
-  protected SinkContext context;
+  protected CompileContext compileContext;
 
-  CompileExpr(FrameDescriptorPart from, SinkContext context) {
+  CompileExpr(FrameDescriptorPart from, CompileContext compileContext) {
     this.from = from;
-    this.context = context;
+    this.compileContext = compileContext;
   }
   
   abstract public ExprBase visitInputRef(RexInputRef inputRef);
 
-  abstract protected CompileExpr createCompileExpr(FrameDescriptorPart from, SinkContext context);
+  abstract protected CompileExpr createCompileExpr(FrameDescriptorPart from, CompileContext context);
 
   @Override
   public ExprBase visitLocalRef(RexLocalRef localRef) {
@@ -207,7 +207,7 @@ public abstract class CompileExpr implements TruffleArrowRexVisitor<ExprBase> {
 //  }
 
   private ExprBase compile(RexNode rexNode) {
-    return rexNode.accept(createCompileExpr(from, context));
+    return rexNode.accept(createCompileExpr(from, this.compileContext));
   }
 
   @FunctionalInterface
@@ -229,7 +229,7 @@ public abstract class CompileExpr implements TruffleArrowRexVisitor<ExprBase> {
   private ExprBase isNull(List<RexNode> operands) {
     assert operands.size() == 1;
 
-    ExprBase left = operands.get(0).accept(createCompileExpr(from, context));
+    ExprBase left = operands.get(0).accept(createCompileExpr(from, this.compileContext));
     ExprBase right = ExprLiteral.Null();
 
     return ExprEqualsNodeGen.create(left, right);
@@ -238,8 +238,8 @@ public abstract class CompileExpr implements TruffleArrowRexVisitor<ExprBase> {
   private ExprBase binary(List<RexNode> operands, BinaryConstructor then) {
     assert operands.size() == 2;
 
-    ExprBase left = operands.get(0).accept(createCompileExpr(from, context));
-    ExprBase right = operands.get(1).accept(createCompileExpr(from, context));
+    ExprBase left = operands.get(0).accept(createCompileExpr(from, this.compileContext));
+    ExprBase right = operands.get(1).accept(createCompileExpr(from, this.compileContext));
 
     return then.accept(left, right);
   }
@@ -247,7 +247,7 @@ public abstract class CompileExpr implements TruffleArrowRexVisitor<ExprBase> {
   private ExprBase count(List<RexNode> operands) {
     assert operands.size() == 1;
 
-    ExprBase accumulator = operands.get(0).accept(createCompileExpr(from, context));
+    ExprBase accumulator = operands.get(0).accept(createCompileExpr(from, this.compileContext));
     return ExprPlusNodeGen.create(accumulator, ExprLiteral.Int(1));
   }
 
@@ -273,7 +273,7 @@ public abstract class CompileExpr implements TruffleArrowRexVisitor<ExprBase> {
 
   @Override
   public ExprBase visitFieldAccess(RexFieldAccess fieldAccess) {
-    ExprBase receiver = fieldAccess.getReferenceExpr().accept(createCompileExpr(from, context));
+    ExprBase receiver = fieldAccess.getReferenceExpr().accept(createCompileExpr(from, this.compileContext));
     String name = fieldAccess.getField().getName();
 
     return ExprReadPropertyNodeGen.create(receiver, ExprLiteral.Object(name));

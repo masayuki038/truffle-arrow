@@ -37,7 +37,7 @@ public class ArrowProject extends Project implements ArrowRel {
     return this.input;
   }
 
-  public ThenRowSink createRowSink(ThenRowSink next, SinkContext context) {
+  public ThenRowSink createRowSink(ThenRowSink next, CompileContext context) {
     return
       sourceFrame -> ProjectSink.createSink(sourceFrame, this.projects, context, next);
   }

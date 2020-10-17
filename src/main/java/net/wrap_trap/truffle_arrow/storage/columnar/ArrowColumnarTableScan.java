@@ -2,6 +2,7 @@ package net.wrap_trap.truffle_arrow.storage.columnar;
 
 import net.wrap_trap.truffle_arrow.ArrowRel;
 import net.wrap_trap.truffle_arrow.ArrowUtils;
+import net.wrap_trap.truffle_arrow.truffle.CompileContext;
 import net.wrap_trap.truffle_arrow.truffle.SinkContext;
 import net.wrap_trap.truffle_arrow.truffle.ThenRowSink;
 import net.wrap_trap.truffle_arrow.truffle.VectorSchemaRootBroker;
@@ -45,7 +46,7 @@ public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
       this.fields = getProjectFields(projects);
     } else {
       this.fields = this.relOptTable.getRowType().getFieldList().stream()
-                      .mapToInt(f -> f.getIndex()).toArray();
+                      .mapToInt(RelDataTypeField::getIndex).toArray();
     }
   }
 
@@ -79,7 +80,7 @@ public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
     return null;
   }
 
-  public ThenRowSink createRowSink(ThenRowSink next, SinkContext context) {
+  public ThenRowSink createRowSink(ThenRowSink next, CompileContext compileContext) {
 
     VectorSchemaRoot[] vectorSchemaRoots = this.loadVectorSchemaRoots();
 
@@ -90,7 +91,7 @@ public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
         vectorSchemaRoots,
         this.projects,
         this.fields,
-        context,
+          compileContext,
         next);
   }
 

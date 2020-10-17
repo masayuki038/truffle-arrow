@@ -19,7 +19,7 @@ public class AggregateSink extends RelRowSink {
     ImmutableBitSet groupSet,
     ImmutableList<ImmutableBitSet> groupSets,
     List<AggregateCall> aggCalls,
-    SinkContext context,
+    CompileContext context,
     ThenRowSink next) {
     FrameDescriptorPart newFramePart = framePart.newPart();
     for (int i = 0; i < groupSet.toList().size(); i ++) {
@@ -40,7 +40,7 @@ public class AggregateSink extends RelRowSink {
   private ImmutableBitSet groupSet;
   private ImmutableList<ImmutableBitSet> groupSets;
   private List<AggregateCall> aggCalls;
-  private SinkContext sinkContext;
+  private CompileContext compileContext;
   private Map<List<Object>, List<Object>> map;
   private List<TANewObject> objects;
   private FrameSlot keyFrameSlot;
@@ -52,14 +52,14 @@ public class AggregateSink extends RelRowSink {
     ImmutableBitSet groupSet,
     ImmutableList<ImmutableBitSet> groupSets,
     List<AggregateCall> aggCalls,
-    SinkContext sinkContext,
+    CompileContext compileContext,
     RowSink then) {
     super(then);
     this.framePart = framePart;
     this.groupSet = groupSet;
     this.groupSets = groupSets;
     this.aggCalls = aggCalls;
-    this.sinkContext = sinkContext;
+    this.compileContext = compileContext;
     this.map = new HashMap<>();
     this.aggFunctions = new ArrayList<>();
     this.keyFrameSlot = this.framePart.frame().addFrameSlot("tmpKey", FrameSlotKind.Object);
@@ -96,7 +96,7 @@ public class AggregateSink extends RelRowSink {
   }
 
   @Override
-  public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) throws UnexpectedResultException {
+  public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) {
 
     if (this.receiverFrameSlots.size() > 0 && this.objects.size() == 0) {
       for (FrameSlot receiverFrameSlot: this.receiverFrameSlots) {

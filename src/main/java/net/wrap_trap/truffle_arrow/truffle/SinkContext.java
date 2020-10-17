@@ -10,15 +10,12 @@ import java.util.stream.Collectors;
 
 public class SinkContext {
   private Map<Integer, FieldVector> vectors;
-  private UInt4Vector selectionVector;
   private Set<InputRefSlotMap> inputRefSlotMaps;
 
-  public SinkContext() {
-    this.inputRefSlotMaps = new HashSet<>();
-  }
-
-  public void setVectors(Map<Integer, FieldVector> vectors) {
+  public SinkContext(Map<Integer, FieldVector> vectors,
+                     Set<InputRefSlotMap> inputRefSlotMaps) {
     this.vectors = vectors;
+    this.inputRefSlotMaps = inputRefSlotMaps;
   }
 
   public Map<Integer, FieldVector> vectors() {
@@ -28,19 +25,10 @@ public class SinkContext {
     return this.vectors;
   }
 
-  public void setSelectionVector(UInt4Vector selectionVector) {
-    this.selectionVector = selectionVector;
-  }
-
-  public UInt4Vector selectionVector() {
-    return selectionVector;
-  }
-
-  public void addInputRefSlotMap(int index, int slot) {
-    this.inputRefSlotMaps.add(new InputRefSlotMap(index, slot));
-  }
-
   public Set<InputRefSlotMap> getInputRefSlotMaps() {
+    if (this.inputRefSlotMaps == null) {
+      throw new IllegalStateException("inputRefSlotMaps have not been initialized yet");
+    }
     return this.inputRefSlotMaps;
   }
 }

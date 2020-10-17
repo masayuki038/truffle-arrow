@@ -9,9 +9,10 @@ public class TerminalSink extends RowSource {
   private SinkContext context;
   private FrameDescriptorPart framePart;
 
-  public static RowSource compile(SinkContext context, ThenRowSink next) {
+  public static RowSource compile(CompileContext compileContext, ThenRowSink next) {
     FrameDescriptorPart framePart = FrameDescriptorPart.root(0);
-    return new TerminalSink(framePart, context, next.apply(framePart));
+    SinkContext sinkContext = new SinkContext(null, compileContext.getInputRefSlotMaps());
+    return new TerminalSink(framePart, sinkContext, next.apply(framePart));
   }
 
   private TerminalSink(FrameDescriptorPart framePart, SinkContext context, RowSink then) {

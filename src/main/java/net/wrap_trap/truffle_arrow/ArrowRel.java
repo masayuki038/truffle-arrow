@@ -12,9 +12,9 @@ public interface ArrowRel extends RelNode {
 
   RelNode getInput();
 
-  ThenRowSink createRowSink(ThenRowSink next, SinkContext context);
+  ThenRowSink createRowSink(ThenRowSink next, CompileContext context);
 
-  default RowSource compile(ThenRowSink next, SinkContext context) {
+  default RowSource compile(ThenRowSink next, CompileContext context) {
     ThenRowSink wrapped = createRowSink(next, context);
 
     RelNode input = getInput();

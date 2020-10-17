@@ -2,6 +2,7 @@ package net.wrap_trap.truffle_arrow;
 
 import com.google.common.base.Preconditions;
 import net.wrap_trap.truffle_arrow.truffle.AggregateSink;
+import net.wrap_trap.truffle_arrow.truffle.CompileContext;
 import net.wrap_trap.truffle_arrow.truffle.SinkContext;
 import net.wrap_trap.truffle_arrow.truffle.ThenRowSink;
 import org.apache.calcite.adapter.enumerable.AggImplementor;
@@ -55,7 +56,7 @@ public class ArrowAggregate extends Aggregate implements ArrowRel {
     }
   }
 
-  public ThenRowSink createRowSink(ThenRowSink next, SinkContext context) {
+  public ThenRowSink createRowSink(ThenRowSink next, CompileContext context) {
     return
       sourceFrame -> AggregateSink.createSink(
         sourceFrame, this.groupSet, this.groupSets, this.aggCalls, context, next);
