@@ -4,43 +4,53 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 public class TerminalSink extends RowSource {
 
-  private SinkContext context;
+  private CompileContext compileContext;
+  private SinkContext sinkContext;
   private FrameDescriptorPart framePart;
 
   public static RowSource compile(CompileContext compileContext, ThenRowSink next) {
     FrameDescriptorPart framePart = FrameDescriptorPart.root(0);
     SinkContext sinkContext = new SinkContext(null, compileContext.getInputRefSlotMaps(), null);
-    return new TerminalSink(framePart, sinkContext, next.apply(framePart));
+    return new TerminalSink(framePart, compileContext, sinkContext, next.apply(framePart));
   }
 
-  private TerminalSink(FrameDescriptorPart framePart, SinkContext context, RowSink then) {
+  private TerminalSink(FrameDescriptorPart framePart, CompileContext compileContext,
+                       SinkContext sinkContext, RowSink then) {
     super(then);
     this.framePart = framePart;
-    this.context = context;
+    this.compileContext = compileContext;
+    this.sinkContext = sinkContext;
   }
 
   @Override
   protected void executeVoid() {
-    ForkJoinPool pool = new ForkJoinPool(2);
+    ForkJoinPool pool = new ForkJoinPool();
 
-    List<String> partitions = Arrays.asList("202010", "202011");
-    partitions.forEach(p -> {
-      SinkContext newContext = new SinkContext(null, this.context.getInputRefSlotMaps(), p);
+    List<File> partitions = getPartitions();
+    partitions.forEach(f -> {
+      SinkContext newContext = new SinkContext(null, this.sinkContext.getInputRefSlotMaps(), f);
       pool.submit(new ParallelSink(newContext));
     });
 
     if (!pool.awaitQuiescence(1, TimeUnit.MINUTES)) {
       throw new IllegalStateException("Timeout while running ParallelSink");
     }
+  }
+
+  private List<File> getPartitions() {
+    return Arrays.stream(this.compileContext.getDir().listFiles(f -> f.isDirectory()))
+               .collect(Collectors.toList());
   }
 
   class ParallelSink extends RecursiveAction {

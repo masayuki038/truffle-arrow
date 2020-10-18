@@ -127,8 +127,7 @@ public class VectorSchemaRootBroker extends RelRowSink {
   private List<VectorSchemaRoot[]> loadArrowFiles(SinkContext context) {
     return Arrays.stream(this.fields).mapToObj(index -> {
       Field field = this.schema.getFields().get(index);
-      String path = context.getPartition() + File.separator + field.getName().toUpperCase() + ".arrow";
-      File arrowFile = new File(dir, path);
+      File arrowFile = new File(context.getPartition(), field.getName().toUpperCase() + ".arrow");
       String arrowFilePath = arrowFile.getAbsolutePath();
       if (!arrowFile.exists()) {
         throw new IllegalStateException("Failed to read arrow file: " + arrowFilePath);

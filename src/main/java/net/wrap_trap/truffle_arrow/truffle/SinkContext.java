@@ -5,16 +5,17 @@ import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.calcite.rex.RexInputRef;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class SinkContext {
   private Map<Integer, FieldVector> vectors;
   private Set<InputRefSlotMap> inputRefSlotMaps;
-  private String partition;
+  private File partition;
 
   public SinkContext(Map<Integer, FieldVector> vectors,
-                     Set<InputRefSlotMap> inputRefSlotMaps, String partition) {
+                     Set<InputRefSlotMap> inputRefSlotMaps, File partition) {
     this.vectors = vectors;
     this.inputRefSlotMaps = inputRefSlotMaps;
     this.partition = partition;
@@ -34,7 +35,7 @@ public class SinkContext {
     return this.inputRefSlotMaps;
   }
 
-  public String getPartition() {
+  public File getPartition() {
     return this.partition;
   }
 }

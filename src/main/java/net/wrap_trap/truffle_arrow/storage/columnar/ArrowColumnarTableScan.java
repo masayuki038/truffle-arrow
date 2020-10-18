@@ -74,7 +74,7 @@ public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
   }
 
   public ThenRowSink createRowSink(ThenRowSink next, CompileContext compileContext) {
-
+    compileContext.setDir(this.dir);
     return
       frameDescriptor -> VectorSchemaRootBroker.compile(
         frameDescriptor,
