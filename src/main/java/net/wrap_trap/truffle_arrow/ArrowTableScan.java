@@ -75,7 +75,9 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
     return
       frameDescriptor -> VectorSchemaRootBroker.compile(
         frameDescriptor,
-        getRowType(),this.vectorSchemaRoots,
+        getRowType(),
+        null,
+        null,
         this.projects,
         this.fields,
           compileContext,

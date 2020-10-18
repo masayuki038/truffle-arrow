@@ -11,11 +11,13 @@ import java.util.stream.Collectors;
 public class SinkContext {
   private Map<Integer, FieldVector> vectors;
   private Set<InputRefSlotMap> inputRefSlotMaps;
+  private String partition;
 
   public SinkContext(Map<Integer, FieldVector> vectors,
-                     Set<InputRefSlotMap> inputRefSlotMaps) {
+                     Set<InputRefSlotMap> inputRefSlotMaps, String partition) {
     this.vectors = vectors;
     this.inputRefSlotMaps = inputRefSlotMaps;
+    this.partition = partition;
   }
 
   public Map<Integer, FieldVector> vectors() {
@@ -30,5 +32,9 @@ public class SinkContext {
       throw new IllegalStateException("inputRefSlotMaps have not been initialized yet");
     }
     return this.inputRefSlotMaps;
+  }
+
+  public String getPartition() {
+    return this.partition;
   }
 }
