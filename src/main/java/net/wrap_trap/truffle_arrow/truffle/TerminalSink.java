@@ -23,7 +23,7 @@ public class TerminalSink extends RowSource {
 
   public static RowSource compile(CompileContext compileContext, ThenRowSink next) {
     FrameDescriptorPart framePart = FrameDescriptorPart.root(0);
-    SinkContext sinkContext = new SinkContext(null, compileContext.getInputRefSlotMaps(), null, null);
+    SinkContext sinkContext = new SinkContext(compileContext.getInputRefSlotMaps(), null, null);
     return new TerminalSink(framePart, compileContext, sinkContext, next.apply(framePart));
   }
 
@@ -39,7 +39,7 @@ public class TerminalSink extends RowSource {
   protected List<Row> execute() {
     List<SinkContext> contexts = getPartitions()
                                      .stream()
-                                     .map(f -> new SinkContext(null, this.sinkContext.getInputRefSlotMaps(), f, new ArrayList<Row>()))
+                                     .map(f -> new SinkContext(this.sinkContext.getInputRefSlotMaps(), f, new ArrayList<Row>()))
                                      .collect(Collectors.toList());
 
     ForkJoinPool pool = new ForkJoinPool();
@@ -75,6 +75,7 @@ public class TerminalSink extends RowSource {
         VirtualFrame frame = Truffle.getRuntime()
                                  .createVirtualFrame(new Object[] { }, framePart.frame());
         then.executeVoid(frame, this.sinkContext);
+        then.afterExecute(frame, this.sinkContext);
       } catch (UnexpectedResultException e) {
         throw new RuntimeException(e);
       }

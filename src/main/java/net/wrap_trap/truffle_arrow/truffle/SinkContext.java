@@ -11,19 +11,10 @@ public class SinkContext {
   private File partition;
   private List<Row> rows;
 
-  public SinkContext(Map<Integer, FieldVector> vectors, Set<InputRefSlotMap> inputRefSlotMaps,
-                     File partition, List<Row> rows) {
-    this.vectors = vectors;
+  public SinkContext(Set<InputRefSlotMap> inputRefSlotMaps, File partition, List<Row> rows) {
     this.inputRefSlotMaps = inputRefSlotMaps;
     this.partition = partition;
     this.rows = rows;
-  }
-
-  public Map<Integer, FieldVector> vectors() {
-    if (this.vectors == null) {
-      throw new IllegalStateException("vectors have not been initialized yet");
-    }
-    return this.vectors;
   }
 
   public Set<InputRefSlotMap> getInputRefSlotMaps() {
