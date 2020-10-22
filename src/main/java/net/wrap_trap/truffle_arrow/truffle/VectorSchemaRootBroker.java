@@ -76,7 +76,7 @@ public class VectorSchemaRootBroker extends RelRowSink {
         selected.put(inputRefSlotMap.getSlot(), fieldVectors.get(fieldVectorIndex));
       }
 
-      SinkContext newContext = new SinkContext(selected, context.getInputRefSlotMaps(), context.getPartition());
+      SinkContext newContext = new SinkContext(selected, context.getInputRefSlotMaps(), context.getPartition(), context.getRows());
       this.vectorEach(frame, this.framePart, newContext, i -> {
         try {
           then.executeByRow(frame, this.framePart, newContext);

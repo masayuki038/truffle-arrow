@@ -31,7 +31,7 @@ public abstract class RowSink extends Node {
    */
   public void executeVoid(VirtualFrame frame, SinkContext context)
     throws UnexpectedResultException {
-    throw new UnsupportedOperationException();
+    afterExecute(frame, context);
   }
 
   public void afterExecute(VirtualFrame frame, SinkContext context)

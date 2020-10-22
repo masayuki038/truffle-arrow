@@ -12,20 +12,18 @@ public class RelRootNode extends RootNode {
 
   @Child
   private RowSource delegate;
-  private List<Row> results;
 
-  public RelRootNode(TruffleArrowLanguage language, RowSource delegate, List<Row> results) {
+  public RelRootNode(TruffleArrowLanguage language, RowSource delegate) {
     // TODO Cross reference by TruffleArrowLanguage
     super(language, new FrameDescriptor());
     this.delegate = delegate;
-    this.results = results;
   }
 
   @Override
   public Object execute(VirtualFrame frame) {
     try {
-      this.delegate.executeVoid();
-      return new Result(this.results);
+      List<Row> results = this.delegate.execute();
+      return new Result(results);
     } catch (UnexpectedResultException e) {
       throw new RuntimeException(e);
     }

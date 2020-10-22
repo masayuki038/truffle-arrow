@@ -1,24 +1,22 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
-import net.wrap_trap.truffle_arrow.ArrowFieldType;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.UInt4Vector;
-import org.apache.calcite.rex.RexInputRef;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class SinkContext {
   private Map<Integer, FieldVector> vectors;
   private Set<InputRefSlotMap> inputRefSlotMaps;
   private File partition;
+  private List<Row> rows;
 
-  public SinkContext(Map<Integer, FieldVector> vectors,
-                     Set<InputRefSlotMap> inputRefSlotMaps, File partition) {
+  public SinkContext(Map<Integer, FieldVector> vectors, Set<InputRefSlotMap> inputRefSlotMaps,
+                     File partition, List<Row> rows) {
     this.vectors = vectors;
     this.inputRefSlotMaps = inputRefSlotMaps;
     this.partition = partition;
+    this.rows = rows;
   }
 
   public Map<Integer, FieldVector> vectors() {
@@ -37,5 +35,13 @@ public class SinkContext {
 
   public File getPartition() {
     return this.partition;
+  }
+
+  public List<Row> getRows() {
+    return this.rows;
+  }
+
+  public void addRow(Row row) {
+    this.rows.add(row);
   }
 }

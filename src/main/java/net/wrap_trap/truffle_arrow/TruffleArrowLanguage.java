@@ -60,19 +60,17 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
   }
 
   private CallTarget compileInteractiveQuery(RelRoot plan) {
-    final List<Row> results = new ArrayList<>();
-
     ThenRowSink sink = resultFrame -> new RowSink() {
       @Override
       public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) {
         List<Object> row = framePart.getFrameSlots().stream()
                                .map(slot -> getValue(frame.getValue(slot)))
                                .collect(Collectors.toList());
-        results.add(new Row(row));
+        context.addRow(new Row(row));
       }
     };
 
-    return compile(plan, results, sink);
+    return compile(plan, sink);
   }
 
   private Object getValue(Object o) {
@@ -86,10 +84,10 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
     return o;
   }
 
-  private CallTarget compile(RelRoot plan, List<Row> results, ThenRowSink sink) {
+  private CallTarget compile(RelRoot plan, ThenRowSink sink) {
     ArrowRel rel = (ArrowRel) plan.rel;
     RowSource compiled = rel.compile(sink, new CompileContext());
-    RelRootNode root = new RelRootNode(this, compiled, results);
+    RelRootNode root = new RelRootNode(this, compiled);
 
     return Truffle.getRuntime().createCallTarget(root);
   }

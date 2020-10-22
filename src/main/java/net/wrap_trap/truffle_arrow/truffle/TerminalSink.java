@@ -1,10 +1,12 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
+import com.google.common.collect.Lists;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
@@ -21,7 +23,7 @@ public class TerminalSink extends RowSource {
 
   public static RowSource compile(CompileContext compileContext, ThenRowSink next) {
     FrameDescriptorPart framePart = FrameDescriptorPart.root(0);
-    SinkContext sinkContext = new SinkContext(null, compileContext.getInputRefSlotMaps(), null);
+    SinkContext sinkContext = new SinkContext(null, compileContext.getInputRefSlotMaps(), null, null);
     return new TerminalSink(framePart, compileContext, sinkContext, next.apply(framePart));
   }
 
@@ -34,18 +36,24 @@ public class TerminalSink extends RowSource {
   }
 
   @Override
-  protected void executeVoid() {
-    ForkJoinPool pool = new ForkJoinPool();
+  protected List<Row> execute() {
+    List<SinkContext> contexts = getPartitions()
+                                     .stream()
+                                     .map(f -> new SinkContext(null, this.sinkContext.getInputRefSlotMaps(), f, new ArrayList<Row>()))
+                                     .collect(Collectors.toList());
 
-    List<File> partitions = getPartitions();
-    partitions.forEach(f -> {
-      SinkContext newContext = new SinkContext(null, this.sinkContext.getInputRefSlotMaps(), f);
+    ForkJoinPool pool = new ForkJoinPool();
+    contexts.forEach(newContext -> {
       pool.submit(new ParallelSink(newContext));
     });
 
     if (!pool.awaitQuiescence(1, TimeUnit.MINUTES)) {
       throw new IllegalStateException("Timeout while running ParallelSink");
     }
+
+    List<Row> results = Lists.newArrayList();
+    contexts.forEach(newContext -> results.addAll(newContext.getRows()));
+    return results;
   }
 
   private List<File> getPartitions() {
@@ -67,7 +75,6 @@ public class TerminalSink extends RowSource {
         VirtualFrame frame = Truffle.getRuntime()
                                  .createVirtualFrame(new Object[] { }, framePart.frame());
         then.executeVoid(frame, this.sinkContext);
-        then.afterExecute(frame, this.sinkContext);
       } catch (UnexpectedResultException e) {
         throw new RuntimeException(e);
       }
