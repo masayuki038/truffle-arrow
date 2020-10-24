@@ -1,6 +1,5 @@
 package net.wrap_trap.truffle_arrow;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.util.List;

@@ -9,9 +9,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveAction;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 
@@ -43,12 +41,16 @@ public class TerminalSink extends RowSource {
                                      .collect(Collectors.toList());
 
     ForkJoinPool pool = new ForkJoinPool();
+
+    List<ForkJoinTask> tasks = new ArrayList<>();
     contexts.forEach(newContext -> {
-      pool.submit(new ParallelSink(newContext));
+      ForkJoinTask task = new ParallelSink(newContext);
+      tasks.add(task);
+      pool.submit(task);
     });
 
-    if (!pool.awaitQuiescence(1, TimeUnit.MINUTES)) {
-      throw new IllegalStateException("Timeout while running ParallelSink");
+    for(ForkJoinTask task: tasks) {
+      task.join();
     }
 
     List<Row> results = Lists.newArrayList();

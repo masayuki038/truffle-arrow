@@ -214,8 +214,9 @@ public class FilterEqualVectorTest {
        EXPECTED
       )
     );
+    // TODO Convert to a Exception that it is easy to understand what it occurs
     assertThat(e.getCause().getMessage(),
-      containsString("java.lang.ClassCastException: java.lang.Long cannot be cast to java.lang.String"));
+      containsString("java.lang.ClassCastException"));
   }
 
   @Test
@@ -227,8 +228,9 @@ public class FilterEqualVectorTest {
        EXPECTED
       )
     );
+    // TODO Convert to a Exception that it is easy to understand what it occurs
     assertThat(e.getCause().getMessage(),
-      containsString("java.lang.ClassCastException: net.wrap_trap.truffle_arrow.type.ArrowTimeSec cannot be cast to java.lang.String"));
+      containsString("java.lang.ClassCastException"));
   }
 
   @Test
@@ -240,8 +242,9 @@ public class FilterEqualVectorTest {
        EXPECTED
       )
     );
+    // TODO Convert to a Exception that it is easy to understand what it occurs
     assertThat(e.getCause().getMessage(),
-      containsString("java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String"));
+      containsString("java.lang.ClassCastException"));
   }
 
   @Test
@@ -288,8 +291,9 @@ public class FilterEqualVectorTest {
         EXPECTED
       )
     );
+    // TODO Convert to a Exception that it is easy to understand what it occurs
     assertThat(e.getCause().getMessage(),
-      containsString("java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Long"));
+      containsString("java.lang.ClassCastException"));
   }
 
   @Test
@@ -371,8 +375,9 @@ public class FilterEqualVectorTest {
        EXPECTED
       )
     );
+    // TODO Convert to a Exception that it is easy to understand what it occurs
     assertThat(e.getCause().getMessage(),
-      containsString("java.lang.ClassCastException: java.lang.String cannot be cast to net.wrap_trap.truffle_arrow.type.ArrowTimeSec"));
+      containsString("java.lang.ClassCastException"));
   }
 
   @Test
@@ -458,8 +463,9 @@ public class FilterEqualVectorTest {
       EXPECTED
       )
     );
+    // TODO Convert to a Exception that it is easy to understand what it occurs
     assertThat(e.getCause().getMessage(),
-      containsString("java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Integer"));
+      containsString("java.lang.ClassCastException"));
   }
 
   @Test

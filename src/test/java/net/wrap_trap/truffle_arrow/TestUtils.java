@@ -40,6 +40,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class TestUtils {
 
   public static void generateTestFiles(String dirPath, TestDataType dataType) throws IOException {
+    generateTestFiles(dirPath, "202012", dataType);
+  }
+
+  public static void generateTestFiles(String dirPath, String partition, TestDataType dataType) throws IOException {
     RootAllocator allocator = new RootAllocator(Integer.MAX_VALUE);
     FieldVector intVector, bigIntVector, varCharVector, timestampVector, timeVector, dateVector, doubleVector;
 
@@ -146,10 +150,16 @@ public class TestUtils {
       writer.write(root.getSchema().toJson());
     }
 
+    String partitionPath = String.format("%s/%s", dirPath, partition);
+    if (!new File(partitionPath).mkdir()) {
+      throw new IllegalStateException("Failed to create a partition directory");
+    }
+
     Lists.newArrayList(intVector, bigIntVector, varCharVector, timestampVector, timeVector, dateVector, doubleVector)
       .forEach(fieldVector -> {
         VectorSchemaRoot r = new VectorSchemaRoot(Arrays.asList(fieldVector.getField()), Arrays.asList(fieldVector), 10);
-        writeArrowFile(r, dirPath + "/" + fieldVector.getField().getName().toUpperCase() + ".arrow");
+        String filePath = String.format("%s/%s.arrow", partitionPath, fieldVector.getField().getName().toUpperCase());
+        writeArrowFile(r, filePath);
         r.clear();
       });
   }
@@ -343,11 +353,8 @@ public class TestUtils {
 
   public static void deleteDirectory(String path) throws IOException {
     Path dir = Paths.get(path);
-    try(Stream<Path> walk = Files.walk(dir)) {
-      walk.map(Path::toFile).forEach(File::delete);
-      if (!dir.toFile().delete()) {
-        throw new IllegalStateException("Failed to remove `all_fields`");
-      }
+    try (Stream<Path> walk = Files.walk(dir)) {
+      walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
     }
   }
 
