@@ -1,6 +1,5 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
-import com.google.common.collect.Lists;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
@@ -35,27 +34,20 @@ public class TerminalSink extends RowSource {
 
   @Override
   protected List<Row> execute() {
-    List<SinkContext> contexts = getPartitions()
-                                     .stream()
-                                     .map(f -> new SinkContext(this.sinkContext.getInputRefSlotMaps(), f, new ArrayList<Row>()))
-                                     .collect(Collectors.toList());
-
     ForkJoinPool pool = new ForkJoinPool();
 
-    List<ForkJoinTask> tasks = new ArrayList<>();
-    contexts.forEach(newContext -> {
-      ForkJoinTask task = new ParallelSink(newContext);
-      tasks.add(task);
+    List<ParallelSink> tasks = getPartitions().stream().map(f -> {
+      SinkContext newContext = new SinkContext(this.sinkContext.getInputRefSlotMaps(), f, new ArrayList<Row>());
+      ParallelSink task = new ParallelSink(newContext);
       pool.submit(task);
-    });
+      return task;
+    }).collect(Collectors.toList());
 
-    for(ForkJoinTask task: tasks) {
-      task.join();
-    }
-
-    List<Row> results = Lists.newArrayList();
-    contexts.forEach(newContext -> results.addAll(newContext.getRows()));
-    return results;
+    return tasks.stream()
+            .flatMap(p -> {
+              p.join();
+              return p.sinkContext().getRows().stream();
+            }).collect(Collectors.toList());
   }
 
   private List<File> getPartitions() {
@@ -69,6 +61,10 @@ public class TerminalSink extends RowSource {
 
     ParallelSink(SinkContext sinkContext) {
       this.sinkContext = sinkContext;
+    }
+
+    public SinkContext sinkContext() {
+      return this.sinkContext;
     }
 
     @Override
