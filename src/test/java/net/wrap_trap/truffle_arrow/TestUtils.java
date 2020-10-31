@@ -164,6 +164,14 @@ public class TestUtils {
       });
   }
 
+  public static void reloadTruffleArrowConfig() {
+    TruffleArrowConfig.INSTANCE.reload();
+  }
+
+  public static void assertRelInclude(Class<? extends ArrowRel> clazz) {
+    assertThat(LastPlan.INSTANCE.includes(clazz), is(true));
+  }
+
   private static void writeArrowFile(VectorSchemaRoot root, String filePath) {
     try (FileOutputStream out = new FileOutputStream(filePath)) {
       try (ArrowWriter writer = new ArrowFileWriter(root, null, Channels.newChannel(out))) {

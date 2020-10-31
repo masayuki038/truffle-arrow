@@ -3,6 +3,8 @@ package net.wrap_trap.truffle_arrow.truffle;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -13,6 +15,8 @@ import java.util.stream.Collectors;
 
 
 public class TerminalSink extends RowSource {
+
+  private static final Logger log = LoggerFactory.getLogger(TerminalSink.class);
 
   private CompileContext compileContext;
   private SinkContext sinkContext;
@@ -44,10 +48,10 @@ public class TerminalSink extends RowSource {
     }).collect(Collectors.toList());
 
     return tasks.stream()
-            .flatMap(p -> {
-              p.join();
-              return p.sinkContext().getRows().stream();
-            }).collect(Collectors.toList());
+               .flatMap(p -> {
+                 p.join();
+                 return p.sinkContext().getRows().stream();
+               }).collect(Collectors.toList());
   }
 
   private List<File> getPartitions() {
@@ -71,11 +75,15 @@ public class TerminalSink extends RowSource {
     protected void compute() {
       try {
         VirtualFrame frame = Truffle.getRuntime()
-                                 .createVirtualFrame(new Object[] { }, framePart.frame());
+                                 .createVirtualFrame(new Object[] { }, framePart.frame().copy());
         then.executeVoid(frame, this.sinkContext);
         then.afterExecute(frame, this.sinkContext);
       } catch (UnexpectedResultException e) {
+        log.error("ParallelSink", e);
         throw new RuntimeException(e);
+      } catch (RuntimeException e) {
+        log.error("ParallelSink", e);
+        throw e;
       }
     }
   }
