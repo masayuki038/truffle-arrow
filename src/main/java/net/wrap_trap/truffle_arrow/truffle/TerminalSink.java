@@ -18,31 +18,31 @@ public class TerminalSink extends RowSource {
 
   private static final Logger log = LoggerFactory.getLogger(TerminalSink.class);
 
-  private CompileContext compileContext;
-  private SinkContext sinkContext;
-  private FrameDescriptorPart framePart;
+  private List<ParallelExecuteContext> sinks;
 
   public static RowSource compile(CompileContext compileContext, ThenRowSink next) {
-    FrameDescriptorPart framePart = FrameDescriptorPart.root(0);
-    SinkContext sinkContext = new SinkContext(compileContext.getInputRefSlotMaps(), null, null);
-    return new TerminalSink(framePart, compileContext, sinkContext, next.apply(framePart));
+
+    List<ParallelExecuteContext> sinks = getPartitions(compileContext)
+     .stream().map(f -> {
+       FrameDescriptorPart framePart = FrameDescriptorPart.root(0);
+       RowSink sink = next.apply(framePart);
+       SinkContext sinkContext = new SinkContext(compileContext.getInputRefSlotMaps(), f, new ArrayList<Row>());
+       return new ParallelExecuteContext(framePart, sinkContext, sink);
+     }).collect(Collectors.toList());
+    return new TerminalSink(sinks);
   }
 
-  private TerminalSink(FrameDescriptorPart framePart, CompileContext compileContext,
-                       SinkContext sinkContext, RowSink then) {
-    super(then);
-    this.framePart = framePart;
-    this.compileContext = compileContext;
-    this.sinkContext = sinkContext;
+  private TerminalSink(List<ParallelExecuteContext> sinks) {
+    this.sinks = sinks;
+    sinks.forEach(s -> this.insert(s.rowSink()));
   }
 
   @Override
   protected List<Row> execute() {
     ForkJoinPool pool = new ForkJoinPool();
 
-    List<ParallelSink> tasks = getPartitions().stream().map(f -> {
-      SinkContext newContext = new SinkContext(this.sinkContext.getInputRefSlotMaps(), f, new ArrayList<Row>());
-      ParallelSink task = new ParallelSink(newContext);
+    List<ParallelSink> tasks = sinks.stream().map(parallelExecuteContext -> {
+      ParallelSink task = new ParallelSink(parallelExecuteContext);
       pool.submit(task);
       return task;
     }).collect(Collectors.toList());
@@ -54,30 +54,30 @@ public class TerminalSink extends RowSource {
                }).collect(Collectors.toList());
   }
 
-  private List<File> getPartitions() {
-    return Arrays.stream(this.compileContext.getDir().listFiles(f -> f.isDirectory()))
+  private static List<File> getPartitions(CompileContext compileContext) {
+    return Arrays.stream(compileContext.getDir().listFiles(f -> f.isDirectory()))
                .collect(Collectors.toList());
   }
 
   class ParallelSink extends RecursiveAction {
 
-    private SinkContext sinkContext;
+    private ParallelExecuteContext p;
 
-    ParallelSink(SinkContext sinkContext) {
-      this.sinkContext = sinkContext;
+    ParallelSink(ParallelExecuteContext p) {
+      this.p = p;
     }
 
-    public SinkContext sinkContext() {
-      return this.sinkContext;
+    SinkContext sinkContext() {
+      return this.p.sinkContext();
     }
 
     @Override
     protected void compute() {
       try {
         VirtualFrame frame = Truffle.getRuntime()
-                                 .createVirtualFrame(new Object[] { }, framePart.frame().copy());
-        then.executeVoid(frame, this.sinkContext);
-        then.afterExecute(frame, this.sinkContext);
+                                 .createVirtualFrame(new Object[] { }, p.framePart().frame());
+        p.rowSink().executeVoid(frame, p.sinkContext());
+        p.rowSink().afterExecute(frame, p.sinkContext());
       } catch (UnexpectedResultException e) {
         log.error("ParallelSink", e);
         throw new RuntimeException(e);
@@ -85,6 +85,30 @@ public class TerminalSink extends RowSource {
         log.error("ParallelSink", e);
         throw e;
       }
+    }
+  }
+
+  static class ParallelExecuteContext {
+    private FrameDescriptorPart framePart;
+    private SinkContext sinkContext;
+    private RowSink rowSink;
+
+    ParallelExecuteContext(FrameDescriptorPart framePart, SinkContext sinkContext, RowSink rowSink) {
+      this.framePart = framePart;
+      this.sinkContext = sinkContext;
+      this.rowSink = rowSink;
+    }
+
+    FrameDescriptorPart framePart() {
+      return this.framePart;
+    }
+
+    SinkContext sinkContext() {
+      return this.sinkContext;
+    }
+
+    RowSink rowSink() {
+      return this.rowSink;
     }
   }
 }
