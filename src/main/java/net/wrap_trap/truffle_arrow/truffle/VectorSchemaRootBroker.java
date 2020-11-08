@@ -39,6 +39,7 @@ public class VectorSchemaRootBroker extends RelRowSink {
     } else {
       for (int field : fields) {
         compileContext.addInputRefSlotMap(field, field);
+        framePart.addFrameSlot();
       }
     }
     RowSink sink = then.apply(framePart);
@@ -94,7 +95,6 @@ public class VectorSchemaRootBroker extends RelRowSink {
     }
     return map;
   }
-
 
   private VectorSchemaRoot[] loadVectorSchemaRoots(SinkContext context) {
     List<VectorSchemaRoot[]> list = loadArrowFiles(context);
