@@ -21,7 +21,7 @@ public class ProjectCompileExpr extends CompileExpr {
   public ExprBase visitInputRef(RexInputRef inputRef) {
     int index = inputRef.getIndex();
     FrameSlot slot = from.findFrameSlotInPrevious(index);
-    Objects.requireNonNull(slot);
+    Objects.requireNonNull(slot, "FrameSlot not found. index: " + index);
 
     return ExprReadLocalNodeGen.create(slot);
   }

@@ -22,22 +22,27 @@ public class AggregateSink extends RelRowSink {
     List<AggregateCall> aggCalls,
     CompileContext context,
     ThenRowSink next) {
-    FrameDescriptorPart newFramePart = framePart.newPart();
+    FrameDescriptorPart aggregateFramePart = framePart.newPart();
     for (int i = 0; i < groupSet.toList().size(); i ++) {
-      newFramePart.addFrameSlot();
+      aggregateFramePart.addFrameSlot();
     }
 
-    // newFramePart.addFrameSlot();
-    // FrameSlot slot = newFramePart.findFrameSlot(newFramePart.getCurrentSlotPosition());
-    // newFramePart.frame().setFrameSlotKind(slot, FrameSlotKind.Long);
+    FrameDescriptorPart resultFramePart = aggregateFramePart.newPart();
+    for (int i = 0; i < groupSet.toList().size(); i ++) {
+      resultFramePart.addFrameSlot();
+    }
+    for (AggregateCall aggCall: aggCalls) {
+      resultFramePart.addFrameSlot();
+    }
 
-    RowSink rowSink = next.apply(newFramePart);
+    RowSink rowSink = next.apply(resultFramePart);
 
     return new AggregateSink(
-      newFramePart, groupSet, groupSets, aggCalls, context, rowSink);
+        aggregateFramePart, resultFramePart, groupSet, groupSets, aggCalls, context, rowSink);
   }
 
   private FrameDescriptorPart aggregateFramePart;
+  private FrameDescriptorPart resultFramePart;
   private ImmutableBitSet groupSet;
   private ImmutableList<ImmutableBitSet> groupSets;
   private List<AggregateCall> aggCalls;
@@ -51,6 +56,7 @@ public class AggregateSink extends RelRowSink {
 
   private AggregateSink(
     FrameDescriptorPart aggregateFramePart,
+    FrameDescriptorPart resultFramePart,
     ImmutableBitSet groupSet,
     ImmutableList<ImmutableBitSet> groupSets,
     List<AggregateCall> aggCalls,
@@ -58,6 +64,7 @@ public class AggregateSink extends RelRowSink {
     RowSink then) {
     super(then);
     this.aggregateFramePart = aggregateFramePart;
+    this.resultFramePart = resultFramePart;
     this.groupSet = groupSet;
     this.groupSets = groupSets;
     this.aggCalls = aggCalls;
@@ -125,27 +132,20 @@ public class AggregateSink extends RelRowSink {
 
   @Override
   public void afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
-    FrameDescriptorPart resultFramePart = this.aggregateFramePart.newPart();
     VirtualFrame resultFrame = Truffle.getRuntime()
-                                .createVirtualFrame(new Object[] { }, resultFramePart.frame());
-    for (int i = 0; i < groupSet.toList().size(); i ++) {
-      resultFramePart.addFrameSlot();
-    }
-    for (AggregateCall aggCall: this.aggCalls) {
-      resultFramePart.addFrameSlot();
-    }
+                                .createVirtualFrame(new Object[] { }, this.resultFramePart.frame());
 
     for (List<Object> keyList : this.map.keySet()) {
       int i;
       for (i = 0; i < keyList.size(); i ++) {
         StatementWriteLocalNodeGen.create(
-          ExprLiteral.Object(keyList.get(i)), resultFramePart.findFrameSlot(i)).executeVoid(resultFrame);
+          ExprLiteral.Object(keyList.get(i)), this.resultFramePart.findFrameSlot(i)).executeVoid(resultFrame);
       }
       for (Object funcResult: this.map.get(keyList)) {
         StatementWriteLocalNodeGen.create(
-          ExprLiteral.Object(funcResult), resultFramePart.findFrameSlot(i ++)).executeVoid(resultFrame);
+          ExprLiteral.Object(funcResult), this.resultFramePart.findFrameSlot(i ++)).executeVoid(resultFrame);
       }
-      then.executeByRow(resultFrame, resultFramePart, context);
+      then.executeByRow(resultFrame, this.resultFramePart, context);
     }
     then.afterExecute(resultFrame, context);
   }
