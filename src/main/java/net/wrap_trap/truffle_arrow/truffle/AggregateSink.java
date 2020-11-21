@@ -81,23 +81,12 @@ public class AggregateSink extends RelRowSink {
       SqlKind kind = aggCall.getAggregation().kind;
       switch(kind) {
         case COUNT:
-          FrameSlot receiverFrameSlot = this.aggregateFramePart.frame().addFrameSlot(
-            "receiver" + this.receiverFrameSlots.size(), FrameSlotKind.Object);
-          this.receiverFrameSlots.add(receiverFrameSlot);
-
-          ExprBase key = ExprReadLocalNodeGen.create(this.keyFrameSlot);
-          ExprBase receiver = ExprReadLocalNodeGen.create(receiverFrameSlot);
-          ExprBase hasMember = ExprHasMemberNodeGen.create(receiver, key);
-
-          ExprBase readProperty = ExprReadPropertyNodeGen.create(receiver, key);
-          ExprBase inc = ExprPlusNodeGen.create(readProperty, ExprLiteral.Long(1));
-          ExprBase writeProperty = ExprWritePropertyNodeGen.create(receiver, key, inc);
-          ExprBase initProperty = ExprWritePropertyNodeGen.create(receiver, key, ExprLiteral.Long(1));
-
-          aggFunctions.add(new ExprIf(hasMember, writeProperty, initProperty));
-          this.insert(hasMember);
-          this.insert(initProperty);
-          this.insert(writeProperty);
+          aggFunctions.add(Functions.count(
+            this.aggregateFramePart,
+            this.receiverFrameSlots,
+            this.keyFrameSlot,
+            child -> this.insert(child))
+          );
           break;
 
         default:
