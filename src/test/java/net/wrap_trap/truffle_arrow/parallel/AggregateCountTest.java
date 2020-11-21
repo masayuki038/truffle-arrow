@@ -1,20 +1,20 @@
 package net.wrap_trap.truffle_arrow.parallel;
 
-import java.io.IOException;
-import java.sql.*;
-import java.util.List;
-
 import net.wrap_trap.truffle_arrow.*;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.hasItem;
+import java.io.IOException;
+import java.sql.*;
+import java.util.Comparator;
+import java.util.List;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+public class AggregateCountTest {
 
-public class FilterTest {
   @BeforeAll
   public static void setupOnce() throws ClassNotFoundException, IOException {
     Class.forName("net.wrap_trap.truffle_arrow.TruffleDriver");
@@ -32,32 +32,27 @@ public class FilterTest {
   }
 
   @Test
-  public void equal() throws SQLException {
+  public void countByInt() throws SQLException {
     try (
       Connection conn = DriverManager.getConnection("jdbc:truffle:");
       PreparedStatement pstmt = conn.prepareStatement(
-        "select * from ALL_FIELDS where F_INT=2");
+        "select F_INT, COUNT(F_INT) AS CNT from ALL_FIELDS group by F_INT");
       ResultSet rs = pstmt.executeQuery()
     ) {
       List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(5));
-      assertThat(results, hasItem("2\t2\ttest2\t2020-05-04 15:48:11.0\t03:20:23\t2020-05-05\t125.456"));
-      TestUtils.assertRelInclude(ArrowFilter.class);
-    }
-  }
-
-  @Test
-  public void greaterThan() throws SQLException {
-    try (
-      Connection conn = DriverManager.getConnection("jdbc:truffle:");
-      PreparedStatement pstmt = conn.prepareStatement(
-        "select * from ALL_FIELDS where F_BIGINT > 2");
-      ResultSet rs = pstmt.executeQuery()
-    ) {
-      List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(33));
-      assertThat(results, hasItem("0\t10\t0\t2020-05-03 00:00:00.0\t01:20:23\t2020-05-03\t10.0"));
-      TestUtils.assertRelInclude(ArrowFilter.class);
+      assertThat(results.size(), is(10));
+      results.sort(Comparator.naturalOrder());
+      assertThat(results.get(0), is("0\t5"));
+      assertThat(results.get(1), is("1\t5"));
+      assertThat(results.get(2), is("2\t5"));
+      assertThat(results.get(3), is("3\t5"));
+      assertThat(results.get(4), is("4\t5"));
+      assertThat(results.get(5), is("5\t5"));
+      assertThat(results.get(6), is("6\t5"));
+      assertThat(results.get(7), is("7\t5"));
+      assertThat(results.get(8), is("8\t5"));
+      assertThat(results.get(9), is("9\t5"));
+      TestUtils.assertRelInclude(ArrowAggregate.class);
     }
   }
 }

@@ -3,7 +3,6 @@ package net.wrap_trap.truffle_arrow;
 import com.google.common.base.Preconditions;
 import net.wrap_trap.truffle_arrow.truffle.AggregateSink;
 import net.wrap_trap.truffle_arrow.truffle.CompileContext;
-import net.wrap_trap.truffle_arrow.truffle.SinkContext;
 import net.wrap_trap.truffle_arrow.truffle.ThenRowSink;
 import org.apache.calcite.adapter.enumerable.AggImplementor;
 import org.apache.calcite.adapter.enumerable.RexImpTable;

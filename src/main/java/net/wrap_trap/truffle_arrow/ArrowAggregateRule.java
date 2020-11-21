@@ -20,7 +20,7 @@ public class ArrowAggregateRule extends ConverterRule {
     final LogicalAggregate agg = (LogicalAggregate) rel;
     final RelTraitSet traitSet = agg.getTraitSet().replace(ArrowRel.CONVENTION);
     try {
-      return new ArrowAggregate(
+      ArrowRel aggregate = new ArrowAggregate(
         rel.getCluster(),
         traitSet,
         convert(agg.getInput(), ArrowRel.CONVENTION),
@@ -28,6 +28,12 @@ public class ArrowAggregateRule extends ConverterRule {
         agg.getGroupSet(),
         agg.getGroupSets(),
         agg.getAggCallList());
+
+      return new GatherMerge(
+        rel.getCluster(),
+        traitSet,
+        aggregate
+      );
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
