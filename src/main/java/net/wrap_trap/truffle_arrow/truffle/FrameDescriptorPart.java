@@ -8,7 +8,11 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import java.util.List;
 
 /**
- * Represents a contiguous subset of frame slots that we use to store a relation
+ * Represents a contiguous subset of frame slots that we use to store a relation.
+ *
+ * If thinking about refactoring this, remember that it should be processed all computations
+ * by one frame because it needs to move local values from previous FrameDescriptorPart to current,
+ * especially SQL Functions (ex. max)
  */
 public class FrameDescriptorPart {
   private final FrameDescriptor frame;
