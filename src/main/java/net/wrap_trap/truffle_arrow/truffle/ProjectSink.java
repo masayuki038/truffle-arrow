@@ -1,6 +1,6 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
-import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import org.apache.calcite.rex.RexNode;
@@ -21,10 +21,12 @@ public class ProjectSink extends RelRowSink {
     }
     RowSink rowSink = next.apply(newFramePart);
 
-    ExprBase[] locals = new ExprBase[projects.size()];
+    StatementWriteLocal[] locals = new StatementWriteLocal[projects.size()];
     for (int i = 0; i < projects.size(); i ++) {
       RexNode child = projects.get(i);
-      locals[i] = compile(newFramePart, child, compileContext);
+      ExprBase compiled = compile(newFramePart, child, compileContext);
+      FrameSlot slot = newFramePart.findFrameSlot(i);
+      locals[i] = StatementWriteLocalNodeGen.create(compiled, slot);
     }
     return new ProjectSink(newFramePart, locals, rowSink);
   }
@@ -33,26 +35,20 @@ public class ProjectSink extends RelRowSink {
     return ProjectCompileExpr.compile(framePart, child, compileContext);
   }
 
-  private FrameDescriptorPart projectFramePart;
-  private VirtualFrame projectFrame;
-  private ExprBase[] locals;
+  private FrameDescriptorPart framePart;
+  private StatementWriteLocal[] locals;
 
-  private ProjectSink(FrameDescriptorPart projectFramePart, ExprBase[] locals, RowSink then) {
+  private ProjectSink(FrameDescriptorPart framePart, StatementWriteLocal[] locals, RowSink then) {
     super(then);
-    this.projectFramePart = projectFramePart;
+    this.framePart = framePart;
     this.locals = locals;
-    this.projectFrame = Truffle.getRuntime()
-                              .createVirtualFrame(new Object[] { }, this.projectFramePart.frame());
-
   }
 
   @Override
   public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) throws UnexpectedResultException {
-    for (int i = 0; i < this.locals.length; i ++) {
-      Object v = locals[i].executeGeneric(frame);
-      StatementWriteLocalNodeGen.create(
-          ExprLiteral.Object(v), projectFramePart.findFrameSlot(i)).executeVoid(this.projectFrame);
+    for (StatementWriteLocal local : locals) {
+      local.executeVoid(frame);
     }
-    then.executeByRow(this.projectFrame, this.projectFramePart, context);
+    then.executeByRow(frame, this.framePart, context);
   }
 }

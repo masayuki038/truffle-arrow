@@ -12,11 +12,14 @@ import java.util.List;
  */
 public class FrameDescriptorPart {
   private final FrameDescriptor frame;
-  private final FrameDescriptor previous;
+  private final int startOffset;
   private int size;
+  private FrameDescriptorPart previous;
 
-  private FrameDescriptorPart(FrameDescriptor frame, FrameDescriptor previous) {
+  private FrameDescriptorPart(FrameDescriptor frame, int startOffset, int size, FrameDescriptorPart previous) {
     this.frame = frame;
+    this.startOffset = startOffset;
+    this.size = size;
     this.previous = previous;
   }
 
@@ -27,30 +30,36 @@ public class FrameDescriptorPart {
     return frame;
   }
 
+  /**
+   * The number of slots we are using
+   */
+  public int size() {
+    return size;
+  }
+
   public List<FrameSlot> getFrameSlots() {
     List<FrameSlot> frameSlotList = Lists.newArrayList();
-    for (int i = 0; i < this.frame.getSize(); i ++) {
+    for (int i = this.startOffset; i < this.startOffset + this.size; i ++) {
       frameSlotList.add(this.frame.findFrameSlot(i));
     }
     return frameSlotList;
   }
 
   static FrameDescriptorPart root(int slots) {
-    FrameDescriptor newFrame = new FrameDescriptor();
+    FrameDescriptor frame = new FrameDescriptor();
 
     for (int i = 0; i < slots; i++)
-      newFrame.addFrameSlot(i);
+      frame.addFrameSlot(i);
 
-    return new FrameDescriptorPart(newFrame, null);
+    return new FrameDescriptorPart(frame, 0, slots, null);
   }
 
   FrameDescriptorPart newPart() {
-    FrameDescriptor newFrame = new FrameDescriptor();
-    return new FrameDescriptorPart(newFrame, this.frame);
+    return new FrameDescriptorPart(frame, startOffset + size, 0, this);
   }
 
   FrameSlot addFrameSlot() {
-    return frame.addFrameSlot(this.size ++);
+    return frame.addFrameSlot(startOffset + this.size ++);
   }
 
   int getCurrentSlotPosition() {
@@ -59,13 +68,13 @@ public class FrameDescriptorPart {
 
   FrameSlot findFrameSlotInPrevious(int index) {
     if (this.previous == null) {
-      throw new IllegalStateException("Previous FrameDescriptorPart is null");
+      new IllegalStateException("Previous FrameDescriptorPart is null");
     }
     return this.previous.findFrameSlot(index);
   }
 
   FrameSlot findFrameSlot(int index) {
-    return frame().findFrameSlot(index);
+    return frame().findFrameSlot(startOffset + index);
   }
 
   void setFrameSlotKind(FrameSlot slot, FrameSlotKind kind) {
