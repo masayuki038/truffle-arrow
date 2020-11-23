@@ -51,7 +51,9 @@ abstract public class ExprCast extends ExprBase {
 
   @Specialization(guards = "asDouble()")
   protected Object castToDouble(Object value) {
-    if (value instanceof Integer) {
+    if (value instanceof Double) {
+      return value;
+    } else if (value instanceof Integer) {
       return ((Integer) value).doubleValue();
     } else if (value instanceof Long) {
       return ((Long) value).doubleValue();
@@ -59,7 +61,7 @@ abstract public class ExprCast extends ExprBase {
       return Double.parseDouble(value.toString());
     }
     throw new UnsupportedOperationException(
-      String.format("Unsupported operation: CAST(%s As Long)", value.getClass()));
+      String.format("Unsupported operation: CAST(%s As Double)", value.getClass()));
   }
 
   @Specialization(guards = "asString()")
@@ -72,7 +74,7 @@ abstract public class ExprCast extends ExprBase {
       return value.toString();
     }
     throw new UnsupportedOperationException(
-      String.format("Unsupported operation: CAST(%s As Long)", value.getClass()));
+      String.format("Unsupported operation: CAST(%s As String)", value.getClass()));
   }
 
   @Specialization(guards = "asInstant()")
