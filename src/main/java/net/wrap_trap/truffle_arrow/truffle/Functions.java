@@ -34,7 +34,7 @@ public class Functions {
     ExprBase readProperty = ExprReadPropertyNodeGen.create(receiver, key);
     ExprBase inc = ExprPlusNodeGen.create(readProperty, toBeAdded);
     ExprBase writeProperty = ExprWritePropertyNodeGen.create(receiver, key, inc);
-    ExprBase initProperty = ExprWritePropertyNodeGen.create(receiver, key, ExprLiteral.Long(1));
+    ExprBase initProperty = ExprWritePropertyNodeGen.create(receiver, key, toBeAdded);
 
     insertToNode.apply(hasMember);
     insertToNode.apply(initProperty);

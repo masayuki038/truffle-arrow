@@ -28,6 +28,8 @@ public class AggregateSink extends RelRowSink {
     }
     for (AggregateCall aggCall: aggCalls) {
       aggregateFramePart.addFrameSlot();
+      FrameSlot frameSlot = aggregateFramePart.findFrameSlot(aggregateFramePart.getCurrentSlotPosition());
+      frameSlot.setKind(FrameSlotKind.Int);
     }
 
     RowSink rowSink = next.apply(aggregateFramePart);
@@ -82,7 +84,7 @@ public class AggregateSink extends RelRowSink {
           aggFunctions.add(Functions.sum(
             receiverFrameSlot,
             this.keyFrameSlot,
-            aggregateFramePart.findFrameSlot(aggCall.getArgList().get(0)),
+            aggregateFramePart.findFrameSlotInPrevious(aggCall.getArgList().get(0)),
             child -> this.insert(child))
           );
           break;
@@ -125,9 +127,15 @@ public class AggregateSink extends RelRowSink {
         StatementWriteLocalNodeGen.create(
           ExprLiteral.Object(keyList.get(i)), this.aggregateFramePart.findFrameSlot(i)).executeVoid(frame);
       }
-      for (Object funcResult: this.map.get(keyList)) {
+      List<Object> funcResults = this.map.get(keyList);
+      for (int j = 0; j < funcResults.size(); j ++) {
+        ExprBase result = ExprCastNodeGen.create(
+          aggCalls.get(j).getType(),
+          ExprLiteral.Object(funcResults.get(j)));
         StatementWriteLocalNodeGen.create(
-          ExprLiteral.Object(funcResult), this.aggregateFramePart.findFrameSlot(i ++)).executeVoid(frame);
+          result,
+          this.aggregateFramePart.findFrameSlot(i ++)
+        ).executeVoid(frame);
       }
       then.executeByRow(frame, this.aggregateFramePart, context);
     }

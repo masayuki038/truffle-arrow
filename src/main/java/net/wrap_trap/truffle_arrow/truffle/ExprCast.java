@@ -7,6 +7,8 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.arrow.vector.util.Text;
 
+import static sun.security.krb5.Confounder.longValue;
+
 @NodeChild("target")
 abstract public class ExprCast extends ExprBase {
   private final RelDataType type;
@@ -19,6 +21,12 @@ abstract public class ExprCast extends ExprBase {
   protected Object castToInt(Object value) {
     if (value instanceof Integer) {
       return value;
+    } else if (value instanceof Long) {
+      Long l = (Long) value;
+      if (l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE) {
+        return l.intValue();
+      }
+      throw new IllegalArgumentException("Couldn't cast long value to int: " + value);
     } else if (value instanceof Text) {
       return Integer.parseInt(value.toString());
     } else if (value instanceof String) {
