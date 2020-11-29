@@ -47,15 +47,11 @@ public class FilterGreaterThanVectorTest {
 
   @Test
   public void intGtLong2() throws SQLException {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_INT > CAST(F_BIGINT AS INT)",
-       4,
-       EXPECTED6
-      )
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_INT > CAST(F_BIGINT AS INT)",
+      4,
+      EXPECTED6
     );
-    assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(class java.lang.Long As Int)"));
   }
 
   @Test

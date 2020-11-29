@@ -48,15 +48,11 @@ public class FilterGreaterEqualVectorTest {
 
   @Test
   public void intGeLong2() throws SQLException {
-    Throwable e = assertThrows(SQLException.class, () ->
-      TestUtils.filterTest(
-       "select * from ALL_FIELDS where F_INT >= CAST(F_BIGINT AS INT)",
-       5,
-       EXPECTED5
-      )
+    TestUtils.filterTest(
+      "select * from ALL_FIELDS where F_INT >= CAST(F_BIGINT AS INT)",
+      5,
+      EXPECTED5
     );
-    assertThat(e.getCause().getMessage(),
-      containsString("Unsupported operation: CAST(class java.lang.Long As Int)"));
   }
 
   @Test
