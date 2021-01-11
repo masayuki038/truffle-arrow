@@ -167,7 +167,6 @@ public class TruffleArrowMeta extends MetaImpl {
       RelDataTypeField field = fieldList.get(i);
       List<String> origins = fieldOrigins.get(i);
 
-
       SqlTypeName sqlTypeName = type.getFieldList().get(i).getType().getSqlTypeName();
       ColumnMetaData.AvaticaType avaticaType =  ColumnMetaData.scalar(
         sqlTypeName.getJdbcOrdinal(),

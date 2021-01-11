@@ -1,12 +1,12 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
+import net.wrap_trap.truffle_arrow.TruffleArrowLanguage;
+
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import net.wrap_trap.truffle_arrow.TruffleArrowLanguage;
-
-import java.util.List;
+import org.apache.arrow.vector.VectorSchemaRoot;
 
 public class RelRootNode extends RootNode {
 
@@ -22,7 +22,7 @@ public class RelRootNode extends RootNode {
   @Override
   public Object execute(VirtualFrame frame) {
     try {
-      List<Row> results = this.delegate.execute();
+      VectorSchemaRoot[] results = this.delegate.execute();
       return new Result(results);
     } catch (UnexpectedResultException e) {
       throw new RuntimeException(e);

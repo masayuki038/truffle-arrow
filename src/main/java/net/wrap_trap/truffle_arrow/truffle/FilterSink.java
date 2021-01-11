@@ -29,10 +29,16 @@ public class FilterSink extends RelRowSink {
   }
 
   @Override
-  public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context)
+  protected FrameDescriptorPart getFrameDescriptorPart() {
+    return this.getFrameDescriptorPart();
+  }
+
+  @Override
+  public SinkContext executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context)
     throws UnexpectedResultException {
     if (this.conditionExpr.executeBoolean(frame)) {
-      then.executeByRow(frame, this.framePart, context);
+      return then.executeByRow(frame, this.framePart, context);
     }
+    return context;
   }
 }

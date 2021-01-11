@@ -17,6 +17,18 @@ abstract class StatementWriteLocal extends StatementBase {
 
   protected abstract FrameSlot getSlot();
 
+  @Specialization(guards = "isIntOrIllegal(frame)")
+  protected void writeInt(VirtualFrame frame, int value) {
+    // Initialize type on first write of the local variable. No-op if kind is already Boolean.
+    getSlot().setKind(FrameSlotKind.Int);
+
+    frame.setInt(getSlot(), value);
+  }
+
+  protected boolean isIntOrIllegal(VirtualFrame frame) {
+    return getSlot().getKind() == FrameSlotKind.Int || getSlot().getKind() == FrameSlotKind.Illegal;
+  }
+
   @Specialization(guards = "isBooleanOrIllegal(frame)")
   protected void writeBoolean(VirtualFrame frame, boolean value) {
     // Initialize type on first write of the local variable. No-op if kind is already Boolean.

@@ -75,15 +75,17 @@ public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
 
   public ThenRowSink createRowSink(ThenRowSink next, CompileContext compileContext) {
     compileContext.setDir(this.dir);
-    return
-      frameDescriptor -> VectorSchemaRootBroker.compile(
+    return frameDescriptor -> {
+      frameDescriptor.pushRelDataType(getRowType());
+      return VectorSchemaRootBroker.compile(
         frameDescriptor,
-        getRowType(),
         this.dir,
         this.schema,
         this.projects,
-        this.fields, compileContext,
+        this.fields,
+        compileContext,
         next);
+    };
   }
 
   private int[] getProjectFields(List<? extends RexNode> exps) {

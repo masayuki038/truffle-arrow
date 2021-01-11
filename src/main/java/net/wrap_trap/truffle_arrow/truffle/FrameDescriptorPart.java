@@ -4,7 +4,9 @@ import com.google.common.collect.Lists;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import org.apache.calcite.rel.type.RelDataType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,6 +21,7 @@ public class FrameDescriptorPart {
   private final int startOffset;
   private int size;
   private FrameDescriptorPart previous;
+  private List<RelDataType> relDataTypes = new ArrayList<>();
 
   private FrameDescriptorPart(FrameDescriptor frame, int startOffset, int size, FrameDescriptorPart previous) {
     this.frame = frame;
@@ -28,9 +31,9 @@ public class FrameDescriptorPart {
   }
 
   /**
-   * The underyling frame, which includes all the slots
+   * The underlying frame, which includes all the slots
    */
-  FrameDescriptor frame() {
+  public FrameDescriptor frame() {
     return frame;
   }
 
@@ -49,7 +52,7 @@ public class FrameDescriptorPart {
     return frameSlotList;
   }
 
-  static FrameDescriptorPart root(int slots) {
+  public static FrameDescriptorPart root(int slots) {
     FrameDescriptor frame = new FrameDescriptor();
 
     for (int i = 0; i < slots; i++)
@@ -58,30 +61,38 @@ public class FrameDescriptorPart {
     return new FrameDescriptorPart(frame, 0, slots, null);
   }
 
-  FrameDescriptorPart newPart() {
+  public FrameDescriptorPart newPart() {
     return new FrameDescriptorPart(frame, startOffset + size, 0, this);
   }
 
-  FrameSlot addFrameSlot() {
+  public FrameSlot addFrameSlot() {
     return frame.addFrameSlot(startOffset + this.size ++);
   }
 
-  int getCurrentSlotPosition() {
+  public int getCurrentSlotPosition() {
     return this.size - 1;
   }
 
-  FrameSlot findFrameSlotInPrevious(int index) {
+  public FrameSlot findFrameSlotInPrevious(int index) {
     if (this.previous == null) {
       new IllegalStateException("Previous FrameDescriptorPart is null");
     }
     return this.previous.findFrameSlot(index);
   }
 
-  FrameSlot findFrameSlot(int index) {
+  public FrameSlot findFrameSlot(int index) {
     return frame().findFrameSlot(startOffset + index);
   }
 
-  void setFrameSlotKind(FrameSlot slot, FrameSlotKind kind) {
+  public void setFrameSlotKind(FrameSlot slot, FrameSlotKind kind) {
     frame().setFrameSlotKind(slot, kind);
+  }
+
+  public void pushRelDataType(RelDataType relDataType) {
+    this.relDataTypes.add(0, relDataType);
+  }
+
+  public RelDataType getRelDataType() {
+    return this.relDataTypes.get(0);
   }
 }

@@ -58,6 +58,6 @@ public class ArrowAggregate extends Aggregate implements ArrowRel {
   public ThenRowSink createRowSink(ThenRowSink next, CompileContext context) {
     return
       sourceFrame -> AggregateSink.createSink(
-        sourceFrame, this.groupSet, this.groupSets, this.aggCalls, context, next);
+        sourceFrame, this.groupSet, this.groupSets, this.aggCalls, this.getRowType(), context, next);
   }
 }

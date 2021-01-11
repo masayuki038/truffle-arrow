@@ -31,6 +31,8 @@ abstract public class ExprCast extends ExprBase {
       return Integer.parseInt(value.toString());
     } else if (value instanceof String) {
       return Integer.parseInt((String) value);
+    } else if (value instanceof SqlNull) {
+      return SqlNull.INSTANCE;
     }
     throw new UnsupportedOperationException(
       String.format("Unsupported operation: CAST(%s As Int)", value.getClass()));
@@ -44,6 +46,8 @@ abstract public class ExprCast extends ExprBase {
       return value;
     } else if (value instanceof Text) {
       return Long.parseLong(value.toString());
+    } else if (value instanceof SqlNull) {
+      return SqlNull.INSTANCE;
     }
     throw new UnsupportedOperationException(
       String.format("Unsupported operation: CAST(%s As Long)", value.getClass()));
@@ -59,6 +63,8 @@ abstract public class ExprCast extends ExprBase {
       return ((Long) value).doubleValue();
     } else if (value instanceof Text) {
       return Double.parseDouble(value.toString());
+    } else if (value instanceof SqlNull) {
+      return SqlNull.INSTANCE;
     }
     throw new UnsupportedOperationException(
       String.format("Unsupported operation: CAST(%s As Double)", value.getClass()));
@@ -72,6 +78,8 @@ abstract public class ExprCast extends ExprBase {
       return value.toString();
     } else if (value instanceof Double) {
       return value.toString();
+    } else if (value instanceof SqlNull) {
+      return SqlNull.INSTANCE;
     }
     throw new UnsupportedOperationException(
       String.format("Unsupported operation: CAST(%s As String)", value.getClass()));

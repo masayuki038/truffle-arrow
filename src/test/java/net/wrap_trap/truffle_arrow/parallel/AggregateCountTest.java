@@ -40,10 +40,10 @@ public class AggregateCountTest {
       ResultSet rs = pstmt.executeQuery()
     ) {
       List<String> results = TestUtils.getResults(rs);
-      assertThat(results.size(), is(10));
+      assertThat(results.size(), is(11));
       results.sort(Comparator.naturalOrder());
       assertThat(results.get(0), is("0\t5"));
-      assertThat(results.get(1), is("1\t5"));
+      assertThat(results.get(1), is("1\t4"));
       assertThat(results.get(2), is("2\t5"));
       assertThat(results.get(3), is("3\t5"));
       assertThat(results.get(4), is("4\t5"));
@@ -52,6 +52,7 @@ public class AggregateCountTest {
       assertThat(results.get(7), is("7\t5"));
       assertThat(results.get(8), is("8\t5"));
       assertThat(results.get(9), is("9\t5"));
+      assertThat(results.get(10), is("_NULL_\t1"));
       TestUtils.assertRelInclude(ArrowAggregate.class);
     }
   }

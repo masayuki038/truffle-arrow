@@ -1,5 +1,7 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
+import net.wrap_trap.truffle_arrow.type.ArrowTimeSec;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.InvalidArrayIndexException;
@@ -7,16 +9,19 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.util.Text;
 
-import java.util.List;
 
 @ExportLibrary(InteropLibrary.class)
 public class Row implements TruffleObject {
 
-  final List<Object> row;
+  final VectorSchemaRoot vectorSchemaRoot;
+  final int rowIndex;
 
-  public Row(List<Object> row) {
-    this.row = row;
+  public Row(int rowIndex, VectorSchemaRoot vectorSchemaRoot) {
+    this.rowIndex = rowIndex;
+    this.vectorSchemaRoot = vectorSchemaRoot;
   }
 
   @ExportMessage
@@ -26,12 +31,16 @@ public class Row implements TruffleObject {
 
   @ExportMessage
   @CompilerDirectives.TruffleBoundary
-  Object readArrayElement(long index) throws UnsupportedMessageException, InvalidArrayIndexException {
-    try {
-      return this.row.get((int) index);
-    } catch (IndexOutOfBoundsException ioob) {
-      throw InvalidArrayIndexException.create(index);
+  Object readArrayElement(long index) {
+    Object o = this.vectorSchemaRoot.getFieldVectors().get((int) index).getObject(this.rowIndex);
+    if (o == null) {
+      return SqlNull.INSTANCE;
+    } else if (o instanceof Text) {
+      return o.toString();
+    } else if (o instanceof ArrowTimeSec) {
+      return ((ArrowTimeSec) o).timeSec() * 1000;
     }
+    return o;
   }
 
   @ExportMessage
@@ -43,7 +52,7 @@ public class Row implements TruffleObject {
   @ExportMessage
   @CompilerDirectives.TruffleBoundary
   long getArraySize() {
-    return this.row.size();
+    return this.vectorSchemaRoot.getFieldVectors().size();
   }
 
   @ExportMessage(name = "isArrayElementReadable")

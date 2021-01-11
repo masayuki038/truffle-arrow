@@ -3,6 +3,7 @@ package net.wrap_trap.truffle_arrow.truffle;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 
 import java.util.List;
@@ -13,9 +14,11 @@ public class ProjectSink extends RelRowSink {
   public static ProjectSink createSink(
     FrameDescriptorPart framePart,
     List<? extends RexNode> projects,
+    RelDataType relDataType,
     CompileContext compileContext,
     ThenRowSink next) {
     FrameDescriptorPart newFramePart = framePart.newPart();
+    newFramePart.pushRelDataType(relDataType);
     for (int i = 0; i < projects.size(); i ++) {
       newFramePart.addFrameSlot();
     }
@@ -45,10 +48,15 @@ public class ProjectSink extends RelRowSink {
   }
 
   @Override
-  public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) throws UnexpectedResultException {
+  protected FrameDescriptorPart getFrameDescriptorPart() {
+    return this.getFrameDescriptorPart();
+  }
+
+  @Override
+  public SinkContext executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) throws UnexpectedResultException {
     for (StatementWriteLocal local : locals) {
       local.executeVoid(frame);
     }
-    then.executeByRow(frame, this.framePart, context);
+    return then.executeByRow(frame, this.framePart, context);
   }
 }

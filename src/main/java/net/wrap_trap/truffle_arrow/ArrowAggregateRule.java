@@ -32,8 +32,11 @@ public class ArrowAggregateRule extends ConverterRule {
       return new GatherMerge(
         rel.getCluster(),
         traitSet,
-        aggregate
-      );
+        aggregate,
+        agg.indicator,
+        agg.getGroupSet(),
+        agg.getGroupSets(),
+        agg.getAggCallList());
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }

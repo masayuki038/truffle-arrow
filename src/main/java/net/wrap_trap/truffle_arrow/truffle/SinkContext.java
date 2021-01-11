@@ -1,6 +1,7 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.VectorSchemaRoot;
 
 import java.io.File;
 import java.util.*;
@@ -10,6 +11,7 @@ public class SinkContext {
   private Set<InputRefSlotMap> inputRefSlotMaps;
   private File partition;
   private List<Row> rows;
+  private VectorSchemaRoot[] vectorSchemaRoots;
 
   public SinkContext(Set<InputRefSlotMap> inputRefSlotMaps, File partition, List<Row> rows) {
     this.inputRefSlotMaps = inputRefSlotMaps;
@@ -34,5 +36,15 @@ public class SinkContext {
 
   public void addRow(Row row) {
     this.rows.add(row);
+  }
+
+  public VectorSchemaRoot[] getVectorSchemaRoots() {
+    return this.vectorSchemaRoots;
+  }
+
+  public SinkContext setVectorSchemaRoots(VectorSchemaRoot[] vectorSchemaRoots) {
+    SinkContext newContext = new SinkContext(this.inputRefSlotMaps, this.partition, this.rows);
+    newContext.vectorSchemaRoots = vectorSchemaRoots;
+    return newContext;
   }
 }

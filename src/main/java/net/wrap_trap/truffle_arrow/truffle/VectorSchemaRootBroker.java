@@ -25,7 +25,6 @@ public class VectorSchemaRootBroker extends RelRowSink {
 
   public static VectorSchemaRootBroker compile(
       FrameDescriptorPart framePart,
-      RelDataType relType,
       File dir,
       Schema schema,
       List<? extends RexNode> projects,
@@ -43,7 +42,7 @@ public class VectorSchemaRootBroker extends RelRowSink {
       }
     }
     RowSink sink = then.apply(framePart);
-    return new VectorSchemaRootBroker(framePart, relType, dir, schema, projects, fields, sink);
+    return new VectorSchemaRootBroker(framePart, framePart.getRelDataType(), dir, schema, projects, fields, sink);
   }
 
   private static ExprBase compile(FrameDescriptorPart framePart, RexNode child, CompileContext compileContext) {
@@ -66,9 +65,16 @@ public class VectorSchemaRootBroker extends RelRowSink {
   }
 
   @Override
-  public void executeVoid(VirtualFrame frame, SinkContext context) {
-    VectorSchemaRoot[] vectorSchemaRoots = this.loadVectorSchemaRoots(context);
+  protected FrameDescriptorPart getFrameDescriptorPart() {
+    return this.getFrameDescriptorPart();
+  }
+
+  @Override
+  public SinkContext executeVoid(VirtualFrame frame, VectorSchemaRoot[] alwaysNull, SinkContext initialContext) {
+    VectorSchemaRoot[] vectorSchemaRoots = this.loadVectorSchemaRoots(initialContext);
     Map<Integer, Integer> indexesMap = createFieldIndexesMap();
+
+    SinkContext context = initialContext;
     for (VectorSchemaRoot vectorSchemaRoot : vectorSchemaRoots) {
       List<FieldVector> fieldVectors = vectorSchemaRoot.getFieldVectors();
       Map<Integer, FieldVector> selected = new HashMap<>();
@@ -77,15 +83,16 @@ public class VectorSchemaRootBroker extends RelRowSink {
         selected.put(inputRefSlotMap.getSlot(), fieldVectors.get(fieldVectorIndex));
       }
 
+      // TODO newContext を作る必要があるか？
       SinkContext newContext = new SinkContext(context.getInputRefSlotMaps(), context.getPartition(), context.getRows());
-      this.vectorEach(frame, this.framePart, selected, newContext, i -> {
-        try {
-          then.executeByRow(frame, this.framePart, newContext);
-        } catch (UnexpectedResultException e) {
-          throw new RuntimeException(e);
-        }
-      });
+      context = this.vectorEach(frame, this.framePart, selected, newContext);
     }
+    return context;
+  }
+
+  @Override
+  public SinkContext executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) throws UnexpectedResultException {
+    return this.then.executeByRow(frame, framePart, context);
   }
 
   private Map<Integer, Integer> createFieldIndexesMap() {

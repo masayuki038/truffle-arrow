@@ -18,6 +18,7 @@ import java.util.List;
 public class ArrowProject extends Project implements ArrowRel {
 
   private List<? extends RexNode> projects;
+  private RelDataType relDataType;
 
   public ArrowProject(RelOptCluster cluster,
                       RelTraitSet traitSet,
@@ -25,6 +26,7 @@ public class ArrowProject extends Project implements ArrowRel {
                       List<? extends RexNode> projects, RelDataType rowType) {
     super(cluster, traitSet, input, projects, rowType);
     this.projects = projects;
+    this.relDataType = rowType;
   }
 
   @Override
@@ -39,6 +41,6 @@ public class ArrowProject extends Project implements ArrowRel {
 
   public ThenRowSink createRowSink(ThenRowSink next, CompileContext context) {
     return
-      sourceFrame -> ProjectSink.createSink(sourceFrame, this.projects, context, next);
+      sourceFrame -> ProjectSink.createSink(sourceFrame, this.projects, relDataType, context, next);
   }
 }

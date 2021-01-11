@@ -1,59 +1,46 @@
-package net.wrap_trap.truffle_arrow.truffle;
+package net.wrap_trap.truffle_arrow.truffle.node;
 
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import net.wrap_trap.truffle_arrow.ArrowFieldType;
+import net.wrap_trap.truffle_arrow.truffle.FrameDescriptorPart;
+import net.wrap_trap.truffle_arrow.truffle.InputRefSlotMap;
+import net.wrap_trap.truffle_arrow.truffle.SinkContext;
+import net.wrap_trap.truffle_arrow.truffle.SqlNull;
 import net.wrap_trap.truffle_arrow.type.ArrowTimeSec;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.VectorSchemaRoot;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.BiFunction;
 
-public abstract class RelRowSink extends RowSink {
+public abstract class WorkerNode extends Node {
 
-  protected RowSink then;
-
-  protected RelRowSink(RowSink then) {
-    this.then = then;
-    if (this != null) {
-      this.insert(then);
-    }
+  public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context)
+    throws UnexpectedResultException {
+    throw new UnsupportedOperationException();
   }
 
-  abstract protected FrameDescriptorPart getFrameDescriptorPart();
-
-  public SinkContext executeVoid(VirtualFrame frame, VectorSchemaRoot[] vectorSchemaRoots, SinkContext initialContext) {
-    SinkContext sinkContext = initialContext;
-    for (VectorSchemaRoot vectorSchemaRoot : vectorSchemaRoots) {
-      List<FieldVector> fieldVectors = vectorSchemaRoot.getFieldVectors();
-      Map<Integer, FieldVector> selected = new HashMap<>();
-      for (InputRefSlotMap inputRefSlotMap : sinkContext.getInputRefSlotMaps()) {
-        selected.put(inputRefSlotMap.getSlot(), fieldVectors.get(inputRefSlotMap.getIndex()));
-      }
-      sinkContext = this.vectorEach(frame, getFrameDescriptorPart(), selected, sinkContext);
-    }
-    return sinkContext;
+  /**
+   * Do something with one row. Called once per row of the relational expression.
+   */
+  public void executeVoid(VirtualFrame frame, SinkContext context)
+    throws UnexpectedResultException {
+    throw new UnsupportedOperationException();
   }
 
-  @Override
-  public SinkContext afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
-    return then.afterExecute(frame, context);
-  }
+  public void afterExecute(VirtualFrame frame, SinkContext context)
+    throws UnexpectedResultException { }
 
-  protected SinkContext vectorEach(VirtualFrame frame, FrameDescriptorPart framePart, Map<Integer, FieldVector> vectors,
-                            SinkContext initialContext) {
-    Set<InputRefSlotMap> inputRefMaps = initialContext.getInputRefSlotMaps();
+  protected void vectorEach(VirtualFrame frame, FrameDescriptorPart framePart, Map<Integer, FieldVector> vectors,
+                            SinkContext context, Consumer<Integer> action) {
+    Set<InputRefSlotMap> inputRefMaps = context.getInputRefSlotMaps();
 
-    SinkContext context = initialContext;
-    for (int i = 0; i < vectors.get(0).getValueCount(); i ++) {
-      for (InputRefSlotMap inputRefSlotMap: inputRefMaps) {
+    for (int i = 0; i < vectors.get(0).getValueCount(); i++) {
+      for (InputRefSlotMap inputRefSlotMap : inputRefMaps) {
         int slotId = inputRefSlotMap.getSlot();
         FrameSlot slot = framePart.findFrameSlot(slotId);
         FieldVector fieldVector = vectors.get(slotId);
@@ -91,14 +78,7 @@ public abstract class RelRowSink extends RowSink {
           }
         }
       }
-
-      try {
-        context = this.executeByRow(frame, framePart, context);
-      } catch (UnexpectedResultException e) {
-        throw new RuntimeException(e);
-      }
+      action.accept(i);
     }
-
-    return context;
   }
 }

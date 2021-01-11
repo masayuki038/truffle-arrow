@@ -2,6 +2,7 @@ package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import org.apache.arrow.vector.VectorSchemaRoot;
 
 import java.util.List;
 
@@ -15,5 +16,5 @@ public abstract class RowSource extends Node {
     /**
      * Flush all rows. Called once for the entire execution of the query.
      */
-    protected abstract List<Row> execute() throws UnexpectedResultException;
+    protected abstract VectorSchemaRoot[] execute() throws UnexpectedResultException;
 }

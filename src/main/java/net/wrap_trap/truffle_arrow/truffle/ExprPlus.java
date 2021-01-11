@@ -17,6 +17,16 @@ abstract class ExprPlus extends ExprBinary {
   }
 
   @Specialization
+  protected long add(long left, int right) {
+    return left + right;
+  }
+
+  @Specialization
+  protected long add(int left, long right) {
+    return left + right;
+  }
+
+  @Specialization
   protected double add(double left, double right) {
     return left + right;
   }

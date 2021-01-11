@@ -60,33 +60,12 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
   }
 
   private CallTarget compileInteractiveQuery(RelRoot plan) {
-    ThenRowSink sink = resultFrame -> new RowSink() {
-      @Override
-      public void executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) {
-        List<Object> row = framePart.getFrameSlots().stream()
-                               .map(slot -> getValue(frame.getValue(slot)))
-                               .collect(Collectors.toList());
-        context.addRow(new Row(row));
-      }
-    };
-
-    return compile(plan, sink);
+    return compile(plan);
   }
 
-  private Object getValue(Object o) {
-    if (o == null || o == SqlNull.INSTANCE) {
-      return SqlNull.INSTANCE;
-    } else if (o instanceof Text) {
-      return o.toString();
-    } else if (o instanceof ArrowTimeSec) {
-      return ((ArrowTimeSec) o).timeSec() * 1000;
-    }
-    return o;
-  }
-
-  private CallTarget compile(RelRoot plan, ThenRowSink sink) {
+  private CallTarget compile(RelRoot plan) {
     ArrowRel rel = (ArrowRel) plan.rel;
-    RowSource compiled = rel.compile(sink, new CompileContext());
+    RowSource compiled = rel.compile(new CompileContext());
     RelRootNode root = new RelRootNode(this, compiled);
 
     return Truffle.getRuntime().createCallTarget(root);
