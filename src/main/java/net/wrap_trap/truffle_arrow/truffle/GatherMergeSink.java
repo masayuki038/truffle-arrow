@@ -59,7 +59,8 @@ public class GatherMergeSink extends RelRowSink {
     this.receiverFrameSlots = new ArrayList<>();
     this.objects = new ArrayList<>();
 
-    for(AggregateCall aggCall:aggCalls) {
+    for (int i = 0; i < aggCalls.size(); i ++) {
+      AggregateCall aggCall = aggCalls.get(i);
       SqlKind kind = aggCall.getAggregation().kind;
       FrameSlot receiverFrameSlot = aggregateFramePart.frame().addFrameSlot(
         "receiver" + receiverFrameSlots.size(), FrameSlotKind.Object);
@@ -70,7 +71,7 @@ public class GatherMergeSink extends RelRowSink {
           aggFunctions.add(Functions.sum(
             receiverFrameSlot,
             keyFrameSlot,
-            aggregateFramePart.findFrameSlotInPrevious(groupSet.length()),
+            aggregateFramePart.findFrameSlotInPrevious(groupSet.length() + i),
             child -> this.insert(child))
           );
           break;
