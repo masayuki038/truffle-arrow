@@ -1,8 +1,10 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import net.wrap_trap.truffle_arrow.ArrowUtils;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 
@@ -20,7 +22,9 @@ public class ProjectSink extends RelRowSink {
     FrameDescriptorPart newFramePart = framePart.newPart();
     newFramePart.pushRelDataType(relDataType);
     for (int i = 0; i < projects.size(); i ++) {
-      newFramePart.addFrameSlot();
+      FrameSlot slot = newFramePart.addFrameSlot();
+      FrameSlotKind slotKind = ArrowUtils.getFrameSlotKind(relDataType.getFieldList().get(i));
+      newFramePart.setFrameSlotKind(slot, slotKind);
     }
     RowSink rowSink = next.apply(newFramePart);
 

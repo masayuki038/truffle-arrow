@@ -29,7 +29,7 @@ public interface ArrowRel extends RelNode {
   }
 
   default RowSource compile(CompileContext context) {
-    ThenRowSink createConverter = sourceFrame -> createSink(sourceFrame, context, null);
+    ThenRowSink createConverter = sourceFrame -> VectorSchemaRootConverterSink.createSink(sourceFrame, context, null);
     return compile(createConverter, context);
   }
 
@@ -38,7 +38,7 @@ public interface ArrowRel extends RelNode {
     if (isLeader()) {
       ThenLeader leader = createLeader(next, context);
       context.addLeader(leader);
-      nextWorkerSink = sourceFrame -> createSink(sourceFrame, context, null);
+      nextWorkerSink = sourceFrame -> VectorSchemaRootConverterSink.createSink(sourceFrame, context, null);
     } else {
       nextWorkerSink = createRowSink(next, context);
     }
@@ -51,7 +51,7 @@ public interface ArrowRel extends RelNode {
         // L1 を作る
         ThenLeader leader = GroupLeaderNode.getFactory(nextWorkerSink, context);
         context.addLeader(leader);
-        nextWorkerSink = sourceFrame -> createSink(sourceFrame, context, null);
+        nextWorkerSink = sourceFrame -> VectorSchemaRootConverterSink.createSink(sourceFrame, context, null);
       }
       return arrowRel.compile(nextWorkerSink, context);
     }
@@ -61,32 +61,5 @@ public interface ArrowRel extends RelNode {
     context.addLeader(leader);
 
     return TerminalSink.compile(context);
-  }
-
-  // TODO Move to ConverterSink
-  default RelRowSink createSink(FrameDescriptorPart framePart, CompileContext context, ThenRowSink next) {
-    // TODO とりあえず 1 つの VectorSchemaRoot に入れる。あとで複数に分割することを検討する
-    VectorSchemaRoot vectorSchemaRoot = ArrowUtils.createVectorSchemaRoot(framePart);
-    return new RelRowSink(null) {
-      int index = 0;
-
-      @Override
-      protected FrameDescriptorPart getFrameDescriptorPart() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public SinkContext executeByRow(VirtualFrame frame, FrameDescriptorPart framePart, SinkContext context) throws UnexpectedResultException {
-        ArrowUtils.setValues(frame, framePart, vectorSchemaRoot, this.index ++);
-        return context;
-      }
-
-      @Override
-      public SinkContext afterExecute(VirtualFrame frame, SinkContext context) throws UnexpectedResultException {
-        vectorSchemaRoot.getFieldVectors().stream().forEach(fieldVector -> fieldVector.setValueCount(this.index));
-        vectorSchemaRoot.setRowCount(this.index);
-        return context.setVectorSchemaRoots(new VectorSchemaRoot[]{vectorSchemaRoot});
-      }
-    };
   }
 }

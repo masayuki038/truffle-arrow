@@ -52,26 +52,34 @@ public class ArrowUtils {
 
   public static VectorSchemaRoot createVectorSchemaRoot(FrameDescriptorPart framePart) {
     ImmutableList.Builder<FieldVector> builder = ImmutableList.builder();
-
-    framePart.getFrameSlots().stream().forEach(slot -> {
+    framePart.getRelDataType().getFieldList().stream().forEach(relDataTypeField -> {
       FieldVector fieldVector;
-      String name = slot.getIdentifier().toString();
-      FrameSlotKind kind = framePart.frame().getFrameSlotKind(slot);
-      switch (kind) {
-        case Int:
-          fieldVector =  new IntVector(name, allocator);
+      String name = relDataTypeField.getName();
+      String type = relDataTypeField.getType().getSqlTypeName().getName();
+      switch (type) { // Time も Int になってしまう。RelDataTypeを見て、生成する FieldVector を細かく制御するべき？
+        case "INTEGER":
+          fieldVector = new IntVector(name, allocator);
           break;
-        case Long:
+        case "DATE":
+          fieldVector = new DateDayVector(name, allocator);
+          break;
+        case "TIME":
+          fieldVector = new TimeSecVector(name, allocator);
+          break;
+        case "BIGINT":
           fieldVector = new BigIntVector(name, allocator);
           break;
-        case Double:
+        case "TIMESTAMP":
+          fieldVector = new TimeStampSecTZVector(name, allocator, "GMT");
+          break;
+        case "DOUBLE":
           fieldVector = new Float8Vector(name, allocator);
           break;
-        case Object:
+        case "VARCHAR":
           fieldVector = new VarCharVector(name, allocator);
           break;
         default:
-          throw new IllegalArgumentException("Unexpected FrameSlotKind: " + kind);
+          throw new IllegalArgumentException("Unexpected RelDataFieldType: " + type);
       }
       fieldVector.allocateNew();
       builder.add(fieldVector);
@@ -90,8 +98,6 @@ public class ArrowUtils {
       Object value = virtualFrame.getValue(slot);
       switch (type) {
         case INT:
-        case DATE:
-        case TIME:
           IntVector intVector = (IntVector) fieldVector;
           if (!(value instanceof SqlNull)) {
             intVector.set(index, (int) value);
@@ -99,8 +105,31 @@ public class ArrowUtils {
             intVector.setNull(index);
           }
           break;
-        case LONG:
+        case DATE:
+          DateDayVector dateDayVector = (DateDayVector) fieldVector;
+          if (!(value instanceof SqlNull)) {
+            dateDayVector.set(index, (int) value);
+          } else {
+            dateDayVector.setNull(index);
+          }
+          break;
+        case TIME:
+          TimeSecVector timeSecVector = (TimeSecVector) fieldVector;
+          if (!(value instanceof SqlNull)) {
+            timeSecVector.set(index, ((ArrowTimeSec) value).timeSec());
+          } else {
+            timeSecVector.setNull(index);
+          }
+          break;
         case TIMESTAMP:
+          TimeStampSecTZVector timezoneVector = (TimeStampSecTZVector) fieldVector;
+          if (!(value instanceof SqlNull)) {
+            timezoneVector.set(index, (long) value);
+          } else {
+            timezoneVector.setNull(index);
+          }
+          break;
+        case LONG:
           BigIntVector bigIntVector = (BigIntVector) fieldVector;
           if (!(value instanceof SqlNull)) {
             bigIntVector.set(index, (long) value);
@@ -119,7 +148,7 @@ public class ArrowUtils {
         case STRING:
           VarCharVector varCharVector = (VarCharVector) fieldVector;
           if (!(value instanceof SqlNull)) {
-            varCharVector.set(index, new Text((String) value));
+            varCharVector.set(index, (Text) value);
           } else {
             varCharVector.setNull(index);
           }
@@ -134,22 +163,18 @@ public class ArrowUtils {
     String typeName = field.getType().getSqlTypeName().getName();
     switch (typeName) {
       case "INTEGER":
+      case "DATE":
+      case "TIME":
         return FrameSlotKind.Float.Int;
       case "BIGINT":
+      case "TIMESTAMP":
         return FrameSlotKind.Long;
+      case "DOUBLE":
+        return FrameSlotKind.Double;
+      case "VARCHAR":
+        return FrameSlotKind.Object;
       default:
         throw new IllegalArgumentException(typeName);
     }
-  }
-
-  public static Object getValue(Object o) {
-    if (o == null || o == SqlNull.INSTANCE) {
-      return SqlNull.INSTANCE;
-    } else if (o instanceof Text) {
-      return o.toString();
-    } else if (o instanceof ArrowTimeSec) {
-      return ((ArrowTimeSec) o).timeSec() * 1000;
-    }
-    return o;
   }
 }

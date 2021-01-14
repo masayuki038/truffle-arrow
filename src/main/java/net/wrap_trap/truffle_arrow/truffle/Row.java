@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
+import net.wrap_trap.truffle_arrow.ArrowFieldType;
 import net.wrap_trap.truffle_arrow.type.ArrowTimeSec;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -10,6 +11,7 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.util.Text;
 
 
@@ -32,13 +34,15 @@ public class Row implements TruffleObject {
   @ExportMessage
   @CompilerDirectives.TruffleBoundary
   Object readArrayElement(long index) {
-    Object o = this.vectorSchemaRoot.getFieldVectors().get((int) index).getObject(this.rowIndex);
+    FieldVector fieldVector = this.vectorSchemaRoot.getFieldVectors().get((int) index);
+    Object o = fieldVector.getObject(this.rowIndex);
+    ArrowFieldType fieldType = ArrowFieldType.of(fieldVector.getField().getType());
     if (o == null) {
       return SqlNull.INSTANCE;
     } else if (o instanceof Text) {
       return o.toString();
-    } else if (o instanceof ArrowTimeSec) {
-      return ((ArrowTimeSec) o).timeSec() * 1000;
+    } else if (o instanceof Integer && fieldType == ArrowFieldType.TIME) {
+      return ((Integer) o) * 1000;
     }
     return o;
   }
