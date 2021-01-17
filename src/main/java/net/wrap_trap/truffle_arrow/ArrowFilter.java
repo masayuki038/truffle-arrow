@@ -8,6 +8,7 @@ import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexProgram;
@@ -37,6 +38,11 @@ public class ArrowFilter extends SingleRel implements ArrowRel {
   public ArrowFilter copy(RelTraitSet traitSet, List<RelNode> inputs) {
     assert inputs.size() == 1;
     return create(traitSet, inputs.get(0), this.program, this.condition);
+  }
+
+  @Override
+  public RelDataType getRelDataType() {
+    return this.deriveRowType();
   }
 
   public static ArrowFilter create(final RelTraitSet traitSet, final RelNode input,

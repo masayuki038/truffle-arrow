@@ -35,6 +35,11 @@ public class ArrowProject extends Project implements ArrowRel {
     return new ArrowProject(getCluster(), traitSet, input, projects, rowType);
   }
 
+  @Override
+  public RelDataType getRelDataType() {
+    return this.relDataType;
+  }
+
   public RelNode getInput() {
     return this.input;
   }

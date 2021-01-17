@@ -17,6 +17,10 @@ public class ParallelSink extends RecursiveAction {
   private VectorSchemaRoot[] inputs;
   private VectorSchemaRoot[] results;
 
+  public ParallelSink(ParallelExecuteContext p) {
+    this(p, null);
+  }
+
   public ParallelSink(ParallelExecuteContext p, VectorSchemaRoot[] inputs) {
     this.p = p;
     this.inputs = inputs;
@@ -34,12 +38,9 @@ public class ParallelSink extends RecursiveAction {
       SinkContext context = p.rowSink().executeVoid(frame, inputs, p.sinkContext());
       context = p.rowSink().afterExecute(frame, context);
       this.results = context.getVectorSchemaRoots();
-    } catch (UnexpectedResultException e) {
+    } catch (Throwable e) {
       log.error("ParallelSink", e);
       throw new RuntimeException(e);
-    } catch (Exception e) {
-      log.error("ParallelSink", e);
-      throw e;
     }
   }
 }

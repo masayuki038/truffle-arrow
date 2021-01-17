@@ -25,8 +25,10 @@ public class Result implements TruffleObject {
     size = 0;
     for (VectorSchemaRoot v : result) {
       int rowCount = v.getRowCount();
-      resultMap.put(Long.valueOf(size + rowCount), v);
-      size += rowCount;
+      if (rowCount > 0) {
+        size += rowCount;
+        resultMap.put(Long.valueOf(size), v);
+      }
     }
   }
 

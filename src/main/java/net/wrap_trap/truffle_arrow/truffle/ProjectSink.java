@@ -53,7 +53,7 @@ public class ProjectSink extends RelRowSink {
 
   @Override
   protected FrameDescriptorPart getFrameDescriptorPart() {
-    return this.getFrameDescriptorPart();
+    return this.framePart;
   }
 
   @Override

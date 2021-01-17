@@ -12,6 +12,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.ArrayList;
@@ -53,6 +54,11 @@ public class GatherMerge extends Aggregate implements ArrowRel {
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
+  }
+
+  @Override
+  public RelDataType getRelDataType() {
+    return this.deriveRowType();
   }
 
   @Override

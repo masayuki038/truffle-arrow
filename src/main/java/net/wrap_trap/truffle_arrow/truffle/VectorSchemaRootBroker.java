@@ -20,7 +20,6 @@ public class VectorSchemaRootBroker extends RelRowSink {
 
   private FrameDescriptorPart framePart;
   private Schema schema;
-  private File dir;
   private int[] fields;
 
   public static VectorSchemaRootBroker compile(
@@ -58,7 +57,6 @@ public class VectorSchemaRootBroker extends RelRowSink {
       int[] fields, RowSink then) {
     super(then);
     this.framePart = framePart;
-    this.dir = dir;
     this.schema = schema;
     this.fields = fields;
     this.then = then;

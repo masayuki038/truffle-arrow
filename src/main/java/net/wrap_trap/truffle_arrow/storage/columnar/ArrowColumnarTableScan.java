@@ -69,6 +69,11 @@ public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
     return builder.build();
   }
 
+  @Override
+  public RelDataType getRelDataType() {
+    return this.deriveRowType();
+  }
+
   public RelNode getInput() {
     return null;
   }

@@ -12,6 +12,7 @@ import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.List;
@@ -39,6 +40,11 @@ public class ArrowAggregate extends Aggregate implements ArrowRel {
         throw new InvalidRelException("aggregation " + aggCall.getAggregation() + " not supported");
       }
     }
+  }
+
+  @Override
+  public RelDataType getRelDataType() {
+    return this.deriveRowType();
   }
 
   @Override

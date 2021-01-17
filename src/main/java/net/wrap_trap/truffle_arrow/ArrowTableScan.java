@@ -63,6 +63,11 @@ public class ArrowTableScan extends TableScan implements ArrowRel {
     return builder.build();
   }
 
+  @Override
+  public RelDataType getRelDataType() {
+    return this.deriveRowType();
+  }
+
   public VectorSchemaRoot[] getVectorSchemaRoots() {
     return this.vectorSchemaRoots;
   }
