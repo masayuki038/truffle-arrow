@@ -24,7 +24,6 @@ public class GatherMergeSink extends RelRowSink {
                                           List<AggregateCall> aggCalls,
                                           RelDataType relDataType,
                                           CompileContext context, ThenRowSink next) {
-    // TODO とりあえず 1 つの VectorSchemaRoot に入れる。あとで複数に分割することを検討する
     RowSink then = next.apply(aggregateFramePart);
     return new GatherMergeSink(aggregateFramePart, groupSet, groupSets, aggCalls, then);
   }
@@ -39,7 +38,6 @@ public class GatherMergeSink extends RelRowSink {
   private FrameSlot keyFrameSlot;
   private List<FrameSlot> receiverFrameSlots;
   private List<ExprBase> aggFunctions;
-  private int index = 0;
 
   private GatherMergeSink(
     FrameDescriptorPart aggregateFramePart,
@@ -105,14 +103,8 @@ public class GatherMergeSink extends RelRowSink {
     }
     StatementWriteLocalNodeGen.create(
       ExprLiteral.Object(grouping.toString()), this.keyFrameSlot).executeVoid(frame);
-    List<Object> funcResults = this.aggFunctions.stream().map(f -> {
-      try {
-        return f.executeGeneric(frame);
-      } catch (Throwable e) {
-        log.error("executeByRow failed", e);
-        throw e;
-      }
-    }).collect(Collectors.toList());
+    List<Object> funcResults =
+      this.aggFunctions.stream().map(f -> f.executeGeneric(frame)).collect(Collectors.toList());
     map.put(grouping, funcResults);
     return context;
   }
