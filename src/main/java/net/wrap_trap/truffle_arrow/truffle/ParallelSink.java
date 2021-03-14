@@ -2,7 +2,6 @@ package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +31,7 @@ public class ParallelSink extends RecursiveAction {
 
   @Override
   public void compute() {
+    log.debug("start, rowSink: " + this.p.rowSink());
     try {
       VirtualFrame frame = Truffle.getRuntime()
                              .createVirtualFrame(new Object[] { }, p.framePart().frame());
@@ -41,6 +41,8 @@ public class ParallelSink extends RecursiveAction {
     } catch (Throwable e) {
       log.error("ParallelSink", e);
       throw new RuntimeException(e);
+    } finally {
+      log.debug("end, rowSink: " + this.p.rowSink());
     }
   }
 }

@@ -2,8 +2,9 @@ package net.wrap_trap.truffle_arrow.truffle.node;
 
 import net.wrap_trap.truffle_arrow.truffle.*;
 import org.apache.arrow.vector.VectorSchemaRoot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,9 +13,13 @@ import java.util.stream.Collectors;
 
 public class FirstGroupLeaderNode extends AbstractLeaderNode {
 
+  private static final Logger log = LoggerFactory.getLogger(FirstGroupLeaderNode.class);
+
   private List<ParallelExecuteContext> parallelExecuteContexts;
 
   public static ThenLeader getFactory(ThenRowSink next, CompileContext compileContext) {
+    log.debug("create ThenLeader");
+    log.debug("partitions.size: " + compileContext.getPartitions().size());
     return () -> {
       List<ParallelExecuteContext> sinks = compileContext.getPartitions().stream().map(f -> {
         FrameDescriptorPart framePart = FrameDescriptorPart.root(0);
@@ -37,17 +42,19 @@ public class FirstGroupLeaderNode extends AbstractLeaderNode {
   }
 
   public VectorSchemaRoot[] execute() {
-    // call from TerminalSink#execute
     ForkJoinPool pool = new ForkJoinPool();
 
+    log.debug("start querying in parallel, parallelExecuteContexts.size: " + parallelExecuteContexts.size());
     List<VectorSchemaRoot> collected = parallelExecuteContexts.stream().map(parallelExecuteContext -> {
       ParallelSink task = new ParallelSink(parallelExecuteContext);
       pool.submit(task);
+      log.debug("submitted, rowSink: " + parallelExecuteContext.rowSink());
       return task;
     }).flatMap(p -> {
       p.join();
       return Arrays.stream(p.getResults());
     }).collect(Collectors.toList());
+    log.debug("end querying");
 
     VectorSchemaRoot[] result = new VectorSchemaRoot[collected.size()];
     collected.toArray(result);

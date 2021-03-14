@@ -12,10 +12,14 @@ import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class GatherMergeNode  extends AbstractLeaderNode {
+
+  private static final Logger log = LoggerFactory.getLogger(GatherMergeNode.class);
 
   public static GatherMergeNode createSink(
     FrameDescriptorPart framePart,
@@ -25,6 +29,7 @@ public class GatherMergeNode  extends AbstractLeaderNode {
     RelDataType relDataType,
     CompileContext context,
     ThenRowSink next) {
+    log.debug("create GatherMergeNode");
     FrameDescriptorPart aggregateFramePart = framePart.newPart();
     aggregateFramePart.pushRelDataType(relDataType);
     for (Integer i : groupSet) {
@@ -65,6 +70,7 @@ public class GatherMergeNode  extends AbstractLeaderNode {
 
   @Override
   public VectorSchemaRoot[] execute(VectorSchemaRoot[] vectorSchemaRoots) {
+    log.debug("start merging");
     VirtualFrame frame = Truffle.getRuntime()
                            .createVirtualFrame(new Object[] { }, this.aggregateFramePart.frame());
     try {

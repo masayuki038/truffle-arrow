@@ -16,11 +16,15 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
 
 public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
+
+  private static final Logger log = LoggerFactory.getLogger(ArrowColumnarTableScan.class);
 
   private RelOptTable relOptTable;
   private File dir;
@@ -79,6 +83,7 @@ public class ArrowColumnarTableScan extends TableScan implements ArrowRel {
   }
 
   public ThenRowSink createRowSink(ThenRowSink next, CompileContext compileContext) {
+    log.debug("this.dir: " + this.dir);
     compileContext.setDir(this.dir);
     return frameDescriptor -> {
       frameDescriptor.pushRelDataType(getRowType());

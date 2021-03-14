@@ -21,9 +21,11 @@ public class ArrowColumnarSchema extends ArrowSchema {
   @Override
   public Map<String, Table> getTableMap() {
     if (tableMap == null) {
+      log.debug("create tableMap");
       tableMap = new HashMap<>();
       File[] tableDirs = directory.listFiles(f -> f.isDirectory());
       Arrays.stream(tableDirs).forEach(dir -> {
+        log.debug("dir: " + dir);
         tableMap.put(
           dir.getName().toUpperCase(),
           new ArrowColumnarTable(dir, null));

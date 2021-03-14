@@ -1,5 +1,6 @@
 package net.wrap_trap.truffle_arrow;
 
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.impl.AbstractSchema;
@@ -16,7 +17,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Schema for Apache Arrow
  */
-public class ArrowSchema extends AbstractSchema {
+public abstract class ArrowSchema extends AbstractSchema {
 
   private static final Logger log = LoggerFactory.getLogger(ArrowSchema.class);
 
@@ -43,23 +44,5 @@ public class ArrowSchema extends AbstractSchema {
     return null;
   }
 
-  public Map<String, Table> getTableMap() {
-    if (tableMap == null) {
-      tableMap = new HashMap<>();
-      File[] arrowFiles = directory.listFiles((dir, name) -> name.endsWith(".arrow"));
-      Arrays.stream(arrowFiles).forEach(file -> {
-        try {
-          String path = file.getAbsolutePath();
-          log.debug("Found: " + path);
-          VectorSchemaRoot[] vectorSchemaRoots = ArrowUtils.load(path);
-          tableMap.put(
-            trim(file.getName(), ".arrow").toUpperCase(),
-            new ArrowTable(vectorSchemaRoots, null));
-        } catch (IOException e) {
-          throw new IllegalStateException(e);
-        }
-      });
-    }
-    return tableMap;
-  }
+  abstract public Map<String, Table> getTableMap();
 }

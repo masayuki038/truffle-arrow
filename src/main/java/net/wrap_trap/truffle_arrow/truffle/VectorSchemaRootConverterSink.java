@@ -3,6 +3,7 @@ package net.wrap_trap.truffle_arrow.truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import net.wrap_trap.truffle_arrow.ArrowUtils;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 
@@ -11,21 +12,25 @@ import java.util.stream.Collectors;
 
 public class VectorSchemaRootConverterSink extends RelRowSink {
 
-  private int index = 0;
-  private int[] indexes;
+  private BufferAllocator allocator;
   private VectorSchemaRoot[] vectorSchemaRoots;
+  private int[] indexes;
+  private int index = 0;
+
 
   public static RelRowSink createSink(FrameDescriptorPart framePart, CompileContext context, ThenRowSink next) {
+    BufferAllocator allocator = ArrowUtils.createAllocator();
     List<VectorSchemaRoot> list = context.getPartitions().stream().map(f ->
-      ArrowUtils.createVectorSchemaRoot(framePart)
+      ArrowUtils.createVectorSchemaRoot(framePart, allocator)
     ).collect(Collectors.toList());
     VectorSchemaRoot[] vectorSchemaRoots = new VectorSchemaRoot[list.size()];
     list.toArray(vectorSchemaRoots);
-    return new VectorSchemaRootConverterSink(vectorSchemaRoots);
+    return new VectorSchemaRootConverterSink(vectorSchemaRoots, allocator);
   }
 
-  public VectorSchemaRootConverterSink(VectorSchemaRoot[] vectorSchemaRoots) {
+  public VectorSchemaRootConverterSink(VectorSchemaRoot[] vectorSchemaRoots, BufferAllocator allocator) {
     super(null);
+    this.allocator = allocator;
     this.vectorSchemaRoots = vectorSchemaRoots;
     this.indexes = new int[vectorSchemaRoots.length];
   }
@@ -52,5 +57,6 @@ public class VectorSchemaRootConverterSink extends RelRowSink {
       vectorSchemaRoots[i].setRowCount(this.indexes[i]);
     }
     return context.setVectorSchemaRoots(this.vectorSchemaRoots);
+    // TODO dispose this.allocator
   }
 }

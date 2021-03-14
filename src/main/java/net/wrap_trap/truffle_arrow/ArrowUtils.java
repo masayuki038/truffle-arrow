@@ -7,6 +7,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import net.wrap_trap.truffle_arrow.truffle.FrameDescriptorPart;
 import net.wrap_trap.truffle_arrow.truffle.SqlNull;
 import net.wrap_trap.truffle_arrow.type.ArrowTimeSec;
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
@@ -15,6 +16,8 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.util.ByteArrayReadableSeekableByteChannel;
 import org.apache.arrow.vector.util.Text;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -25,32 +28,20 @@ import java.util.stream.Collectors;
 
 public class ArrowUtils {
 
-  private static final RootAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+  private static final Logger log = LoggerFactory.getLogger(ArrowUtils.class);
 
-  public static UInt4Vector createSelectionVector() {
-    return new UInt4Vector("selectionVector", allocator);
+  private static RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
+
+
+  public static BufferAllocator createAllocator() {
+    return rootAllocator.newChildAllocator(Thread.currentThread().getName(), 1_000_000, Integer.MAX_VALUE);
   }
 
-  public static VectorSchemaRoot[] load(String path) throws IOException {
-    byte[] bytes = Files.readAllBytes(FileSystems.getDefault().getPath(path));
-    SeekableReadChannel channel = new SeekableReadChannel(new ByteArrayReadableSeekableByteChannel(bytes));
-    ArrowFileReader reader = new ArrowFileReader(channel, allocator);
-    List<VectorSchemaRoot> list = reader.getRecordBlocks().stream().map(block -> {
-      try {
-        if (!reader.loadRecordBatch(block)) {
-          throw new IllegalStateException("Failed to load RecordBatch");
-        }
-        return reader.getVectorSchemaRoot();
-      } catch (IOException e) {
-        throw new IllegalStateException(e);
-      }
-    }).collect(Collectors.toList());
-    VectorSchemaRoot[] vectorSchemaRoots = new VectorSchemaRoot[list.size()];
-    list.toArray(vectorSchemaRoots);
-    return vectorSchemaRoots;
+  public static void disposeAllocator(BufferAllocator allocator) {
+    allocator.close();
   }
 
-  public static VectorSchemaRoot createVectorSchemaRoot(FrameDescriptorPart framePart) {
+  public static VectorSchemaRoot createVectorSchemaRoot(FrameDescriptorPart framePart, BufferAllocator allocator) {
     ImmutableList.Builder<FieldVector> builder = ImmutableList.builder();
     framePart.getRelDataType().getFieldList().stream().forEach(relDataTypeField -> {
       FieldVector fieldVector;

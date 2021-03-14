@@ -3,6 +3,8 @@ package net.wrap_trap.truffle_arrow.truffle.node;
 import net.wrap_trap.truffle_arrow.truffle.*;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.calcite.rel.type.RelDataType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
@@ -11,9 +13,12 @@ import java.util.stream.IntStream;
 
 public class GroupLeaderNode extends AbstractLeaderNode {
 
+  private static final Logger log = LoggerFactory.getLogger(GroupLeaderNode.class);
+
   private  List<ParallelExecuteContext> parallelExecuteContexts;
 
   public static ThenLeader getFactory(ThenRowSink next, RelDataType relDataType, CompileContext compileContext) {
+    log.debug("create ThenLeader");
     return () -> {
       List<ParallelExecuteContext> sinks = compileContext.getPartitions().stream().map(f -> {
           FrameDescriptorPart framePart = FrameDescriptorPart.root(0);
@@ -30,18 +35,18 @@ public class GroupLeaderNode extends AbstractLeaderNode {
   }
 
   private GroupLeaderNode(List<ParallelExecuteContext> parallelExecuteContexts) {
+    log.debug("create GroupLeaderNode");
     this.parallelExecuteContexts = parallelExecuteContexts;
     parallelExecuteContexts.forEach(p -> this.insert(p.rowSink()));
   }
 
   @Override
   public VectorSchemaRoot[] execute(VectorSchemaRoot[] vectorSchemaRoots) {
-    // call from TerminalSink#execute
     int size = parallelExecuteContexts.size();
     assert(size == vectorSchemaRoots.length);
     ForkJoinPool pool = new ForkJoinPool();
 
-    // vectorSchemaRoot を 1 つだけ渡す zipWithIndex を使う？
+    log.debug("start querying in parallel, parallelExecuteContexts.size: " + parallelExecuteContexts.size());
     List<VectorSchemaRoot> collected = IntStream.range(0, size).mapToObj(i -> {
       ParallelSink task = new ParallelSink(
         this.parallelExecuteContexts.get(i),
