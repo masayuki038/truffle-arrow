@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 public class VectorSchemaRootBroker extends RelRowSink {
 
-  private static final Logger log = LoggerFactory.getLogger(AggregateSink.class);
+  private static final Logger log = LoggerFactory.getLogger(VectorSchemaRootBroker.class);
 
   private ArrowFileReader reader;
   private FrameDescriptorPart framePart;
@@ -82,6 +82,8 @@ public class VectorSchemaRootBroker extends RelRowSink {
 
   @Override
   public SinkContext executeVoid(VirtualFrame frame, VectorSchemaRoot[] alwaysNull, SinkContext initialContext) {
+    log.debug("executeVoid");
+
     try (BufferAllocator allocator = ArrowUtils.createAllocator()) {
       return loadVectorSchemaRoots(initialContext, allocator, vectorSchemaRoots -> {
         Map<Integer, Integer> indexesMap = createFieldIndexesMap();

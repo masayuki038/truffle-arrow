@@ -7,11 +7,15 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import net.wrap_trap.truffle_arrow.ArrowUtils;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 
 public class ProjectSink extends RelRowSink {
+
+  private static final Logger log = LoggerFactory.getLogger(ProjectSink.class);
 
   public static ProjectSink createSink(
     FrameDescriptorPart framePart,
@@ -19,6 +23,8 @@ public class ProjectSink extends RelRowSink {
     RelDataType relDataType,
     CompileContext compileContext,
     ThenRowSink next) {
+    log.debug("createSink");
+
     FrameDescriptorPart newFramePart = framePart.newPart();
     newFramePart.pushRelDataType(relDataType);
     for (int i = 0; i < projects.size(); i ++) {

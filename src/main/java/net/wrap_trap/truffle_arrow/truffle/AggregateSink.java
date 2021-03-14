@@ -28,6 +28,8 @@ public class AggregateSink extends RelRowSink {
     RelDataType relDataType,
     CompileContext context,
     ThenRowSink next) {
+    log.debug("createSink");
+
     FrameDescriptorPart aggregateFramePart = framePart.newPart();
     aggregateFramePart.pushRelDataType(relDataType);
     for (Integer i : groupSet) {
@@ -142,6 +144,8 @@ public class AggregateSink extends RelRowSink {
 
   @Override
   public SinkContext afterExecute(VirtualFrame frame, SinkContext initialContext) throws UnexpectedResultException {
+    log.debug("afterExecute");
+
     SinkContext context = initialContext;
     for (List<Object> keyList : this.map.keySet()) {
       int i;

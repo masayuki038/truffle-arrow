@@ -6,19 +6,23 @@ import net.wrap_trap.truffle_arrow.ArrowUtils;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class VectorSchemaRootConverterSink extends RelRowSink {
 
-  private BufferAllocator allocator;
+  private static final Logger log = LoggerFactory.getLogger(VectorSchemaRootConverterSink.class);
+
   private VectorSchemaRoot[] vectorSchemaRoots;
   private int[] indexes;
   private int index = 0;
 
-
   public static RelRowSink createSink(FrameDescriptorPart framePart, CompileContext context, ThenRowSink next) {
+    log.debug("createSink");
+
     BufferAllocator allocator = ArrowUtils.createAllocator();
     List<VectorSchemaRoot> list = context.getPartitions().stream().map(f ->
       ArrowUtils.createVectorSchemaRoot(framePart, allocator)
@@ -30,7 +34,6 @@ public class VectorSchemaRootConverterSink extends RelRowSink {
 
   public VectorSchemaRootConverterSink(VectorSchemaRoot[] vectorSchemaRoots, BufferAllocator allocator) {
     super(null);
-    this.allocator = allocator;
     this.vectorSchemaRoots = vectorSchemaRoots;
     this.indexes = new int[vectorSchemaRoots.length];
   }
@@ -49,6 +52,8 @@ public class VectorSchemaRootConverterSink extends RelRowSink {
 
   @Override
   public SinkContext afterExecute(VirtualFrame frame, SinkContext context) {
+    log.debug("afterExecute");
+
     for (int i = 0; i < this.vectorSchemaRoots.length; i ++) {
       List<FieldVector> fieldVectors = vectorSchemaRoots[i].getFieldVectors();
       for (int j = 0; j < fieldVectors.size(); j ++) {

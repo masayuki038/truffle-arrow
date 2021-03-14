@@ -24,6 +24,8 @@ public class GatherMergeSink extends RelRowSink {
                                           List<AggregateCall> aggCalls,
                                           RelDataType relDataType,
                                           CompileContext context, ThenRowSink next) {
+    log.debug("createRowSink");
+
     RowSink then = next.apply(aggregateFramePart);
     return new GatherMergeSink(aggregateFramePart, groupSet, groupSets, aggCalls, then);
   }
@@ -111,6 +113,8 @@ public class GatherMergeSink extends RelRowSink {
 
   @Override
   public SinkContext afterExecute(VirtualFrame frame, SinkContext initialContext) throws UnexpectedResultException {
+    log.debug("afterExecute");
+
     SinkContext context = initialContext;
     for (List<Object> keyList : this.map.keySet()) {
       int i;
