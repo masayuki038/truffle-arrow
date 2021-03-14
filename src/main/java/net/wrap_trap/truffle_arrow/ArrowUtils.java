@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import net.wrap_trap.truffle_arrow.truffle.FrameDescriptorPart;
 import net.wrap_trap.truffle_arrow.truffle.SqlNull;
 import net.wrap_trap.truffle_arrow.type.ArrowTimeSec;
@@ -29,16 +31,14 @@ import java.util.stream.Collectors;
 public class ArrowUtils {
 
   private static final Logger log = LoggerFactory.getLogger(ArrowUtils.class);
+  private static final String CONFIG_ALLOCATOR_SIZE = "allocator.initial.size";
 
   private static RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
 
-
   public static BufferAllocator createAllocator() {
-    return rootAllocator.newChildAllocator(Thread.currentThread().getName(), 1_000_000, Integer.MAX_VALUE);
-  }
-
-  public static void disposeAllocator(BufferAllocator allocator) {
-    allocator.close();
+    Config config = ConfigFactory.load();
+    int size = config.getInt(CONFIG_ALLOCATOR_SIZE);
+    return rootAllocator.newChildAllocator(Thread.currentThread().getName(), size, Integer.MAX_VALUE);
   }
 
   public static VectorSchemaRoot createVectorSchemaRoot(FrameDescriptorPart framePart, BufferAllocator allocator) {
