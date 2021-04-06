@@ -84,7 +84,7 @@ public class VectorSchemaRootBroker extends RelRowSink {
   public SinkContext executeVoid(VirtualFrame frame, VectorSchemaRoot[] alwaysNull, SinkContext initialContext) {
     log.debug("executeVoid");
 
-    try (BufferAllocator allocator = ArrowUtils.createAllocator()) {
+    try (BufferAllocator allocator = ArrowUtils.createAllocator("executeVoid")) {
       return loadVectorSchemaRoots(initialContext, allocator, vectorSchemaRoots -> {
         Map<Integer, Integer> indexesMap = createFieldIndexesMap();
 

@@ -23,12 +23,9 @@ public class VectorSchemaRootConverterSink extends RelRowSink {
   public static RelRowSink createSink(FrameDescriptorPart framePart, CompileContext context, ThenRowSink next) {
     log.debug("createSink");
 
-    BufferAllocator allocator = ArrowUtils.createAllocator();
-    List<VectorSchemaRoot> list = context.getPartitions().stream().map(f ->
-      ArrowUtils.createVectorSchemaRoot(framePart, allocator)
-    ).collect(Collectors.toList());
-    VectorSchemaRoot[] vectorSchemaRoots = new VectorSchemaRoot[list.size()];
-    list.toArray(vectorSchemaRoots);
+    BufferAllocator allocator = ArrowUtils.createAllocator("VectorSchemaRootConverterSink#createSink");
+    VectorSchemaRoot vectorSchemaRoot = ArrowUtils.createVectorSchemaRoot(framePart, allocator);
+    VectorSchemaRoot[] vectorSchemaRoots = new VectorSchemaRoot[]{vectorSchemaRoot};
     return new VectorSchemaRootConverterSink(vectorSchemaRoots, allocator);
   }
 

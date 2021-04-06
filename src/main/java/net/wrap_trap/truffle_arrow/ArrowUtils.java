@@ -35,10 +35,14 @@ public class ArrowUtils {
 
   private static RootAllocator rootAllocator = new RootAllocator(Long.MAX_VALUE);
 
-  public static BufferAllocator createAllocator() {
+  public static BufferAllocator createAllocator(String desc) {
     Config config = ConfigFactory.load();
     int size = config.getInt(CONFIG_ALLOCATOR_SIZE);
-    return rootAllocator.newChildAllocator(Thread.currentThread().getName(), size, Integer.MAX_VALUE);
+    log.debug(String.format("createAllocator [%s] (before) %s", desc, rootAllocator.toVerboseString()));
+    BufferAllocator newBuffer = rootAllocator.newChildAllocator(
+      Thread.currentThread().getName(), size, Integer.MAX_VALUE);
+    log.debug(String.format("createAllocator [%s] (after) %s", desc, rootAllocator.toVerboseString()));
+    return newBuffer;
   }
 
   public static VectorSchemaRoot createVectorSchemaRoot(FrameDescriptorPart framePart, BufferAllocator allocator) {
