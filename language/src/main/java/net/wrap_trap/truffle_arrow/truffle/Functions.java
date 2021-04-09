@@ -1,10 +1,6 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
 import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotKind;
-
-import java.util.List;
-import java.util.function.Function;
 
 public class Functions {
 

@@ -1,0 +1,38 @@
+{
+  "fields" : [ {
+    "name" : "N_NATIONKEY",
+    "nullable" : false,
+    "type" : {
+      "name" : "int",
+      "bitWidth" : 64,
+      "isSigned" : true
+    },
+    "children" : [ ]
+  },
+    {
+      "name" : "N_NAME",
+      "nullable" : false,
+      "type" : {
+        "name" : "utf8"
+      },
+      "children" : [ ]
+    },
+    {
+      "name" : "N_REGIONKEY",
+      "nullable" : false,
+      "type" : {
+        "name" : "int",
+        "bitWidth" : 64,
+        "isSigned" : true
+      },
+      "children" : [ ]
+    },
+    {
+      "name" : "N_COMMENT",
+      "nullable" : false,
+      "type" : {
+        "name" : "utf8"
+      },
+      "children" : [ ]
+    }]
+}

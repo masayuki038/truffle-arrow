@@ -1,7 +1,6 @@
 package net.wrap_trap.truffle_arrow.truffle;
 
 import com.google.common.collect.ImmutableList;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
