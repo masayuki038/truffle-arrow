@@ -1,10 +1,14 @@
 package net.wrap_trap.truffle_arrow.language.runtime;
 
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.instrumentation.AllocationReporter;
 import com.oracle.truffle.api.TruffleLanguage.Env;
+import com.oracle.truffle.api.interop.TruffleObject;
+import com.oracle.truffle.api.source.Source;
 import net.wrap_trap.truffle_arrow.language.TruffleArrowLanguage;
 import net.wrap_trap.truffle_arrow.language.builtins.BuiltinNode;
 
@@ -19,19 +23,14 @@ public class TruffleArrowContext {
   private final Env env;
   private final BufferedReader input;
   private final PrintWriter output;
-  private final FunctionRegistry functionRegistry;
   private final AllocationReporter allocationReporter;
 
-  public TruffleArrowContext(TruffleArrowLanguage language, TruffleLanguage.Env env, List<NodeFactory<? extends BuiltinNode>> externalBuiltins) {
+  public TruffleArrowContext(TruffleArrowLanguage language, TruffleLanguage.Env env) {
     this.env = env;
     this.input = new BufferedReader(new InputStreamReader(env.in()));
     this.output = new PrintWriter(env.out(), true);
     this.language = language;
     this.allocationReporter = env.lookup(AllocationReporter.class);
-    installBuiltins();
-    for (NodeFactory<? extends BuiltinNode> builtin : externalBuiltins) {
-      installBuiltin(builtin);
-    }
   }
 
   /**
@@ -47,32 +46,6 @@ public class TruffleArrowContext {
 
   public PrintWriter getOutput() {
     return output;
-  }
-
-  private void installBuiltins() {
-    installBuiltin(SLReadlnBuiltinFactory.getInstance());
-    installBuiltin(SLPrintlnBuiltinFactory.getInstance());
-    installBuiltin(SLNanoTimeBuiltinFactory.getInstance());
-    installBuiltin(SLDefineFunctionBuiltinFactory.getInstance());
-    installBuiltin(SLStackTraceBuiltinFactory.getInstance());
-    installBuiltin(SLHelloEqualsWorldBuiltinFactory.getInstance());
-    installBuiltin(SLNewObjectBuiltinFactory.getInstance());
-    installBuiltin(SLEvalBuiltinFactory.getInstance());
-    installBuiltin(SLImportBuiltinFactory.getInstance());
-    installBuiltin(SLGetSizeBuiltinFactory.getInstance());
-    installBuiltin(SLHasSizeBuiltinFactory.getInstance());
-    installBuiltin(SLIsExecutableBuiltinFactory.getInstance());
-    installBuiltin(SLIsNullBuiltinFactory.getInstance());
-    installBuiltin(SLWrapPrimitiveBuiltinFactory.getInstance());
-    installBuiltin(SLTypeOfBuiltinFactory.getInstance());
-    installBuiltin(SLIsInstanceBuiltinFactory.getInstance());
-  }
-
-  public void installBuiltin(NodeFactory<? extends BuiltinNode> factory) {
-    /* Register the builtin function in our function registry. */
-    RootCallTarget target = language.lookupBuiltin(factory);
-    String rootName = target.getRootNode().getName();
-    getFunctionRegistry().register(rootName, target);
   }
 
   /*
@@ -94,18 +67,18 @@ public class TruffleArrowContext {
       return fromForeignNumber(a);
     } else if (a instanceof TruffleObject) {
       return a;
-    } else if (a instanceof SLContext) {
+    } else if (a instanceof TruffleArrowContext) {
       return a;
     }
     throw shouldNotReachHere("Value is not a truffle value.");
   }
 
-  @TruffleBoundary
+  @CompilerDirectives.TruffleBoundary
   private static long fromForeignNumber(Object a) {
     return ((Number) a).longValue();
   }
 
-  @TruffleBoundary
+  @CompilerDirectives.TruffleBoundary
   private static String fromForeignCharacter(char c) {
     return String.valueOf(c);
   }
@@ -122,7 +95,7 @@ public class TruffleArrowContext {
     return (TruffleObject) env.getPolyglotBindings();
   }
 
-  public static SLContext getCurrent() {
-    return SLLanguage.getCurrentContext();
+  public static TruffleArrowContext getCurrent() {
+    return TruffleArrowLanguage.getCurrentContext();
   }
 }

@@ -1,18 +1,18 @@
 package net.wrap_trap.truffle_arrow.language;
 
-import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.*;
 import com.oracle.truffle.api.debug.DebuggerTags;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.Source;
 import net.wrap_trap.truffle_arrow.language.builtins.BuiltinNode;
+import net.wrap_trap.truffle_arrow.language.parser.TruffleArrowLanguageParser;
 import net.wrap_trap.truffle_arrow.language.runtime.TruffleArrowContext;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @ProvidedTags({StandardTags.CallTag.class, StandardTags.StatementTag.class, StandardTags.RootTag.class, StandardTags.RootBodyTag.class, StandardTags.ExpressionTag.class, DebuggerTags.AlwaysHalt.class,
   StandardTags.ReadVariableTag.class, StandardTags.WriteVariableTag.class})
 public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
+  public static volatile int counter;
 
   public static final String ID = "truffle-arrow";
   public static final String MIME_TYPE = "application/x-truffle-arrow";
@@ -32,5 +33,32 @@ public class TruffleArrowLanguage extends TruffleLanguage<TruffleArrowContext> {
 
   private final Shape rootShape;
 
+
+  public TruffleArrowLanguage() {
+    counter++;
+    this.rootShape = Shape.newBuilder().layout(SLObject.class).build();
+  }
+
+  @Override
+  protected TruffleArrowContext createContext(Env env) {
+    return new TruffleArrowContext(this, env);
+  }
+
+  public static NodeInfo lookupNodeInfo(Class<?> clazz) {
+    if (clazz == null) {
+      return null;
+    }
+    NodeInfo info = clazz.getAnnotation(NodeInfo.class);
+    if (info != null) {
+      return info;
+    } else {
+      return lookupNodeInfo(clazz.getSuperclass());
+    }
+  }
+
+  @Override
+  protected CallTarget parse(ParsingRequest request) throws Exception {
+    Map<String, RootCallTarget> targets = TruffleArrowLanguageParser.parse(this, request.getSource());
+  }
 
 }

@@ -5,6 +5,7 @@ package net.wrap_trap.truffle_arrow.language.parser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.RootCallTarget;
 import net.wrap_trap.truffle_arrow.language.TruffleArrowLanguage;
@@ -104,7 +105,7 @@ public class TruffleArrowLanguageParser extends Parser {
 	public ATN getATN() { return _ATN; }
 
 
-	private NodeFactory factory;
+	private TruffleArrowNodeFactory factory;
 	private Source source;
 	private static final class BailoutErrorListener extends BaseErrorListener {
 	    private final Source source;
@@ -130,14 +131,14 @@ public class TruffleArrowLanguageParser extends Parser {
 	}
 
 	public static Map<String, RootCallTarget> parse(TruffleArrowLanguage language, Source source) {
-	    TruffleArrowLexer lexer = new TruffleArrowLanguageLexer(CharStreams.fromString(source.getCharacters().toString()));
-	    TruffleLanguageParser parser = new TruffleArrowLanguageParser(new CommonTokenStream(lexer));
+			TruffleArrowLanguageLexer lexer = new TruffleArrowLanguageLexer(CharStreams.fromString(source.getCharacters().toString()));
+		  TruffleArrowLanguageParser parser = new TruffleArrowLanguageParser(new CommonTokenStream(lexer));
 	    lexer.removeErrorListeners();
 	    parser.removeErrorListeners();
 	    BailoutErrorListener listener = new BailoutErrorListener(source);
 	    lexer.addErrorListener(listener);
 	    parser.addErrorListener(listener);
-	    parser.factory = new NodeFactory(language, source);
+	    parser.factory = new TruffleArrowNodeFactory(language, source);
 	    parser.source = source;
 	    parser.script();
 	    return parser.factory.getAllFunctions();

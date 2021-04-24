@@ -21,7 +21,6 @@ public class TruffleArrowType implements TruffleObject {
   public static final TruffleArrowType STRING = new TruffleArrowType("String", (l, v) -> l.isString(v));
   public static final TruffleArrowType BOOLEAN = new TruffleArrowType("Boolean", (l, v) -> l.isBoolean(v));
   public static final TruffleArrowType OBJECT = new TruffleArrowType("Object", (l, v) -> l.hasMembers(v));
-  public static final TruffleArrowType FUNCTION = new TruffleArrowType("Function", (l, v) -> l.isExecutable(v));
 
   @CompilerDirectives.CompilationFinal(dimensions = 1) public static final TruffleArrowType[] PRECEDENCE = new TruffleArrowType[]{NULL, NUMBER, STRING, BOOLEAN, FUNCTION, OBJECT};
 
