@@ -1,2 +1,0 @@
-#curl -O https://www.antlr.org/download/antlr-4.7.1-complete.jar
-java -cp antlr-4.7.1-complete.jar org.antlr.v4.Tool -package net.wrap_trap.truffle_arrow.language.parser -no-listener language/src/main/java/net/wrap_trap/truffle_arrow/language/parser/TruffleArrowLanguage.g4
