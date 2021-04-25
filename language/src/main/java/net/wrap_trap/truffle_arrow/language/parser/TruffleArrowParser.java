@@ -1,14 +1,10 @@
 package net.wrap_trap.truffle_arrow.language.parser;
 
+import net.wrap_trap.truffle_arrow.language.parser.ast.AST;
 import org.jparsec.*;
 import org.jparsec.pattern.CharPredicates;
 import org.jparsec.pattern.Pattern;
 import org.jparsec.pattern.Patterns;
-
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.Value;
 
 import java.util.Arrays;
 import java.util.List;
@@ -48,147 +44,84 @@ public class TruffleArrowParser {
     Terminals.IntegerLiteral.TOKENIZER,
     Terminals.Identifier.TOKENIZER);
 
-  public interface AST{}
-  public interface ASTExp extends AST{}
-
-  @Value
-  public static class IntValue implements ASTExp {
-    double value;
+  public static Parser<AST.IntValue> integer() {
+    return Terminals.IntegerLiteral.PARSER.map(s -> AST.intValue(Double.parseDouble(s)));
   }
 
-  public static Parser<IntValue> integer() {
-    return Terminals.IntegerLiteral.PARSER.map(s -> new IntValue(Double.parseDouble(s)));
+  public static Parser<AST.StringValue> string() {
+    return Terminals.StringLiteral.PARSER.map(AST::stringValue);
   }
 
-  @Value
-  public static class StringValue implements ASTExp {
-    String value;
+  public static Parser<AST.Variable> variable() {
+    return VAR_PARSER.map(AST::variable);
   }
 
-  public static Parser<StringValue> string() {
-    return Terminals.StringLiteral.PARSER.map(StringValue::new);
-  }
-
-  @Value
-  public static class ASTVariable implements ASTExp {
-    String name;
-  }
-
-  public static Parser<ASTVariable> variable() {
-    return VAR_PARSER.map(var -> new ASTVariable(var.substring(1)));
-  }
-
-  public static Parser<ASTExp> value() {
-    return Parsers.or(integer(), assignment(), variable(), funcCall(), string(),
+  public static Parser<AST.Expression> value() {
+    return Parsers.or(integer(), assignment(), variable(), string(),
       terms.token("(").next(pr -> expression().followedBy(terms.token(")"))));
   }
 
-  @Value
-  public static class ASTBinaryOp implements ASTExp {
-    ASTExp left;
-    ASTExp right;
-    String op;
-  }
-
-  public static Parser<ASTExp> operator() {
-    return new OperatorTable<ASTExp>()
-             .infixl(terms.token(".").retn((l, r) -> new ASTBinaryOp(l, r, ".")), 10)
-             .infixl(terms.token("+").retn((l, r) -> new ASTBinaryOp(l, r, "+")), 10)
-             .infixl(terms.token("-").retn((l, r) -> new ASTBinaryOp(l, r, "-")), 10)
+  public static Parser<AST.Expression> operator() {
+    return new OperatorTable<AST.Expression>()
+             .infixl(terms.token(".").retn((l, r) -> AST.binary(l, r, ".")), 10)
+             .infixl(terms.token("+").retn((l, r) -> AST.binary(l, r, "+")), 10)
+             .infixl(terms.token("-").retn((l, r) -> AST.binary(l, r, "-")), 10)
              .build(value());
   }
 
-  public static Parser<ASTExp> bicond() {
+  public static Parser<AST.Expression> bicond() {
     return operator().next(l ->
                              terms.token("<", ">").source()
-                               .next(op -> operator().map(r -> (ASTExp)new ASTBinaryOp(l, r, op.trim()))).optional(l));
+                               .next(op -> operator().map(r -> (AST.Expression) AST.binary(l, r, op.trim()))).optional(l));
   }
 
-  public static Parser<ASTExp> concat() {
+  public static Parser<AST.Expression> concat() {
     return bicond().next(l ->
                            terms.token(".").source()
-                             .next(op -> bicond().map(r -> (ASTExp)new ASTBinaryOp(l, r, "."))).optional(l));
+                                .next(op -> bicond().map(r -> (AST.Expression) AST.binary(l, r, "."))).optional(l));
   }
 
-  public static Parser<ASTExp> expression() {
+  public static Parser<AST.Expression> expression() {
     return concat();
   }
-  @Value
-  public static class ASTCommand implements AST {
-    String command;
-    ASTExp param;
-  }
-  public static Parser<ASTCommand> command() {
+
+  public static Parser<AST.Command> command() {
     return terms.token("echo")
-             .next(t -> expression().map(exp -> new ASTCommand(t.toString(), exp)));
+             .next(t -> expression().map(exp -> AST.command(t.toString(), exp)));
   }
 
-  @Value
-  public static class ASTAssignment implements ASTExp {
-    ASTVariable variable;
-    ASTExp expression;
-  }
-
-  public static Parser<ASTAssignment> assignment() {
+  public static Parser<AST.Assignment> assignment() {
     return variable().followedBy(terms.token("="))
-             .next(v -> expression().map(exp -> new ASTAssignment(v, exp)));
+             .next(v -> expression().map(exp -> AST.assignment(v, exp)));
   }
 
   public static Parser<String> identifier() {
     return Terminals.Identifier.PARSER;
   }
 
-  @RequiredArgsConstructor
-  public static class ASTFuncCall implements ASTExp {
-    @Getter
-    final String name;
-    @Getter
-    final List<ASTExp> params;
-    @Setter
-    @Getter
-    ASTFunction cache = null;
-  }
-
-  public static Parser<ASTFuncCall> funcCall() {
-    return identifier().next(id ->
-                               expression().sepBy(terms.token(",")).between(terms.token("("), terms.token(")"))
-                                 .map(param -> new ASTFuncCall(id, param)));
-  }
-
-  @Value
-  public static class ASTIf implements AST {
-    ASTExp expression;
-    List<AST> statements;
-  }
-
-  public static Parser<ASTIf> ifStatement() {
-    return terms.token("if").next(t -> expression().between(terms.token("("), terms.token(")"))
+  public static Parser<AST.If> ifStatement() {
+    return terms.token("if").next(t -> expression()
+                                         .between(terms.token("("), terms.token(")"))
                                          .next(exp -> statements()
-                                                        .map(statements -> new ASTIf(exp, statements))));
+                                                        .map(statements -> AST.ifs(exp, statements))));
   }
 
-  public static Parser<AST> statement() {
+  public static Parser<AST.ASTNode> statement() {
     return Parsers.or(Parsers.or(bicond(), command()).followedBy(terms.token(";")),
       ifStatement());
   }
 
-  public static Parser<List<AST>> statements() {
+  public static Parser<List<AST.ASTNode>> statements() {
     return Parsers.or(
       statement().map(s -> Arrays.asList(s)),
       statement().many().between(terms.token("{"), terms.token("}")));
   }
-  @Value
-  public static class ASTFunction implements AST {
-    String name;
-    List<ASTVariable> params;
-    List<AST> statements;
-  }
 
-  public static Parser<List<AST>> script() {
+  public static Parser<List<AST.ASTNode>> script() {
     return statement().many();
   }
 
-  public static Parser<List<AST>> createParser() {
+  public static Parser<List<AST.ASTNode>> createParser() {
     return script().from(tokenizer, ignored);
   }
 }

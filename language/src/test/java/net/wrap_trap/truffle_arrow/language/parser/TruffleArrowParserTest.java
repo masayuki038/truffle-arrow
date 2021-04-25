@@ -1,71 +1,94 @@
 package net.wrap_trap.truffle_arrow.language.parser;
 
-import java.util.List;
+import net.wrap_trap.truffle_arrow.language.parser.ast.AST;
 import org.jparsec.Parser;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
+
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+
 public class TruffleArrowParserTest {
   private final static String SAMPLE =
-      "  echo \"a\";\n" +
+    "  echo \"a\";\n" +
       "  echo \"b\";\n";
 
   @Test
-  public void testScript() {
-    Parser<List<TruffleArrowParser.AST>> parser = parser(TruffleArrowParser.script());
-    List<TruffleArrowParser.AST> asts = parser.parse(SAMPLE);
-    assertThat(asts.size(), is(2));
+  public void testIntValue() {
+    Parser<AST.IntValue> intParser = TruffleArrowParser.integer().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
+    assertThat(intParser.parse("123"), is(AST.intValue(123)));
   }
 
   @Test
-  public void test() {
-    Parser<TruffleArrowParser.IntValue> intParser= TruffleArrowParser.integer().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    System.out.println(intParser.parse("123"));
-
+  public void testIdentifier() {
     Parser<String> identifier = TruffleArrowParser.identifier().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    System.out.println(identifier.parse("abc"));
+    assertThat(identifier.parse("abc"), is("abc"));
+  }
 
-    Parser<TruffleArrowParser.ASTVariable> parser = TruffleArrowParser.variable().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    System.out.println(parser.parse("$hoge"));
+  @Test
+  public void testVariable() {
+    Parser<AST.Variable> parser = TruffleArrowParser.variable().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
+    assertThat(parser.parse("$hoge"), is(AST.variable("$hoge")));
+  }
 
-    Parser<TruffleArrowParser.ASTExp> valueParser = TruffleArrowParser.value().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    System.out.println(valueParser.parse("$hoge"));
-    System.out.println(valueParser.parse("123"));
+  @Test
+  public void testValue() {
+    Parser<AST.Expression> valueParser = TruffleArrowParser.value().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
+    assertThat(valueParser.parse("$hoge"), is(AST.variable("$hoge")));
+    assertThat(valueParser.parse("123"), is(AST.intValue(123)));
+  }
 
-    Parser<TruffleArrowParser.ASTExp> op = TruffleArrowParser.operator().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    System.out.println(op.parse("12+3"));
-    System.out.println(op.parse("12+$a"));
-    System.out.println(op.parse("$ab+123"));
+  @Test
+  public void testOperator() {
+    Parser<AST.Expression> op = TruffleArrowParser.operator().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
+    assertThat(op.parse("12+3"), is(AST.binary(AST.intValue(12), AST.intValue(3), "+")));
+    assertThat(op.parse("12+$a"), is(AST.binary(AST.intValue(12), AST.variable("$a"), "+")));
+    assertThat(op.parse("$ab+123"), is(AST.binary(AST.variable("$ab"), AST.intValue(123), "+")));
+  }
 
-    Parser<TruffleArrowParser.ASTCommand> comm = parser(TruffleArrowParser.command());
-    System.out.println(comm.parse("echo 123"));
-    System.out.println(comm.parse("echo 123<3"));
-    System.out.println(comm.parse("echo 23+3"));
-    System.out.println(comm.parse("echo $a"));
-    System.out.println(comm.parse("echo \"a\""));
+  @Test
+  public void testCommand() {
+    Parser<AST.Command> comm = parser(TruffleArrowParser.command());
+    assertThat(comm.parse("echo 123"), is(AST.command("echo", AST.intValue(123))));
+    assertThat(comm.parse("echo 123<3"), is(AST.command("echo", AST.binary(AST.intValue(123), AST.intValue(3), "<"))));
+    assertThat(comm.parse("echo 23+3"), is(AST.command("echo", AST.binary(AST.intValue(23), AST.intValue(3), "+"))));
+    assertThat(comm.parse("echo $a"), is(AST.command("echo", AST.variable("$a"))));
+    assertThat(comm.parse("echo \"a\""), is(AST.command("echo", AST.stringValue("a"))));
+  }
 
-    Parser<String> ident = TruffleArrowParser.identifier().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    System.out.println(ident.parse("f"));
+  @Test
+  public void testAssignment() {
+    Parser<AST.Assignment> assignment = parser(TruffleArrowParser.assignment());
+    assertThat(assignment.parse("$a=123"), is(AST.assignment(AST.variable("$a"), AST.intValue(123))));
+  }
 
-    Parser<TruffleArrowParser.ASTAssignment> assignment = parser(TruffleArrowParser.assignment());
-    System.out.println(assignment.parse("$a=123"));
+  @Test
+  public void testStatement() {
+    Parser<AST.ASTNode> statement = parser(TruffleArrowParser.statement());
+    assertThat(statement.parse("$a;"), is(AST.variable("$a")));
+    assertThat(statement.parse("$a=$a+1;"), is(AST.assignment(AST.variable("$a"), AST.binary(AST.variable("$a"), AST.intValue(1), "+"))));
+    assertThat(statement.parse("echo \"aaa\";"), is(AST.command("echo", AST.stringValue("aaa"))));
+  }
 
-    Parser<TruffleArrowParser.AST> statement = parser(TruffleArrowParser.statement());
-    System.out.println(statement.parse("$a;"));
-    System.out.println(statement.parse("$a=$a+1;"));
-    System.out.println(statement.parse("echo \"aaa\";"));
+  @Test
+  public void testIfs() {
+    Parser<AST.If> ifs = parser(TruffleArrowParser.ifStatement());
+    assertThat(
+      ifs.parse("if ($a < 3) echo $a;"), is(AST.ifs(AST.binary(AST.variable("$a"), AST.intValue(3), "<")
+        , Arrays.asList(AST.command("echo", AST.variable("$a"))))));
+  }
 
-    Parser<TruffleArrowParser.ASTIf> ifs = parser(TruffleArrowParser.ifStatement());
-    System.out.println(ifs.parse("if ($a < 3) echo $a;"));
-
-    Parser<List<TruffleArrowParser.AST>> scriptParser = parser(TruffleArrowParser.script());
-    final List<TruffleArrowParser.AST> script = scriptParser.parse(SAMPLE);
-    System.out.println(script);
+  @Test
+  public void testScript() {
+    Parser<List<AST.ASTNode>> parser = parser(TruffleArrowParser.script());
+    List<AST.ASTNode> asts = parser.parse(SAMPLE);
+    assertThat(asts.size(), is(2));
   }
 
   <T> Parser<T> parser(Parser<T> p) {
     return p.from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
   }
-
 }
