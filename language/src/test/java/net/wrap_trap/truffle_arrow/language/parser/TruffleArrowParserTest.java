@@ -1,6 +1,6 @@
 package net.wrap_trap.truffle_arrow.language.parser;
 
-import net.wrap_trap.truffle_arrow.language.parser.ast.AST;
+import static net.wrap_trap.truffle_arrow.language.parser.ast.AST.*;
 import org.jparsec.Parser;
 import org.junit.Test;
 
@@ -10,82 +10,97 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-
 public class TruffleArrowParserTest {
   private final static String SAMPLE =
-    "  echo \"a\";\n" +
-      "  echo \"b\";\n";
+      "echo \"a\";\n" +
+      "echo \"b\";\n" +
+      "$a = 1;\n" +
+      "if ($a == 0) echo $a;";
 
   @Test
   public void testIntValue() {
-    Parser<AST.IntValue> intParser = TruffleArrowParser.integer().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    assertThat(intParser.parse("123"), is(AST.intValue(123)));
+    Parser<IntValue> parser = TruffleArrowParser.integer().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
+    assertThat(parser.parse("123"), is(intValue(123)));
   }
 
   @Test
   public void testIdentifier() {
-    Parser<String> identifier = TruffleArrowParser.identifier().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    assertThat(identifier.parse("abc"), is("abc"));
+    Parser<String> parser = TruffleArrowParser.identifier().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
+    assertThat(parser.parse("abc"), is("abc"));
   }
 
   @Test
   public void testVariable() {
-    Parser<AST.Variable> parser = TruffleArrowParser.variable().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    assertThat(parser.parse("$hoge"), is(AST.variable("$hoge")));
+    Parser<Variable> parser = TruffleArrowParser.variable().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
+    assertThat(parser.parse("$hoge"), is(variable("$hoge")));
   }
 
   @Test
   public void testValue() {
-    Parser<AST.Expression> valueParser = TruffleArrowParser.value().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    assertThat(valueParser.parse("$hoge"), is(AST.variable("$hoge")));
-    assertThat(valueParser.parse("123"), is(AST.intValue(123)));
+    Parser<Expression> parser = TruffleArrowParser.value().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
+    assertThat(parser.parse("$hoge"), is(variable("$hoge")));
+    assertThat(parser.parse("123"), is(intValue(123)));
   }
 
   @Test
   public void testOperator() {
-    Parser<AST.Expression> op = TruffleArrowParser.operator().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
-    assertThat(op.parse("12+3"), is(AST.binary(AST.intValue(12), AST.intValue(3), "+")));
-    assertThat(op.parse("12+$a"), is(AST.binary(AST.intValue(12), AST.variable("$a"), "+")));
-    assertThat(op.parse("$ab+123"), is(AST.binary(AST.variable("$ab"), AST.intValue(123), "+")));
+    Parser<Expression> parser = TruffleArrowParser.operator().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
+    assertThat(parser.parse("12+3"), is(binary(intValue(12), intValue(3), "+")));
+    assertThat(parser.parse("12+$a"), is(binary(intValue(12), variable("$a"), "+")));
+    assertThat(parser.parse("$ab+123"), is(binary(variable("$ab"), intValue(123), "+")));
   }
 
   @Test
   public void testCommand() {
-    Parser<AST.Command> comm = parser(TruffleArrowParser.command());
-    assertThat(comm.parse("echo 123"), is(AST.command("echo", AST.intValue(123))));
-    assertThat(comm.parse("echo 123<3"), is(AST.command("echo", AST.binary(AST.intValue(123), AST.intValue(3), "<"))));
-    assertThat(comm.parse("echo 23+3"), is(AST.command("echo", AST.binary(AST.intValue(23), AST.intValue(3), "+"))));
-    assertThat(comm.parse("echo $a"), is(AST.command("echo", AST.variable("$a"))));
-    assertThat(comm.parse("echo \"a\""), is(AST.command("echo", AST.stringValue("a"))));
+    Parser<Command> parser = parser(TruffleArrowParser.command());
+    assertThat(parser.parse("echo 123"), is(command("echo", intValue(123))));
+    assertThat(parser.parse("echo 123<3"), is(command("echo", binary(intValue(123), intValue(3), "<"))));
+    assertThat(parser.parse("echo 23+3"), is(command("echo", binary(intValue(23), intValue(3), "+"))));
+    assertThat(parser.parse("echo $a"), is(command("echo", variable("$a"))));
+    assertThat(parser.parse("echo \"a\""), is(command("echo", stringValue("a"))));
   }
 
   @Test
   public void testAssignment() {
-    Parser<AST.Assignment> assignment = parser(TruffleArrowParser.assignment());
-    assertThat(assignment.parse("$a=123"), is(AST.assignment(AST.variable("$a"), AST.intValue(123))));
+    Parser<Assignment> parser = parser(TruffleArrowParser.assignment());
+    assertThat(parser.parse("$a=123"), is(assignment(variable("$a"), intValue(123))));
   }
 
   @Test
   public void testStatement() {
-    Parser<AST.ASTNode> statement = parser(TruffleArrowParser.statement());
-    assertThat(statement.parse("$a;"), is(AST.variable("$a")));
-    assertThat(statement.parse("$a=$a+1;"), is(AST.assignment(AST.variable("$a"), AST.binary(AST.variable("$a"), AST.intValue(1), "+"))));
-    assertThat(statement.parse("echo \"aaa\";"), is(AST.command("echo", AST.stringValue("aaa"))));
+    Parser<ASTNode> parser = parser(TruffleArrowParser.statement());
+    assertThat(parser.parse("$a;"), is(variable("$a")));
+    assertThat(parser.parse("$a=$a+1;"), is(assignment(variable("$a"), binary(variable("$a"), intValue(1), "+"))));
+    assertThat(parser.parse("echo \"aaa\";"), is(command("echo", stringValue("aaa"))));
   }
 
   @Test
   public void testIfs() {
-    Parser<AST.If> ifs = parser(TruffleArrowParser.ifStatement());
+    Parser<If> parser = parser(TruffleArrowParser.ifStatement());
     assertThat(
-      ifs.parse("if ($a < 3) echo $a;"), is(AST.ifs(AST.binary(AST.variable("$a"), AST.intValue(3), "<")
-        , Arrays.asList(AST.command("echo", AST.variable("$a"))))));
+      parser.parse("if ($a < 3) echo $a;"), is(ifs(binary(variable("$a"), intValue(3), "<")
+        , Arrays.asList(command("echo", variable("$a"))))));
+  }
+
+  @Test
+  public void testIfsWithBlocks() {
+    String ifs = "if ($a < 3) { \n"+
+                 "  echo $a;\n" +
+                 "  echo \"$a < 3\";\n" +
+                 "}\n";
+
+    Parser<If> parser = parser(TruffleArrowParser.ifStatement());
+    assertThat(
+      parser.parse(ifs), is(ifs(binary(variable("$a"), intValue(3), "<")
+        , Arrays.asList(command("echo", variable("$a"))
+          , command("echo", stringValue("$a < 3"))))));
   }
 
   @Test
   public void testScript() {
-    Parser<List<AST.ASTNode>> parser = parser(TruffleArrowParser.script());
-    List<AST.ASTNode> asts = parser.parse(SAMPLE);
-    assertThat(asts.size(), is(2));
+    Parser<List<ASTNode>> parser = parser(TruffleArrowParser.script());
+    List<ASTNode> asts = parser.parse(SAMPLE);
+    assertThat(asts.size(), is(4));
   }
 
   <T> Parser<T> parser(Parser<T> p) {
