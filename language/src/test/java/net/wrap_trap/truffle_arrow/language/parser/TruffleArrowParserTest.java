@@ -10,6 +10,12 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+// TODO
+// map
+// &&
+// ||
+// like
+
 public class TruffleArrowParserTest {
   private final static String SAMPLE =
       "echo \"a\";\n" +
@@ -43,11 +49,20 @@ public class TruffleArrowParserTest {
   }
 
   @Test
+  public void testBicond() {
+    Parser<Expression> parser = TruffleArrowParser.bicond().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
+    assertThat(parser.parse("2 > 1"), is(binary(intValue(2), intValue(1), ">")));
+    assertThat(parser.parse("$a == 1"), is(binary(variable("$a"), intValue(1), "==")));
+    assertThat(parser.parse("\"a\" < $a"), is(binary(stringValue("a"), variable("$a"), "<")));
+  }
+
+  @Test
   public void testOperator() {
     Parser<Expression> parser = TruffleArrowParser.operator().from(TruffleArrowParser.tokenizer, TruffleArrowParser.ignored);
     assertThat(parser.parse("12+3"), is(binary(intValue(12), intValue(3), "+")));
     assertThat(parser.parse("12+$a"), is(binary(intValue(12), variable("$a"), "+")));
     assertThat(parser.parse("$ab+123"), is(binary(variable("$ab"), intValue(123), "+")));
+    assertThat(parser.parse("$a+$b"), is(binary(variable("$a"), variable("$b"), "+")));
   }
 
   @Test

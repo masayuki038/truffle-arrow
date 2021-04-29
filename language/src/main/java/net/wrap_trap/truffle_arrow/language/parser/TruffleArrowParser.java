@@ -12,7 +12,7 @@ import java.util.List;
 
 public class TruffleArrowParser {
   static String[] operators = {
-    "<", ">", "+", "-", "(", ")", ";", "=", ",", "{", "}", "=","."};
+    "<", ">", "+", "-", "(", ")", ";", "=", ",", "{", "}", "==", "."};
   static String[] keywords = {"echo", "if"};
 
   static Parser<Void> ignored = Scanners.WHITESPACES.optional();
@@ -71,7 +71,7 @@ public class TruffleArrowParser {
 
   public static Parser<AST.Expression> bicond() {
     return operator().next(l ->
-                             terms.token("<", ">").source()
+                             terms.token("==", "<", ">").source()
                                .next(op -> operator().map(r -> (AST.Expression) AST.binary(l, r, op.trim()))).optional(l));
   }
 
