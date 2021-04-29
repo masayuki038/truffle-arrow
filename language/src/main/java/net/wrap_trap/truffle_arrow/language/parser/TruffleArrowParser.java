@@ -57,7 +57,7 @@ public class TruffleArrowParser {
   }
 
   public static Parser<AST.Expression> value() {
-    return Parsers.or(integer(), assignment(), variable(), string(),
+    return Parsers.or(integer(), assignment(), variable(), string(), newMap(),
       terms.token("(").next(pr -> expression().followedBy(terms.token(")"))));
   }
 
@@ -115,6 +115,22 @@ public class TruffleArrowParser {
     return Parsers.or(
       statement().map(s -> Arrays.asList(s)),
       statement().many().between(terms.token("{"), terms.token("}")));
+  }
+
+  public static Parser<AST.Expression> newMap() {
+    return Parsers.sequence(terms.token("{"), terms.token("}"))
+             .map(s -> AST.mapValue());
+  }
+
+  public static Parser<AST.MapMember> mapMember() {
+    return variable().followedBy(terms.token("."))
+             .next(v -> identifier().map(i -> AST.mapMember(v, i)));
+  }
+
+  public static Parser<AST.Expression> mapMemberAssignment() {
+    return mapMember().followedBy(terms.token("="))
+             .next(member -> expression().map(exp -> AST.mapMemberAssignment(member, exp)));
+
   }
 
   public static Parser<List<AST.ASTNode>> script() {

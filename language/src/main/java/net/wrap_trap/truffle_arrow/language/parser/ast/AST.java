@@ -72,6 +72,33 @@ public class AST {
   }
 
   @Value
+  public static class MapValue implements Expression { }
+
+  public static MapValue mapValue() {
+    return new MapValue();
+  }
+
+  @Value
+  public static class MapMember implements Expression {
+    Variable map;
+    String name;
+  }
+
+  public static MapMember mapMember(Variable map, String name) {
+    return new MapMember(map, name);
+  }
+
+  @Value
+  public static class MapMemberAssignment implements Expression {
+    MapMember mapMember;
+    Expression expression;
+  }
+
+  public static MapMemberAssignment mapMemberAssignment(MapMember mapMember, Expression expression) {
+    return new MapMemberAssignment(mapMember, expression);
+  }
+
+  @Value
   public static class If implements ASTNode {
     Expression expression;
     List<ASTNode> statements;

@@ -112,6 +112,27 @@ public class TruffleArrowParserTest {
   }
 
   @Test
+  public void testNewMap() {
+    Parser<Expression> parser = parser(new TruffleArrowParser().newMap());
+    assertThat(parser.parse("{}"), is(mapValue()));
+    assertThat(parser.parse("{ }"), is(mapValue()));
+  }
+
+  @Test
+  public void testMapMember() {
+    Parser<MapMember> parser = parser(new TruffleArrowParser().mapMember());
+    assertThat(parser.parse("$a.foo"), is(mapMember(variable("$a"), "foo")));
+    assertThat(parser.parse("$a.a1"), is(mapMember(variable("$a"), "a1")));
+  }
+
+  @Test
+  public void testMapMemberAssignment() {
+    Parser<Expression> parser = parser(new TruffleArrowParser().mapMemberAssignment());
+    assertThat(parser.parse("$a.foo = 1"), is(mapMemberAssignment(mapMember(variable("$a"), "foo"), intValue(1))));
+    assertThat(parser.parse("$a.a1 = \"hoge\""), is(mapMemberAssignment(mapMember(variable("$a"), "a1"), stringValue("hoge"))));
+  }
+
+  @Test
   public void testScript() {
     Parser<List<ASTNode>> parser = parser(TruffleArrowParser.script());
     List<ASTNode> asts = parser.parse(SAMPLE);
