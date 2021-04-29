@@ -21,7 +21,11 @@ public class TruffleArrowParserTest {
       "echo \"a\";\n" +
       "echo \"b\";\n" +
       "$a = 1;\n" +
-      "if ($a == 0) echo $a;";
+      "if ($a == 0) echo $a;\n" +
+      "$b = {};\n" +
+      "$b.foo = 1;\n" +
+      "$b.bar = \"hgoe\";\n" +
+      "echo $b.bar;\n";
 
   @Test
   public void testIntValue() {
@@ -87,6 +91,7 @@ public class TruffleArrowParserTest {
     assertThat(parser.parse("$a;"), is(variable("$a")));
     assertThat(parser.parse("$a=$a+1;"), is(assignment(variable("$a"), binary(variable("$a"), intValue(1), "+"))));
     assertThat(parser.parse("echo \"aaa\";"), is(command("echo", stringValue("aaa"))));
+    assertThat(parser.parse("$a.a1=\"hoge\";"), is(mapMemberAssignment(mapMember(variable("$a"), "a1"), stringValue("hoge"))));
   }
 
   @Test
@@ -129,14 +134,14 @@ public class TruffleArrowParserTest {
   public void testMapMemberAssignment() {
     Parser<Expression> parser = parser(new TruffleArrowParser().mapMemberAssignment());
     assertThat(parser.parse("$a.foo = 1"), is(mapMemberAssignment(mapMember(variable("$a"), "foo"), intValue(1))));
-    assertThat(parser.parse("$a.a1 = \"hoge\""), is(mapMemberAssignment(mapMember(variable("$a"), "a1"), stringValue("hoge"))));
+    assertThat(parser.parse("$a.a1=\"hoge\""), is(mapMemberAssignment(mapMember(variable("$a"), "a1"), stringValue("hoge"))));
   }
 
   @Test
   public void testScript() {
     Parser<List<ASTNode>> parser = parser(TruffleArrowParser.script());
     List<ASTNode> asts = parser.parse(SAMPLE);
-    assertThat(asts.size(), is(4));
+    assertThat(asts.size(), is(8));
   }
 
   <T> Parser<T> parser(Parser<T> p) {

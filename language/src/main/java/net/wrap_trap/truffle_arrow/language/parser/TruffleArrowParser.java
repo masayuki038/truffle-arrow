@@ -57,7 +57,7 @@ public class TruffleArrowParser {
   }
 
   public static Parser<AST.Expression> value() {
-    return Parsers.or(integer(), assignment(), variable(), string(), newMap(),
+    return Parsers.or(mapMemberAssignment(), mapMember(), newMap(),  assignment(), variable(), integer(), string(),
       terms.token("(").next(pr -> expression().followedBy(terms.token(")"))));
   }
 
@@ -75,14 +75,14 @@ public class TruffleArrowParser {
                                .next(op -> operator().map(r -> (AST.Expression) AST.binary(l, r, op.trim()))).optional(l));
   }
 
-  public static Parser<AST.Expression> concat() {
-    return bicond().next(l ->
-                           terms.token(".").source()
-                                .next(op -> bicond().map(r -> (AST.Expression) AST.binary(l, r, "."))).optional(l));
-  }
+//  public static Parser<AST.Expression> concat() {
+//    return bicond().next(l ->
+//                           terms.token(".").source()
+//                                .next(op -> bicond().map(r -> (AST.Expression) AST.binary(l, r, "."))).optional(l));
+//  }
 
   public static Parser<AST.Expression> expression() {
-    return concat();
+    return bicond();
   }
 
   public static Parser<AST.Command> command() {
