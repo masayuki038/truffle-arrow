@@ -10,8 +10,6 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-// TODO
-// like
 
 public class TruffleArrowParserTest {
   private final static String SAMPLE =
@@ -21,8 +19,12 @@ public class TruffleArrowParserTest {
       "if ($a == 0) echo $a;\n" +
       "$b = {};\n" +
       "$b.foo = 1;\n" +
-      "$b.bar = \"hgoe\";\n" +
-      "echo $b.bar;\n";
+      "$b.bar = \"hoge\";\n" +
+      "echo $b.bar;\n" +
+      "if (($a == 0) && ($b == 1)) echo $a;\n" +
+      "if ((($a == 0) || ($b == 1)) && ($c == 2)) echo $a;\n" +
+      "if (($a like \"%a%\") || ($b like \"_b_\")) echo $a;\n";
+
 
   @Test
   public void testIntValue() {
@@ -58,6 +60,8 @@ public class TruffleArrowParserTest {
     assertThat(parser.parse("$a && $b"), is(binary(variable("$a"), variable("$b"), "&&")));
     assertThat(parser.parse("$a || $b"), is(binary(variable("$a"), variable("$b"), "||")));
     assertThat(parser.parse("($a && $b) || $c"), is(binary(binary(variable("$a"), variable("$b"), "&&"), variable("$c"), "||")));
+    assertThat(parser.parse("$a like \"%a%\""), is(binary(variable("$a"), stringValue("%a%"), "like")));
+    assertThat(parser.parse("$b like \"_b_\""), is(binary(variable("$b"), stringValue("_b_"), "like")));
   }
 
   @Test
@@ -141,7 +145,7 @@ public class TruffleArrowParserTest {
   public void testScript() {
     Parser<List<ASTNode>> parser = parser(TruffleArrowParser.script());
     List<ASTNode> asts = parser.parse(SAMPLE);
-    assertThat(asts.size(), is(8));
+    assertThat(asts.size(), is(11));
   }
 
   <T> Parser<T> parser(Parser<T> p) {
