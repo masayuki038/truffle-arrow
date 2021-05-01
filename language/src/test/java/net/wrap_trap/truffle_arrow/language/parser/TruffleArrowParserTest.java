@@ -11,9 +11,6 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 // TODO
-// map
-// &&
-// ||
 // like
 
 public class TruffleArrowParserTest {
@@ -58,6 +55,9 @@ public class TruffleArrowParserTest {
     assertThat(parser.parse("2 > 1"), is(binary(intValue(2), intValue(1), ">")));
     assertThat(parser.parse("$a == 1"), is(binary(variable("$a"), intValue(1), "==")));
     assertThat(parser.parse("\"a\" < $a"), is(binary(stringValue("a"), variable("$a"), "<")));
+    assertThat(parser.parse("$a && $b"), is(binary(variable("$a"), variable("$b"), "&&")));
+    assertThat(parser.parse("$a || $b"), is(binary(variable("$a"), variable("$b"), "||")));
+    assertThat(parser.parse("($a && $b) || $c"), is(binary(binary(variable("$a"), variable("$b"), "&&"), variable("$c"), "||")));
   }
 
   @Test
