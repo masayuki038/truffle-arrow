@@ -4,6 +4,7 @@ import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
+import net.wrap_trap.truffle_arrow.language.truffle.node.ReturnException;
 import net.wrap_trap.truffle_arrow.language.truffle.node.Statements;
 
 
@@ -19,7 +20,11 @@ public class TruffleArrowRootNode extends RootNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    statements.executeVoid(frame);
+    try {
+      statements.executeVoid(frame);
+    } catch (ReturnException e) {
+      return e.getResult();
+    }
     return true;
   }
 }

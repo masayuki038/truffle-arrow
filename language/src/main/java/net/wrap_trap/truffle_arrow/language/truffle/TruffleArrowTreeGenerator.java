@@ -39,7 +39,7 @@ public class TruffleArrowTreeGenerator {
     if ("echo".equals(command.getCommand())) {
       return null; // TODO
     } else if ("return".equals(command.getCommand())) {
-      return null; // TODO or Remove
+      return new ReturnNode(param);
     }
     throw new RuntimeException("Unknown AST.Command: " + command);
   }
