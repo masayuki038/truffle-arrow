@@ -136,7 +136,7 @@ public class TruffleArrowParserTest {
 
   @Test
   public void testMapMemberAssignment() {
-    Parser<Expression> parser = parser(new TruffleArrowParser().mapMemberAssignment());
+    Parser<MapMemberAssignment> parser = parser(new TruffleArrowParser().mapMemberAssignment());
     assertThat(parser.parse("$a.foo = 1"), is(mapMemberAssignment(mapMember(variable("$a"), "foo"), intValue(1))));
     assertThat(parser.parse("$a.a1=\"hoge\""), is(mapMemberAssignment(mapMember(variable("$a"), "a1"), stringValue("hoge"))));
   }

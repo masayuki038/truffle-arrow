@@ -12,6 +12,6 @@ public class TruffleArrowLanguageTest {
   @Test
   public void testScript() {
     Context ctx = Context.create("ta");
-    ctx.eval("ta", SAMPLE);
+    System.out.println(ctx.eval("ta", SAMPLE));
   }
 }

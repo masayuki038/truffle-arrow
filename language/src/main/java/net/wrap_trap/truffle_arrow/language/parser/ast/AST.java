@@ -62,7 +62,7 @@ public class AST {
   }
 
   @Value
-  public static class Assignment implements Expression {
+  public static class Assignment implements ASTNode {
     Variable variable;
     Expression expression;
   }
@@ -89,7 +89,7 @@ public class AST {
   }
 
   @Value
-  public static class MapMemberAssignment implements Expression {
+  public static class MapMemberAssignment implements ASTNode {
     MapMember mapMember;
     Expression expression;
   }
