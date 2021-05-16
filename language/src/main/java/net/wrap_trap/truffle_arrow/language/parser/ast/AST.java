@@ -107,4 +107,13 @@ public class AST {
   public static If ifs(Expression expression, List<ASTNode> statements) {
     return new If(expression, statements);
   }
+
+  @Value
+  public static class Loop implements ASTNode {
+    List<ASTNode> statements;
+  }
+
+  public static Loop loop(List<ASTNode> statements) {
+    return new Loop(statements);
+  }
 }

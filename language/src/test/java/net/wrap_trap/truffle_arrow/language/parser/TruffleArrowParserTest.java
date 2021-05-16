@@ -121,6 +121,19 @@ public class TruffleArrowParserTest {
   }
 
   @Test
+  public void testLoopWithBlocks() {
+    String loop = "loop { \n"+
+                   "  echo $a;\n" +
+                   "  echo \"$a < 3\";\n" +
+                   "}\n";
+
+    Parser<Loop> parser = parser(TruffleArrowParser.loop());
+    assertThat(
+      parser.parse(loop), is(loop(Arrays.asList(command("echo", variable("$a"))
+          , command("echo", stringValue("$a < 3"))))));
+  }
+
+  @Test
   public void testNewMap() {
     Parser<Expression> parser = parser(new TruffleArrowParser().newMap());
     assertThat(parser.parse("{}"), is(mapValue()));
